@@ -73,13 +73,21 @@ class ProductController extends Controller
         }
     }
 
-    public function get_products() {
+    public function get_products_infos() {
         $products = Product::with('category', 'suppliers')
         ->where('prod_status', 1)
         ->orderBy('created_at', 'desc')
         ->get();
 
         return response()->json([ 'product_supplier' => $products ]);
+    }
+
+    public function get_products() {
+        $products = Product::where('prod_status', 1)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json([ 'products' => $products ]);
     }
 
     public function get_product($product_id) {
@@ -196,6 +204,18 @@ class ProductController extends Controller
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             return response()->json([ 'error_message' => $e->getMessage() ]);
+        }
+    }
+
+    public function get_product_price($product_id) {
+        try {
+            $product = Product::where('id', $product_id)
+            ->where('prod_status', 1)
+            ->firstOrFail();
+
+            return response()->json([ 'price' => $product->prod_price ], 200);
+        } catch (\Exception $e) {
+            return response()->json([ 'error' => $e->getMessage(), 'message' => 'Oops, something went wrong, try again later.' ]);
         }
     }
 }

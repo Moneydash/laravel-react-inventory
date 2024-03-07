@@ -104,7 +104,7 @@ function Products() {
     const get_products = () => {
         setRows([]);
         setLoadingTable(true);
-        axios_get_header('/product/get_products', decrypted_access_token)
+        axios_get_header('/product/get_products_infos', decrypted_access_token)
         .then(response => {
             setLoadingTable(false);
             const transformedData = response.data.product_supplier.map(product_supplier => {
@@ -380,7 +380,7 @@ function Products() {
 
         // additional form validations
         if (hasError) {
-            handleSnackbar('Check for empty or error fields!');
+            handleSnackbar(true, 'Oops! Something went wrong. Please check for any empty or incorrect fields.');
         } else if (formData.prod_img === "" && editIndex === 0) {
             setFormDataError((prevError) => ({ ...prevError, prod_img: true }));
             setFormDataHelperText((prevText) => ({ ...prevText, prod_img: 'Product image is required!' }));

@@ -19,9 +19,6 @@ return new class extends Migration
             $table->string('contact_number')->nullable(false);
             $table->string('email')->nullable(false)->unique();
             $table->string('customer_location')->nullable(false);
-            $table->smallInteger('customer_payment_status')->default(1); // 0 = no orders, 1 = paid, 2 = partially paid, 3 = not paid
-            $table->float('customer_latest_payment_amnt', 10, 2)->nullable(false);
-            $table->float('customer_credit_amnt', 10, 2)->nullable(false);
             $table->string('customer_img')->nullable(false);
             $table->boolean('customer_status')->default(1);
             $table->timestamps();

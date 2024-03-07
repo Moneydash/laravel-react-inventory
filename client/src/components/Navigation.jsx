@@ -142,8 +142,9 @@ export default function Navigation() {
     const { role_id } = localStorage;
     if (role_id !== null) {
       const decrypted_role_id = AES.decrypt(role_id, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8);
+      const decrypted_auth_id = AES.decrypt(role_id, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8);
 
-      axios_get_header('/user_nav/get_navigations/' + decrypted_role_id, decrypted_access_token)
+      axios_get_header('/user_nav/get_navigations/' + decrypted_role_id + '/' + decrypted_auth_id, decrypted_access_token)
       .then(response => { setNavigation(response.data.navigations); })
       .catch(error => { console.error("Error: ", error); })
     } else {

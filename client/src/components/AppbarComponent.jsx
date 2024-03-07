@@ -11,10 +11,10 @@ function AppbarComponent() {
     return (
         <AppBar position="fixed">
             <Toolbar variant="dense">
-                <Icon sx={{ mb: 1 }}><Inventory2Rounded fontSize="small"/></Icon>
+                <img src={process.env.REACT_APP_URL + '/logo/logo-transparent.ico'} style={{ height: '20px', marginTop: '-1.5px' }} />
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1, pl: 1 }}>InventoryIQ</Typography>
                 <Button color="inherit" href={targetUrl}>
-                    { location.pathname === '/register' ? 'Log In' : 'Register' }
+                    { location.pathname === '/register' ? 'Sign In' : 'Sign Up' }
                 </Button>
             </Toolbar>
         </AppBar>

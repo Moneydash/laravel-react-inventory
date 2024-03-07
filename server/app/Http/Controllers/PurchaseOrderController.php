@@ -7,22 +7,27 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Cache;
 
 class PurchaseOrderController extends Controller
 {
     public function generate_po_number() {
         do {
-            // Generate a random number portion
+            // Generate a random number portion for PO number
             $randomNumber = mt_rand(100000, 999999);
-    
-            // Create the PO number
             $poNumber = "PO" . $randomNumber;
     
-            // Check if the PO number already exists in the database
-            $exists = DB::table('purchase_orders')->where('po_number', $poNumber)->exists();
+            // check if saved to cache
+            $cached = Cache::get('po_numbers' . $poNumber);
+            if (!$cached) {
+                $exists = DB::table('purchase_orders')->where('po_number', $poNumber)->exists();
+            } else {
+                $exists = true; // Mark as existing to regenerate
+            }
         } while ($exists);
 
-        return response()->json([ 'po_number' => $poNumber ]);
+        $cached_po = Cache::tags(['po_number'])->put('po_numbers' . $poNumber, true, 60);
+        return response()->json(['po_number' => $poNumber], 200);
     }
 
     public function add_purchase_order(Request $request) {

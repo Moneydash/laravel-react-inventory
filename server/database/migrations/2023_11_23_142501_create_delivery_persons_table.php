@@ -23,7 +23,8 @@ return new class extends Migration
             $table->string('contact_number')->nullable(false);
             $table->string('email_address')->nullable()->unique();
             $table->string('home_address')->nullable(false);
-            $table->boolean('status')->default(1);
+            $table->boolean('status')->default(1); // 1 = active, 0 = deleted
+            $table->boolean('delivery_status')->default(1); // 1 = available, 0 = unavailable
             $table->timestamps();
 
             $table->foreign('primaryID_id')->references('id')->on('primary_ids_list');

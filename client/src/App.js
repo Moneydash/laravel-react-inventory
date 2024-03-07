@@ -39,20 +39,20 @@ function AppTheme({ children }) {
 	// pallete mode --> light mode or dark mode
 	const theme = createTheme({
 	  palette: {
-		mode: 'dark'
+		mode: 'light'
 	  },
 	  // over ride typography of material-ui
 	  typography: {
-		fontFamily: 'Quicksand, Grandstander, Source Sans Pro, sans-serif',
+		fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
 	  },
 	  overrides: {
 		MuiCssBaseline: {
 		  '@global': {
 			html: {
-			  fontFamily: 'Quicksand, Grandstander, Source Sans Pro, sans-serif',
+			  fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
 			},
 			body: {
-			  fontFamily: 'Quicksand, Grandstander, Source Sans Pro, sans-serif',
+			  fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
 			},
 		  },
 		},
@@ -62,7 +62,7 @@ function AppTheme({ children }) {
 		MuiDrawer: {
 		  styleOverrides: {
 			paper: {
-			  backgroundColor: '#232323', // replace with your desired dark mode color
+			  backgroundColor: localStorage.getItem('theme') === 'dark' ? '#232323' : '#fefefe', // replace with your desired dark mode color
 			},
 		  },
 		},

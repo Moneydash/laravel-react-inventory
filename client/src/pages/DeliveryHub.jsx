@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, Grid, Typography } from '@mui/material';
-import { decryptAccessToken, decryptRoleId } from "../auth/AuthUtils";
+import { decryptAccessToken, decryptRoleId, decryptAuthId } from "../auth/AuthUtils";
 import { axios_get_header } from "../request/apiRequests";
 import { Link } from "react-router-dom";
 
@@ -8,11 +8,12 @@ function DeliveryHub() {
     document.title = 'InventoryIQ: Delivery Hub';
     const decrypted_access_token = decryptAccessToken();
     const decrypted_role = decryptRoleId();
+    const decrypted_auth = decryptAuthId();
 
     const [subnav, setSubnav] = useState([]);
 
     const get_product_delivery_subnavs = () => {
-        axios_get_header('/user_sub_nav/get_prodDelivery_sub_navigations/' + decrypted_role, decrypted_access_token)
+        axios_get_header('/user_sub_nav/get_prodDelivery_sub_navigations/' + decrypted_role + '/' + decrypted_auth, decrypted_access_token)
         .then(response => { setSubnav(response.data.sub_navigations); })
         .catch(error => { console.log(error); })
     };

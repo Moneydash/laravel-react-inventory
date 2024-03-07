@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\Cache;
 
 class SubNavigationController extends Controller
 {
-    public function get_profile_sub_navigations($role_id) {
-        $cacheKey = 'profile_subNavigations_' . $role_id;
+    public function get_profile_sub_navigations($role_id, $user_id) {
+        $cacheKey = 'profile_subNavigations_' . $role_id . '_' . $user_id;
+        $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
         // remember the navigations using cache for fast initial retrieval
-        $sub_navigations = Cache::remember($cacheKey, $minutes, function () use ($role_id) {
+        $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
             // If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
                 // Attempt to retrieve the data from the cache
@@ -26,12 +27,13 @@ class SubNavigationController extends Controller
         return response()->json([ 'sub_navigations' => $sub_navigations ]);
     }
 
-    public function get_productDelivery_sub_navigations($role_id) {
-        $cacheKey = 'prodDelivery_subNavigations_' . $role_id;
+    public function get_productDelivery_sub_navigations($role_id, $user_id) {
+        $cacheKey = 'prodDelivery_subNavigations_' . $role_id . '_' . $user_id;
+        $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
         // remember the navigations using cache for fast initial retrieval
-        $sub_navigations = Cache::remember($cacheKey, $minutes, function () use ($role_id) {
+        $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
             // If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
                 // Attempt to retrieve the data from the cache
@@ -43,12 +45,13 @@ class SubNavigationController extends Controller
         return response()->json([ 'sub_navigations' => $sub_navigations ]);
     }
 
-    public function get_inventoryControl_sub_navigations($role_id) {
-        $cacheKey = 'inventoryControl_subNavigations_' . $role_id;
+    public function get_inventoryControl_sub_navigations($role_id, $user_id) {
+        $cacheKey = 'inventoryControl_subNavigations_' . $role_id . '_' . $user_id;
+        $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
         // remember the navigations using cache for fast initial retrieval
-        $sub_navigations = Cache::remember($cacheKey, $minutes, function () use ($role_id) {
+        $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
             // If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
                 // Attempt to retrieve the data from the cache
