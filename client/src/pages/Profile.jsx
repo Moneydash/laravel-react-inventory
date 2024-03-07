@@ -2,16 +2,17 @@ import React, { useEffect, useState } from "react";
 import { axios_get_header } from '../request/apiRequests';
 import { Card, CardContent, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import { decryptAccessToken, decryptRoleId } from "../auth/AuthUtils";
+import { decryptAccessToken, decryptRoleId, decryptAuthId } from "../auth/AuthUtils";
 
 function Profile() {
     document.title = 'InventoryIQ: User Preferences';
     const decrypted_access_token = decryptAccessToken();
     const decrypted_role = decryptRoleId();
+    const decrypted_auth = decryptAuthId();
     const [subNav, setSubNav] = useState([]);
     
     const get_profile_subNavs = () => {
-        axios_get_header('/user_sub_nav/get_profile_sub_navigations/' + decrypted_role, decrypted_access_token)
+        axios_get_header('/user_sub_nav/get_profile_sub_navigations/' + decrypted_role + '/' + decrypted_auth, decrypted_access_token)
         .then(response => { setSubNav(response.data.sub_navigations); })
         .catch(error => { console.log(error); })
     };

@@ -11,8 +11,20 @@ class ProductDelivery extends Model
     use HasFactory, HasUuids;
     protected $table = 'product_delivery';
 
+    protected $fillable = [
+        'po_number',
+        'batch_id',
+        'product_id',
+        'quantity',
+        'price',
+        'subtotal',
+        'customer_id',
+        'delivery_status',
+        'delivery_person_id'
+    ];
+
     public function products() {
-        return $this->belongsToMany(Product::class, 'product_id', 'id');
+        return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 
     public function delivery_persons() {

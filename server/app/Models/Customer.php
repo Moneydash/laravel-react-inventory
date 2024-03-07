@@ -19,9 +19,6 @@ class Customer extends Model
         'contact_number',
         'email',
         'customer_location',
-        'customer_payment_status',
-        'customer_payment_amnt',
-        'customer_credit_amnt',
         'customer_img'
     ];
 
@@ -31,5 +28,13 @@ class Customer extends Model
 
     public function product_delivery() {
         return $this->hasMany(ProductDelivery::class, 'customer_id', 'id');
+    }
+
+    public function credit_history() {
+        return $this->hasMany(CreditHistory::class, 'customer_id', 'id');
+    }
+
+    public function payment_history() {
+        return $this->hasMany(PaymentHistory::class, 'customer_id', 'id');
     }
 }

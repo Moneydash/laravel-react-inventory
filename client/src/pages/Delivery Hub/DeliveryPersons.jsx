@@ -1,5 +1,4 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { useSelector, useDispatch} from 'react-redux';
 import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography, styled} from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { LoadingButton } from "@mui/lab";
@@ -7,7 +6,6 @@ import { AttachmentOutlined, CancelOutlined, CloseRounded, DeleteRounded, GroupA
 import { axios_get_header, axios_patch_header, axios_post_header_img } from "../../request/apiRequests";
 import { decryptAccessToken } from "../../auth/AuthUtils";
 import { validate } from "email-validator";
-import { fetchData, request_update, resetForm, updateForm } from "../../redux/crud/product_delivery/actions";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -23,7 +21,6 @@ const VisuallyHiddenInput = styled('input')({
 
 function DeliveryPersons() {
     document.title = 'InventoryIQ: Delivery Hub - Delivery Personnel';
-    const dispatch = useDispatch();
     const decrypted_access_token = decryptAccessToken();
     const empty_field_warning = 'Please fill up required field!';
 
@@ -47,15 +44,11 @@ function DeliveryPersons() {
         { field: 'secondary_id', headerName: 'Secondary ID Used', flex: 1 },
         { field: 'id', headerName: 'Actions', flex: 1, renderCell: renderActionButtons }
     ];
-    // const [rows, setRows] = useState([]);
-    // const [editIndex, setEditIndex] = useState(0);
-    console.log(useSelector(state => state));
-    const editIndex = useSelector(state => state.editIndex);
-    const formData = useSelector(state => state.deliveryPerson);
-    const tableLoading = useSelector(state => state.tableLoading);
+    const [editIndex, setEditIndex] = useState(0);
+    const [rows, setRows] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [removeDialog, setRemoveDialog] = useState(false);
-    // const [tableLoading, setTableLoading] = useState(false);
+    const [tableLoading, setTableLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [primaryIds, setPrimaryIds] = useState([]);
     const [secondaryIds, setSecondaryIds] = useState([]);
@@ -66,6 +59,21 @@ function DeliveryPersons() {
         message: ''
     };
     const [snackbar, setSnackbar] = useState(initialSnackbar);
+    const initialFormData = {
+        id: '',
+        firstname: '',
+        middlename: '',
+        lastname: '',
+        primaryID_id: '',
+        primary_id_img: '',
+        primary_id_img_name: '',
+        secondaryID_id: '',
+        secondary_id_img: '',
+        secondary_id_img_name: '',
+        contact_number: '',
+        email_address: '',
+        home_address: ''
+    };
     const initialFormDataError = {
         firstname: false,
         lastname: false,
@@ -88,11 +96,36 @@ function DeliveryPersons() {
         home_address: ''
     };
     
+    const [formData, setFormData] = useState(initialFormData);
     const [formDataError, setFormDataError] = useState(initialFormDataError);
     const [formDataHelperText, setFormDataHelperText] = useState(initialFormDataHelperText);
 
     const get_delivery_persons = async () => {
-        dispatch(fetchData('deliveryPerson', '/delivery_person/get_delivery_persons', decrypted_access_token)); 
+        setRows([]);
+        setTableLoading(true);
+        axios_get_header('/delivery_hub/delivery_person/get_delivery_persons_infos', decrypted_access_token)
+        .then(response => {
+            const data = response.data;
+            const transformedData = data.delivery_persons.map(delivery_person => {
+                return {
+                    id: delivery_person['id'],
+                    firstname: delivery_person['firstname'],
+                    lastname: delivery_person['lastname'],
+                    contact_number: delivery_person['contact_number'],
+                    email: delivery_person['email_address'],
+                    primary_id: delivery_person['primary_id']['id_name_abbr'],
+                    secondary_id: delivery_person['secondary_id']['id_name_abbr'] === null ? 'None' : delivery_person['secondary_id']['id_name_abbr']
+                };
+            });
+
+            setRows(transformedData);
+            setTableLoading(false);
+        })
+        .catch(error => {
+            setTableLoading(false);
+            handleSnackbar(true, 'Oops, something went wrong. Please try again later.');
+            console.log(error);
+        })
     }
 
     /* eslint-disable */
@@ -106,8 +139,8 @@ function DeliveryPersons() {
     }
 
     const get_delivery_person = (editIndexValue, id) => {
-        dispatch(request_update());
-        axios_get_header('/delivery_person/get_info/' + id, decrypted_access_token)
+        setEditIndex(2);
+        axios_get_header('/delivery_hub/delivery_person/get_info/' + id, decrypted_access_token)
         .then(response => {
             get_primary_ids();
             get_secondary_ids();
@@ -129,7 +162,7 @@ function DeliveryPersons() {
             setPrimaryIdImgSrc(process.env.REACT_APP_API_BASE_IMG_URL + '/storage/' + cleanedPath_primary);
             setSecondaryIdImgSrc(process.env.REACT_APP_API_BASE_IMG_URL + '/storage/' + cleanedPath_secondary);
             if (editIndexValue === 2) {
-                setDialog(true);
+                handleDialog(true);
             } else if (editIndexValue === 3) {
                 setRemoveDialog(true);
             }
@@ -141,13 +174,13 @@ function DeliveryPersons() {
     };
 
     const get_primary_ids = () => {
-        axios_get_header('/delivery_person/get_primary', decrypted_access_token)
+        axios_get_header('/delivery_hub/delivery_person/get_primary', decrypted_access_token)
         .then(response => { setPrimaryIds(response.data.primary_ids); })
         .catch(error => { console.log(error); });
     }
 
     const get_secondary_ids = () => {
-        axios_get_header('/delivery_person/get_secondary', decrypted_access_token)
+        axios_get_header('/delivery_hub/delivery_person/get_secondary', decrypted_access_token)
         .then(response => { setSecondaryIds(response.data.secondary_ids) })
         .catch(error => { console.log(error); });
     };
@@ -171,7 +204,7 @@ function DeliveryPersons() {
     const handleDialog = (open) => {
         setDialog(open);
         if (open === false) {
-            dispatch(resetForm());
+            setFormData(initialFormData);
             setPrimaryIds([]);
             setSecondaryIds([]);
             setFormDataError(initialFormDataError);
@@ -187,7 +220,7 @@ function DeliveryPersons() {
     const handRemoveDialog = (open) => {
         setRemoveDialog(open);
         if (open === false) {
-            dispatch(resetForm());
+            setFormData(initialFormData);
         }
     };
 
@@ -196,7 +229,7 @@ function DeliveryPersons() {
         const { name, value, files } = e.target;
 
         if (name === 'firstname' || name === 'lastname') {
-            dispatch(updateForm('deliveryPerson', [name], value));
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
 
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
@@ -210,10 +243,10 @@ function DeliveryPersons() {
             }
         }
 
-        if (name === 'middlename') { dispatch(updateForm('deliveryPerson', [name], value)) }
+        if (name === 'middlename') { setFormData((prevState) => ({ ...prevState, [name]: value })); }
 
         if (name === 'primaryID_id') {
-            dispatch(updateForm('deliveryPerson', [name], value))
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
                 setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
@@ -224,7 +257,8 @@ function DeliveryPersons() {
         }
 
         if (name === 'secondaryID_id') {
-            dispatch(updateForm('deliveryPerson', [name], value));
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
+            
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, secondary_id_img_name: false }));
                 setFormDataHelperText((prevText) => ({ ...prevText, secondary_id_img_name: '' }));
@@ -232,7 +266,7 @@ function DeliveryPersons() {
         }
         
         if (name === 'contact_number') {
-            dispatch(updateForm('deliveryPerson', [name], value))
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
             const ph_mobile_regex = /^(09|\+639)\d{9}$/;
 
             if (value === '') {
@@ -248,7 +282,7 @@ function DeliveryPersons() {
         }
 
         if (name === 'email_address') {
-            dispatch(updateForm('deliveryPerson', [name], value))
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
 
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: false }));
@@ -271,6 +305,7 @@ function DeliveryPersons() {
                 if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/gif') {
                     if (file.size <= parseInt((5 * 1024) * 1024)) {
                         filereader.onloadend = function(e) {
+                            console.log(filereader.result);
 
                             if (name === 'primary_id_img') {
                                 setPrimaryIdImgSrc(filereader.result);
@@ -278,8 +313,8 @@ function DeliveryPersons() {
                                 setSecondaryIdImgSrc(filereader.result);
                             }
 
-                            dispatch(updateForm('deliveryPerson', [name], file));
-                            dispatch(updateForm('deliveryPerson', [name + '_name'], file.name));
+                            setFormData((prevState) => ({ ...prevState, [name]: file }));
+                            setFormData((prevState) => ({ ...prevState, [name + '_name']: file.name }));
                             setFormDataError((prevError) => ({ ...prevError, [name + '_name']: false }));
                             setFormDataHelperText((prevText) => ({ ...prevText, [name + '_name']: '' }));
                         }
@@ -291,8 +326,8 @@ function DeliveryPersons() {
                             setSecondaryIdImgSrc('');
                         }
 
-                        dispatch(updateForm('deliveryPerson', [name], ''));
-                        dispatch(updateForm('deliveryPerson', [name + '_name'], ''));
+                        setFormData((prevState) => ({ ...prevState, [name]: '' }));
+                        setFormData((prevState) => ({ ...prevState, [name + '_name']: '' }));
                         setFormDataError((prevError) => ({ ...prevError, [name + '_name']: true }));
                         setFormDataHelperText((prevText) => ({ ...prevText, [name + '_name']: 'File size limit is 5MB, please select another file.' }));
                     }
@@ -304,8 +339,8 @@ function DeliveryPersons() {
                         setSecondaryIdImgSrc('');
                     }
 
-                    dispatch(updateForm('deliveryPerson', [name], ''));
-                    dispatch(updateForm('deliveryPerson', [name + '_name'], ''));
+                    setFormData((prevState) => ({ ...prevState, [name]: '' }));
+                    setFormData((prevState) => ({ ...prevState, [name + '_name']: '' }));
                     setFormDataError((prevError) => ({ ...prevError, [name + '_name']: true }));
                     setFormDataHelperText((prevText) => ({ ...prevText, [name + '_name']: 'Please select a valid image file (png, jpeg, jpg or gif)' }));
                 }
@@ -313,7 +348,7 @@ function DeliveryPersons() {
         }
 
         if (name === 'home_address') {
-            dispatch(updateForm('deliveryPerson', [name], value));
+            setFormData((prevState) => ({ ...prevState, [name]: value }));
 
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
@@ -360,11 +395,12 @@ function DeliveryPersons() {
             setFormDataHelperText((prevText) => ({ ...prevText, secondary_id_img_name: 'Please provide image for this field!' }));
         } else {
             setLoading(true);
-            axios_post_header_img('/delivery_person/add_delivery_person', formDataSubmit, decrypted_access_token)
+            axios_post_header_img('/delivery_hub/delivery_person/add_delivery_person', formDataSubmit, decrypted_access_token)
             .then(response => {
                 setLoading(false);
                 handleDialog(false);
                 handleSnackbar(true, response.data.message);
+                get_delivery_persons();
             })
             .catch(error => {
                 setLoading(false);
@@ -376,7 +412,7 @@ function DeliveryPersons() {
 
     const handleRemoveSubmit = () => {
         setLoading(true);
-        axios_patch_header('/delivery_person/remove_delivery_person/' + formData.id, {}, decrypted_access_token)
+        axios_patch_header('/delivery_hub/delivery_person/remove_delivery_person/' + formData.id, {}, decrypted_access_token)
         .then(response => {
             handRemoveDialog(false);
             setLoading(false);
@@ -426,7 +462,7 @@ function DeliveryPersons() {
             <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => handleSnackbar(false, '')} message={snackbar.message} action={action} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
 
             {/* create and view dialog */}
-            <Dialog open={dialog} onClose={() => setDialog(false)} fullWidth maxWidth="lg">
+            <Dialog open={dialog} fullWidth maxWidth="lg">
                 <DialogTitle>Add Delivery Personnel</DialogTitle>
                 <Divider />
                 <DialogContent>
@@ -575,17 +611,23 @@ function DeliveryPersons() {
                                             id="secondaryID_id"
                                             label="secondaryID_id"
                                             name="secondaryID_id"
-                                            value={formData.secondaryID_id}
+                                            value={secondaryIds.length > 0 ? formData.secondaryID_id || '' : ''}
                                             onChange={handleChange}
                                             disabled={editIndex === 2}
                                             fullWidth
                                         >
-                                            <MenuItem value="">&nbsp;</MenuItem>
-                                            {secondaryIds.map(secondary_id => (
-                                                <MenuItem key={secondary_id.id} value={secondary_id.id}>
-                                                    { secondary_id.id_name_abbr }
-                                                </MenuItem>
-                                            ))}
+                                            {secondaryIds.length > 0 ? (
+                                                [
+                                                    <MenuItem key="empty" value="">&nbsp;</MenuItem>,
+                                                    ...secondaryIds.map(secondary_id => (
+                                                        <MenuItem key={secondary_id.id} value={secondary_id.id}>
+                                                            {secondary_id.id_name_abbr}
+                                                        </MenuItem>
+                                                    ))
+                                                ]
+                                            ) : (
+                                                <MenuItem value="">&nbsp;</MenuItem>
+                                            )}
                                         </Select>
                                     </FormControl>
                                 </Grid>
@@ -688,7 +730,7 @@ function DeliveryPersons() {
                 <Grid item lg={12} xl={12}>
                     <Card raised sx={{ width: '100%' }}>
                         <CardContent>
-                            <DataGrid columns={columns} rows={formData.rows} autoHeight loading={tableLoading} />
+                            <DataGrid columns={columns} rows={rows} autoHeight loading={tableLoading} />
                         </CardContent>
                     </Card>
                 </Grid>

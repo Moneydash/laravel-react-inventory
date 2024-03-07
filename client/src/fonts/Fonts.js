@@ -13,9 +13,11 @@ import './raleway.js'
 import './montserrat.js';
 
 // lato font
-import './lato.js'
+import './lato.js';
 
 // ubuntu font
-import './ubuntu.js'
+import './ubuntu.js';
 
+// source sans pro
+import './source_sans_pro.js';
 // add more font below

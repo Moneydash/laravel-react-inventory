@@ -1,12 +1,19 @@
 import { axios_get_header } from '../../../request/apiRequests';
 import * as types from './types';
 
-export const request_update = () => dispatch => {
-    dispatch({
-        type: types.REQUEST_UPDATE
-    });
-}
-export const updateForm = (module, fieldName, fieldValue) => dispatch => {
+export const request_update = (editIndexVal) => dispatch => {
+    try {
+        dispatch({
+            type: types.REQUEST_UPDATE,
+            payload: editIndexVal
+        });
+    
+    } catch (error) {
+        console.error("Error updating form: ", error);
+    }
+};
+
+export const updateForm = (module, fieldName, fieldValue) => async dispatch => {
     try {
         dispatch({
             type: types.UPDATE_FORM,

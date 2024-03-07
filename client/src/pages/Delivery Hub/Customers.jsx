@@ -90,10 +90,10 @@ function Customers() {
 
     const get_customers = () => {
         setTableLoading(true);
-        axios_get_header('/customer/get_customers', decrypted_access_token)
+        axios_get_header('/delivery_hub/customer/get_customers', decrypted_access_token)
         .then(response => {
             const transformedData = response.data.customers.map(customer => {
-                const payment_status = customer['customer_payment_status'] === 0 ? 'None' : (customer['customer_payment_status'] === 1 ? 'Paid' : (customer['customer_payment_status'] === 2 ? 'Partially Paid' : 'Unpaid'));
+                const payment_status = customer['customer_payment_status'] === 0 ? 'No orders yet' : (customer['customer_payment_status'] === 1 ? 'Paid' : (customer['customer_payment_status'] === 2 ? 'Partially Paid' : 'Unpaid'));
 
                 return {
                     id: customer['id'],
@@ -109,7 +109,11 @@ function Customers() {
             setTableLoading(false);
             setRows(transformedData);
         })
-        .catch(error => { console.log(error); });
+        .catch(error => {
+            setTableLoading(false);
+            handleSnackbar(true, 'Oops, something went wrong. Please try again later.');
+            console.log(error);
+        });
     };
 
     /* eslint-disable */
@@ -125,7 +129,7 @@ function Customers() {
     
     const get_customer = (editIndexValue, customer_id) => {
         setEditIndex(editIndexValue);
-        axios_get_header('/customer/get_customer/' + customer_id, decrypted_access_token)
+        axios_get_header('/delivery_hub/customer/get_customer/' + customer_id, decrypted_access_token)
         .then(response => {
             const data = response.data.customer_data;
             const cleanedPath = data.customer_img.substring(data.customer_img.indexOf('/') + 1);
@@ -149,10 +153,11 @@ function Customers() {
     };
 
     const get_customer_payment = (customer_id) => {
-        axios_get_header('/customer/get_customer_payment/' + customer_id, decrypted_access_token)
+        axios_get_header('/delivery_hub/customer/get_customer_payment/' + customer_id, decrypted_access_token)
         .then(response => {
-            const data = response.data.customer;
-            if (data.customer_credit_amnt > 0) {
+            const data = response.data;
+            console.log(data);
+            if (data.credit_standing !== null) {
                 setFormData((prevState) => ({
                     ...prevState,
                     customer_payment_status: data.customer_payment_status,
@@ -374,7 +379,7 @@ function Customers() {
         } else {
             setLoading(true);
             if (editIndex === 1) {
-                axios_post_header_img('/customer/update_customer/' + formData.id, formDataSubmit, decrypted_access_token)
+                axios_post_header_img('/delivery_hub/customer/update_customer/' + formData.id, formDataSubmit, decrypted_access_token)
                 .then(response => {
                     setLoading(false);
                     handleDialog(false);
@@ -386,7 +391,7 @@ function Customers() {
                     console.log(error);
                 })
             } else {
-                axios_post_header_img('/customer/create_customer', formDataSubmit, decrypted_access_token)
+                axios_post_header_img('/delivery_hub/customer/create_customer', formDataSubmit, decrypted_access_token)
                 .then(response => {
                     setLoading(false);
                     handleDialog(false);
@@ -405,7 +410,7 @@ function Customers() {
         e.preventDefault();
 
         setLoading(true);
-        axios_patch_header('/customer/remove_customer/' + formData.id, {}, decrypted_access_token)
+        axios_patch_header('/delivery_hub/customer/remove_customer/' + formData.id, {}, decrypted_access_token)
         .then(response => {
             setLoading(false);
             handleRemoveDialog(false);
@@ -445,7 +450,8 @@ function Customers() {
                 <DialogContent>
                     <Grid container direction="column" rowSpacing={2}>
                         <Grid item>
-                            <TextField
+                            { editIndex !== 2 ?
+                                <TextField
                                 label={editIndex === 2 ? '' : 'Customer Picture'}
                                 type="file"
                                 name="customer_img"
@@ -458,7 +464,8 @@ function Customers() {
                                 disabled={editIndex === 2}
                                 inputProps={{ accept: 'image/png, image/jpeg, image/jpg, image/gif' }}
                                 fullWidth
-                            />
+                            /> : ''
+                            }
                             {imgPreview && (
                                 <div>{imgPreview()}</div>
                             )}

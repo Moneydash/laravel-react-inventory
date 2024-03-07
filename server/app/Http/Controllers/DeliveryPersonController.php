@@ -70,12 +70,20 @@ class DeliveryPersonController extends Controller
         }
     }
 
-    public function get_delivery_persons() {
+    public function get_delivery_persons_infos() {
         $delivery_persons = DeliveryPerson::where('status', 1)
         ->with('primaryId', 'secondaryId')
         ->get();
 
         return response()->json([ 'delivery_persons' => $delivery_persons ]);
+    }
+    
+    public function get_delivery_persons_list() {
+        $delivery_persons = DeliveryPerson::where('status', 1)
+        ->orderBy('lastname')
+        ->get();
+
+        return response()->json([ 'delivery_persons' => $delivery_persons ], 200);
     }
 
     public function get_delivery_person($delivery_person_id) {

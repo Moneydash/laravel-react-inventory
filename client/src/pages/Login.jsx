@@ -1,5 +1,5 @@
 import React, { useState, Fragment, useEffect } from "react";
-import { Button, Card, CardActions, CardContent, CardHeader, Divider, Grid, IconButton, Snackbar, TextField } from '@mui/material';
+import { Button, Card, CardActions, CardContent, CardHeader, Divider, Grid, IconButton, Snackbar, TextField, Typography } from '@mui/material';
 import { CloseRounded, RefreshOutlined, VpnKeyRounded } from "@mui/icons-material";
 import { LoadingButton } from '@mui/lab';
 import { axios_get_header, axios_post } from "../request/apiRequests";
@@ -89,7 +89,7 @@ function Login() {
             localStorage.setItem('auth_id', AES.encrypt(response.data.user.id, process.env.REACT_APP_SECRET_KEY).toString());
             localStorage.setItem('role_id', AES.encrypt(response.data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString());
             localStorage.setItem('expire_at', futureTimestamp);
-            localStorage.setItem('selectedIndex', 0);
+            localStorage.setItem('selectedIndex', 1);
 
             setTimeout(() => {
                 setLoading(false);
@@ -114,60 +114,81 @@ function Login() {
             container
             direction="row"
             justifyContent="center"
-            alignItems="center"
             sx={{ minHeight: '100vh' }}
         >
             <AppbarComponent />
             <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => toggleSnackbar(false, '')} message={snackbar.message} action={action} anchorOrigin={{ horizontal: "center", vertical: "bottom" }}/>
-            <Grid item lg={3} xs={12} sm={8} xl={3} sx={{ m: 4 }}>
-                <Card elevation={12}>
-                    <CardHeader
-                        title="Log In"
-                        titleTypographyProps={{ variant: "h5", fontWeight: 'bold' }}
-                        sx={{ pl: 2.5 }}
-                    ></CardHeader>
-                    <Divider />
-                    <form onSubmit={handleSubmit}>
-                        <CardContent>
-                            <Grid container direction="column" rowSpacing={2}>
-                                <Grid item>
-                                    <TextField
-                                        name="email"
-                                        label="E-mail"
-                                        variant="outlined"
-                                        type="email"
-                                        value={formData.email}
-                                        error={formDataError.email}
-                                        helperText={formDataHelperText.email}
-                                        onChange={handleChange}
-                                        fullWidth
-                                        autoComplete="username"
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        name="password"
-                                        label="Password"
-                                        variant="outlined"
-                                        type="password"
-                                        value={formData.password}
-                                        error={formDataError.password}
-                                        helperText={formDataHelperText.password}
-                                        onChange={handleChange}
-                                        fullWidth
-                                    />
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                        <CardActions>
-                            <Grid container justifyContent="flex-end" sx={{ mr: 1, mb: 1 }}>
-                                <Grid item>
-                                    { loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />} variant="outlined">Logging In</LoadingButton> :  <Button variant="contained" color="success" endIcon={<VpnKeyRounded />} type="submit">Log In</Button>}
-                                </Grid>
-                            </Grid>
-                        </CardActions>
-                    </form>
-                </Card>
+            <Grid item lg={5} xs={12} sm={12} xl={5} pt={{ lg: 10, xl: 15, sm: 10, xs: 10 }} sx={{ background: '#fafafa' }}>
+                <Grid
+                    container
+                    direction="column"
+                    justifyContent="center"
+                    alignItems="center"
+                >
+                    <Grid item lg={12} xs={12} sm={8} xl={12}>
+                        <img src={process.env.REACT_APP_URL + '/logo/logo-transparent-new.png'} style={{ height: '200px' }} />
+                        <Typography variant="h5" justifyContent="center" alignItems="center" sx={{ fontWeight: 'bold' }}>Web-Based Inventory Management App</Typography>
+                    </Grid>
+                </Grid>
+            </Grid>
+            <Grid item lg={7} xs={12} sm={12} xl={7} pt={{ lg: 40, xl: 40, sm: 5, xs: 5 }} px={{ xs: 5 }} sx={{ background: '#fefefe'}}>
+                <Grid
+                    container
+                    direction="row"
+                    justifyContent="center"
+                    alignItems="center"
+                >
+                    <Grid item lg={7} xs={12} sm={8} xl={5}>
+                        <Card elevation={12}>
+                            <CardHeader
+                                title="Log In"
+                                titleTypographyProps={{ variant: "h5", fontWeight: 'bold' }}
+                                sx={{ pl: 2.5 }}
+                            ></CardHeader>
+                            <Divider />
+                            <form onSubmit={handleSubmit}>
+                                <CardContent>
+                                    <Grid container direction="column" rowSpacing={2}>
+                                        <Grid item>
+                                            <TextField
+                                                name="email"
+                                                label="E-mail"
+                                                variant="outlined"
+                                                type="email"
+                                                value={formData.email}
+                                                error={formDataError.email}
+                                                helperText={formDataHelperText.email}
+                                                onChange={handleChange}
+                                                fullWidth
+                                                autoComplete="username"
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <TextField
+                                                name="password"
+                                                label="Password"
+                                                variant="outlined"
+                                                type="password"
+                                                value={formData.password}
+                                                error={formDataError.password}
+                                                helperText={formDataHelperText.password}
+                                                onChange={handleChange}
+                                                fullWidth
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                                <CardActions>
+                                    <Grid container justifyContent="flex-end" sx={{ mr: 1, mb: 1 }}>
+                                        <Grid item>
+                                            { loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />} variant="outlined">Logging In</LoadingButton> :  <Button variant="contained" color="success" endIcon={<VpnKeyRounded />} type="submit">Log In</Button>}
+                                        </Grid>
+                                    </Grid>
+                                </CardActions>
+                            </form>
+                        </Card>
+                    </Grid>
+                </Grid>
             </Grid>
         </Grid>
     );
