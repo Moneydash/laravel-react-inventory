@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { reducer as productDeliveryReducer } from "./crud/product_delivery"; // Import your rootReducer
+import rootReducer from "./rootReducer";
 
 const store = configureStore({
-  reducer: productDeliveryReducer,
+  reducer: rootReducer,
 });
 
 export default store;

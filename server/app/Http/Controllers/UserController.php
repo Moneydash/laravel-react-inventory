@@ -101,10 +101,22 @@ class UserController extends Controller
 
     public function logout(Request $request) {
         $user = $request->user();
-        $user->currentAccessToken()->delete();
-        Cache::flush();
+        $user->currentAccessToken()->delete(); // remove the current access token of the user\
+        
+        // get the user and role id of the user
+        $username = $request->user()->username;
+        $user_data = User::where('username', $username)
+        ->where('status', 1)
+        ->with('roles')
+        ->first();
+        
+        $role_id = $user_data->roles[0]->pivot->role_id;
+        $user_id = $user_data->roles[0]->pivot->user_id;
 
-        return response()->json([ 'message' => 'Successfully logged out.' ]);
+        // delete all the cache that is related to the user
+        Cache::tags($role_id . '_' . $user_id)->flush();
+
+        return response()->json([ 'message' => 'Successfully logged out.', 'role_id' => $role_id ]);
     }
 
     public function get_users_list() {

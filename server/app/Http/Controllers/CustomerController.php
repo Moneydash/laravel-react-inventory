@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CreditHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -27,13 +28,10 @@ class CustomerController extends Controller
         $customer_data = [
             'customer_img' => $filepath,
             'firstname' => $request->firstname,
-            'middlename' => $request->middlename,
+            'middlename' => $request->middlename === '' ? '' : $request->middlename,
             'lastname' => $request->lastname,
             'contact_number' => $request->contact_number,
             'email' => strtolower($request->email),
-            'customer_payment_status' => 0,
-            'customer_payment_amnt' => 0.00,
-            'customer_credit_amnt' => 0.00,
             'customer_location' => $request->customer_location
         ];
 
@@ -122,17 +120,39 @@ class CustomerController extends Controller
     }
 
     public function get_customer_payment($customer_id) {
-        $customer = Customer::findOrFail($customer_id)
-        ->where('customer_status', 1)
-        ->first();
+        $query = CreditHistory::select('customer_id', DB::raw('MAX(id) as id'))
+        ->where('customer_id', $customer_id)
+        ->where('credit_status', 0)
+        ->groupBy('customer_id');
 
-        $customer_data = new Customer();
-        $customer_data->id = $customer->id;
-        $customer_data->customer_payment_status = $customer->customer_payment_status;
-        $customer_data->customer_payment_amnt = $customer->customer_payment_amnt;
-        $customer_data->customer_credit_amnt = $customer->customer_credit_amnt;
+        $credit = $query->first();
 
-        return response()->json([ 'customer' => $customer_data ]);
+        return response()->json([ 'credit_standing' => $credit ], 200);
+    }
+    
+    public function get_clear_customers() {
+        $check_credit = CreditHistory::where('credit_status', 1)
+        ->get()->count();
+        
+        if ($check_credit > 0) {
+            $query = CreditHistory::select('customer_id', DB::raw('MAX(id) as id'))
+            ->where('credit_status', 1)
+            ->with('customers')
+            ->groupBy('customer_id');
+            
+            $customers = $query->get();
+            return response()->json([ 'customers' => $customers ], 200);
+        } else {
+            $query = Customer::whereNotIn('id', function ($query) {
+                $query->select('customer_id')
+                    ->from('credit_history')
+                    ->where('credit_status', 0)
+                    ->groupBy('customer_id');
+            });
+            $customers['customers'] = $query->get();
+
+            return response()->json([ 'customers' => $customers ], 200);
+        }
     }
 
     public function deactivate_customer($customer_id) {
@@ -152,5 +172,9 @@ class CustomerController extends Controller
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);
         }
+    }
+
+    public function get_invoice($customer_id) {
+        // $invoice 
     }
 }

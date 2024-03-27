@@ -1,9 +1,9 @@
 import React, { useState, Fragment, useEffect } from "react";
 import { Button, Card, CardActions, CardContent, CardHeader, Divider, Grid, IconButton, Snackbar, TextField } from '@mui/material';
 import { CloseRounded, GroupAddOutlined } from '@mui/icons-material';
-import { axios_get_header, axios_post } from "../request/apiRequests";
+import { axios_get_header, axios_post } from "../utils/requests";
 import * as EmailValidator from 'email-validator';
-import AppbarComponent from "../components/AppbarComponent";
+import AppbarComponent from "../components/elements/AppbarComponent";
 import { AES, enc } from "crypto-js";
 
 function Register() {

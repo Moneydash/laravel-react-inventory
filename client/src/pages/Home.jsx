@@ -1,10 +1,13 @@
 import React, { useEffect } from "react";
-import Navigation from "../components/Navigation";
+import Navigation from "../components/elements/Navigation";
 import { Box, useMediaQuery } from "@mui/material";
 import { styled, useTheme } from '@mui/material/styles';
-import { Outlet } from "react-router-dom";
-import { axios_get_header } from "../request/apiRequests";
+import { Outlet, useNavigate } from "react-router-dom";
+import { axios_get_header } from "../utils/requests";
 import { AES, enc } from "crypto-js";
+import ToastCmp from "../components/elements/ToastComponent";
+import Cookies from "js-cookie";
+import { checkAuth } from 'utils/services';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -17,13 +20,14 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 function Home() {
-  document.title = 'InventoryIQ: Home Page';
+  document.title = 'InventoryIQ: Home';
+  const navigate = useNavigate();
   const theme = useTheme();
   const drawerWidth = 330;
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
-    const access_token = localStorage.getItem('access_token');
+    const access_token = Cookies.get('access_token');
 
     // Check if access_token is not null or undefined
     if (access_token !== undefined) {
@@ -34,33 +38,38 @@ function Home() {
 
             // Now, check if the decryptedToken is not null or undefined
             if (decryptedToken) {
-                axios_get_header('/checkAuth', decryptedToken)
+                axios_get_header(checkAuth, decryptedToken)
                     .catch(error => {
                       console.log(error);
                       localStorage.clear();
-                      window.location = "/";
+                      Cookies.remove();
+                      navigate("/");
                     });
             } else {
                 // Handle the case when decryption fails
                 console.log("Failed to decrypt access_token");
                 localStorage.clear();
-                window.location = "/";
+                Cookies.remove();
+                navigate("/");
             }
         } catch (error) {
             // Handle decryption error
             console.log("Error decrypting access_token:", error);
             localStorage.clear();
-            window.location = "/";
+            Cookies.remove();
+            navigate("/");
         }
       } else {
           localStorage.clear();
-          window.location = "/";
+          Cookies.remove();
+          navigate("/");
       }
     } else {
       localStorage.clear();
-      window.location = "/";
+      Cookies.remove();
+      navigate("/");
     }
-  }, []);
+  }, [navigate]);
 
   return(
     <Box sx={{ display: 'flex', width: '100%', height: '100vh'}}>
@@ -73,6 +82,7 @@ function Home() {
         }}
       >
         <DrawerHeader />
+        <ToastCmp />
         <Outlet />
       </Box>
     </Box>
