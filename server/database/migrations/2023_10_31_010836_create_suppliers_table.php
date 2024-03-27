@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('contact_person')->nullable(false);
             $table->string('contact_person_number')->nullable(false);
             $table->date('contract_expiry_date')->nullable(false);
-            $table->boolean('supp_status')->default(1);
+            $table->string('terms_and_conditions')->nullable(false); // file
+            $table->string('agreement')->nullable(false);
+            $table->softDeletes($column = 'deleted_at');
             $table->timestamps();
         });
     }

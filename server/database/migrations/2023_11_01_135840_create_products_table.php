@@ -20,13 +20,14 @@ return new class extends Migration
             $table->string('weight');
             $table->string('dimensions');
             $table->float('prod_price', 8, 2)->nullable(false);
-            $table->string('prod_desc')->nullable(false);
+            $table->string('prod_desc', 2000)->nullable(false);
             $table->boolean('is_variant');
             $table->uuid('parent_product_id')->nullable();
             $table->integer('stocks')->nullable(false);
-            $table->unsignedBigInteger('category_id')->nullable();
+            $table->uuid('category_id');
             $table->boolean('prod_status')->default(1);
             $table->string('warranty_info')->nullable();
+            $table->softDeletes($column = 'deleted_at');
             $table->timestamps();
 
             $table->foreign('category_id')->references('id')->on('category');

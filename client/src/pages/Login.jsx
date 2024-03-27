@@ -1,14 +1,19 @@
-import React, { useState, Fragment, useEffect } from "react";
-import { Button, Card, CardActions, CardContent, CardHeader, Divider, Grid, IconButton, Snackbar, TextField, Typography } from '@mui/material';
-import { CloseRounded, RefreshOutlined, VpnKeyRounded } from "@mui/icons-material";
+import React, { useState, useEffect } from "react";
+import { Button, Card, CardActions, CardContent, CardHeader, Divider, Grid, TextField, Typography } from '@mui/material';
+import { RefreshOutlined, VpnKeyRounded } from "@mui/icons-material";
 import { LoadingButton } from '@mui/lab';
-import { axios_get_header, axios_post } from "../request/apiRequests";
+import { axios_get_header, axios_post } from "../utils/requests";
 import { AES, enc } from 'crypto-js';
-import AppbarComponent from "../components/AppbarComponent";
+import AppbarComponent from "../components/elements/AppbarComponent";
+import { toast } from "react-toastify";
+import ToastCmp from "../components/elements/ToastComponent";
+import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
+import { login, checkAuth } from 'utils/services';
 
 function Login() {
     document.title = 'InventoryIQ: Log In';
-    const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
@@ -24,35 +29,20 @@ function Login() {
     });
 
     useEffect(() => {
-        const access_token = localStorage.getItem('access_token');
+        const access_token = Cookies.get('access_token');
         // check if access token is not empty and a valid one.
         if (access_token !== null && access_token !== undefined) {
-            axios_get_header('/checkAuth', AES.decrypt(access_token, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8))
-            .then(response => {
-                console.log(response);
-                window.location = "/main/page";
+            axios_get_header(checkAuth, AES.decrypt(access_token, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8))
+            .then(() => {
+                navigate("/main/page/inventory");
             })
             .catch(error => {
                 console.log(error);
                 localStorage.clear();
-                window.location = "/";
+                navigate("/");
             });
         }
-    }, []);
-
-    const toggleSnackbar = (status, message) => { setSnackbar((prevSnack) => ({ ...prevSnack, open: status, message: message })); }
-    const action = (
-        <Fragment>
-          <IconButton
-            size="small"
-            aria-label="close"
-            color="inherit"
-            onClick={() => toggleSnackbar(false, '')}
-          >
-            <CloseRounded fontSize="small" />
-          </IconButton>
-        </Fragment>
-    );
+    }, [navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -72,39 +62,47 @@ function Login() {
 
         setLoading(true);
 
-        axios_post('/login', formData)
+        axios_post(login, formData)
         .then(response => {
-            toggleSnackbar(true, response.data.message);
+            toast.success(response.data.message);
 
+            /* for localStorage */
             const expirationMinutes = response.data.expire_at;
             const expirationTime = expirationMinutes * 60000;
 
             // Calculate the future timestamp by adding expirationTime to the current time
             const now = new Date().getTime();
             const futureTimestamp = now + expirationTime;
+            const threeHrsFraction = 3 / 24;
 
-            localStorage.setItem('isLoggedIn', 1);
-            localStorage.setItem('access_token', AES.encrypt(response.data.access_token, process.env.REACT_APP_SECRET_KEY).toString());
-            localStorage.setItem('email_token', AES.encrypt(response.data.user.email, process.env.REACT_APP_SECRET_KEY).toString());
-            localStorage.setItem('auth_id', AES.encrypt(response.data.user.id, process.env.REACT_APP_SECRET_KEY).toString());
-            localStorage.setItem('role_id', AES.encrypt(response.data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString());
+            /* for local Storage */
             localStorage.setItem('expire_at', futureTimestamp);
+            localStorage.setItem('previousIndex', 1);
             localStorage.setItem('selectedIndex', 1);
 
+
+            /* for cookie */
+            Cookies.set('isLoggedIn', 1, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('access_token', AES.encrypt(response.data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
+            Cookies.set('email_token', AES.encrypt(response.data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('auth_id', AES.encrypt(response.data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_id', AES.encrypt(response.data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_name', AES.encrypt(response.data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            
             setTimeout(() => {
                 setLoading(false);
-                window.location = "/main/page/products";
+                window.location = "/main/page/inventory";
             }, 2000);
         })
         .catch(error => {
             setLoading(false);
             console.log(error);
             if (error.response.data.email !== undefined) {
-                toggleSnackbar(true, error.response.data.email);
+                toast.error(error.response.data.email);
             } else if (error.response.data.password !== undefined) {
-                toggleSnackbar(true, error.response.data.password);
+                toast.error(error.response.data.password);
             } else {
-                toggleSnackbar(true, error.response.data.message);
+                toast.info(error.response.data.message);
             }
         });
     }
@@ -117,7 +115,7 @@ function Login() {
             sx={{ minHeight: '100vh' }}
         >
             <AppbarComponent />
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => toggleSnackbar(false, '')} message={snackbar.message} action={action} anchorOrigin={{ horizontal: "center", vertical: "bottom" }}/>
+            <ToastCmp />
             <Grid item lg={5} xs={12} sm={12} xl={5} pt={{ lg: 10, xl: 15, sm: 10, xs: 10 }} sx={{ background: '#fafafa' }}>
                 <Grid
                     container
@@ -126,7 +124,7 @@ function Login() {
                     alignItems="center"
                 >
                     <Grid item lg={12} xs={12} sm={8} xl={12}>
-                        <img src={process.env.REACT_APP_URL + '/logo/logo-transparent-new.png'} style={{ height: '200px' }} />
+                        <img src={process.env.REACT_APP_URL + '/logo/logo-transparent-new.png'} style={{ height: '200px' }} alt="Logo" />
                         <Typography variant="h5" justifyContent="center" alignItems="center" sx={{ fontWeight: 'bold' }}>Web-Based Inventory Management App</Typography>
                     </Grid>
                 </Grid>
@@ -151,8 +149,10 @@ function Login() {
                                     <Grid container direction="column" rowSpacing={2}>
                                         <Grid item>
                                             <TextField
+                                                autoFocus
                                                 name="email"
                                                 label="E-mail"
+                                                placeholder="E-mail (Required)"
                                                 variant="outlined"
                                                 type="email"
                                                 value={formData.email}
@@ -167,6 +167,7 @@ function Login() {
                                             <TextField
                                                 name="password"
                                                 label="Password"
+                                                placeholder="Password (Required)"
                                                 variant="outlined"
                                                 type="password"
                                                 value={formData.password}

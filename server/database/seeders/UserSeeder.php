@@ -19,8 +19,8 @@ class UserSeeder extends Seeder
         // Insert initial user
         $initial_user = [
             'username' => 'admin', // Change this to the desired username
-            'email' => 'crraquid@gmail.com', // Change this to the desired email
-            'password' => Hash::make('Cloudshop12345$'), // Change this to the desired password
+            'email' => 'test@test.com', // Change this to the desired email
+            'password' => Hash::make('Test1234!'), // Change this to the desired password
             'status' => 1,
             'created_at' => now(),
             'updated_at' => now(),

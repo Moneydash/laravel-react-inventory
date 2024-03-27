@@ -15,6 +15,7 @@ use App\Http\Controllers\SubNavigationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryPersonController;
 use App\Http\Controllers\ProductDeliveryController;
+use App\Http\Controllers\WarehouseTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,39 +50,52 @@ Route::middleware('auth:sanctum')->get('/checkAuth', function () {
     return response()->json([ 'message' => 'Authenticated' ]);
 })->name('checkAuth');
 
-// Routes for supplier
-Route::middleware(['auth:sanctum'])->prefix('supplier')->group(function() {
-    Route::middleware('auth:sanctum')->post('/add_supplier', [SupplierController::class, 'add_supplier'])->name('supplier.add');
-    Route::middleware('auth:sanctum')->get('/get_suppliers', [SupplierController::class, 'get_suppliers'])->name('supplier.getAll');
-    Route::middleware('auth:sanctum')->get('/get_supplier/{supplier_id}', [SupplierController::class, 'get_supplier'])->name('supplier.getInfo');
-    Route::middleware('auth:sanctum')->put('/update_supplier/{supplier_id}', [SupplierController::class, 'update_supplier'])->name('supplier.update');
-    Route::middleware('auth:sanctum')->patch('/remove_supplier/{supplier_id}', [SupplierController::class, 'remove_supplier'])->name('supplier.remove');
-    Route::middleware('auth:sanctum')->get('/get_removed_suppliers', [SupplierController::class, 'get_removed_suppliers'])->name('supplier.getRemoved');
-    Route::middleware('auth:sanctum')->get('/get_supplier_products/{supplier_id}', [SupplierController::class, 'get_supplier_products'])->name('supplier.getProducts');
-});
+// Routes for the inventory
+Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
+    // Routes for products
+    Route::prefix('product')->middleware('auth:sanctum')->group(function() {
+        Route::post('/add_product', [ProductController::class, 'add_product'])->name('product.add');
+        Route::get('/get_products_infos', [ProductController::class, 'get_products_infos'])->name('product.getAll');
+        Route::get('/get_products', [ProductController::class, 'get_products'])->name('product.getProductsOnly');
+        Route::get('/get_product/{product_id}', [ProductController::class, 'get_product'])->name('product.getInfo');
+        Route::post('/update_product/{product_id}', [ProductController::class, 'update_product'])->name('product.update');
+        Route::patch('/remove_product/{product_id}', [ProductController::class, 'remove_product'])->name('product.remove');
+        Route::get('/get_parent_products', [ProductController::class, 'get_parent_products'])->name('product.getParent');
+        Route::get('/get_price/{product_id}', [ProductController::class, 'get_product_price'])->name('product.getPrice');
+    });
 
-// Routes for categories
-Route::middleware('auth:sanctum')->get('get_categories', [CategoryController::class, 'get_categories'])->name('category.getAll');
+    // Routes for categories
+    Route::prefix('category')->middleware('auth:sanctum')->group(function() {
+        Route::get('/get_categories', [CategoryController::class, 'get_categories'])->name('category.getAll');
+        Route::get('/get_category/{category_id}', [CategoryController::class, 'get_category'])->name('category.getInfo');
+        Route::post('/create', [CategoryController::class, 'store'])->name('category.add');
+        Route::put('/update/{category_id}', [CategoryController::class, 'update_category'])->name('category.update');
+    });
 
-// Routes for products
-Route::middleware(['auth:sanctum'])->prefix('product')->group(function() {
-    Route::middleware('auth:sanctum')->post('/add_product', [ProductController::class, 'add_product'])->name('product.add');
-    Route::middleware('auth:sanctum')->get('/get_products_infos', [ProductController::class, 'get_products_infos'])->name('product.getAll');
-    Route::middleware('auth:sanctum')->get('/get_products', [ProductController::class, 'get_products'])->name('product.getProductsOnly');
-    Route::middleware('auth:sanctum')->get('/get_product/{product_id}', [ProductController::class, 'get_product'])->name('product.getInfo');
-    Route::middleware('auth:sanctum')->post('/update_product/{product_id}', [ProductController::class, 'update_product'])->name('product.update');
-    Route::middleware('auth:sanctum')->patch('/remove_product/{product_id}', [ProductController::class, 'remove_product'])->name('product.remove');
-    Route::middleware('auth:sanctum')->get('/get_parent_products', [ProductController::class, 'get_parent_products'])->name('product.getParent');
-    Route::middleware('auth:sanctum')->get('/get_price/{product_id}', [ProductController::class, 'get_product_price'])->name('product.getPrice');
-});
+    // Routes for suppliers
+    Route::prefix('supplier')->middleware('auth:sanctum')->group(function() {
+        Route::post('/add_supplier', [SupplierController::class, 'add_supplier'])->name('supplier.add');
+        Route::get('/get_suppliers', [SupplierController::class, 'get_suppliers'])->name('supplier.getAll');
+        Route::get('/get_supplier/{supplier_id}', [SupplierController::class, 'get_supplier'])->name('supplier.getInfo');
+        Route::post('/update_supplier/{supplier_id}', [SupplierController::class, 'update_supplier'])->name('supplier.update');
+        Route::delete('/remove_supplier/{supplier_id}', [SupplierController::class, 'remove_supplier'])->name('supplier.remove');
+        Route::get('/get_removed_suppliers', [SupplierController::class, 'get_removed_suppliers'])->name('supplier.getRemoved');
+        Route::get('/get_supplier_products/{supplier_id}', [SupplierController::class, 'get_supplier_products'])->name('supplier.getProducts');
+        Route::put('/restore/{supplier_id}', [SupplierController::class, 'restore_supplier'])->name('supplier.restore');
+    });
 
-// Routes for purchase orders
-Route::middleware(['auth:sanctum'])->prefix('purchase_order')->group(function() {
-    Route::middleware('auth:sanctum')->get('/generate_po_number', [PurchaseOrderController::class, 'generate_po_number'])->name('purchase_order.generatePoNumber');
-    Route::middleware('auth:sanctum')->post('/add_purchase_order', [PurchaseOrderController::class, 'add_purchase_order'])->name('purchase_order.add');
-    Route::middleware('auth:sanctum')->get('/get_purchase_orders', [PurchaseOrderController::class, 'get_purchase_orders'])->name('purchase_order.getAll');
-    Route::middleware('auth:sanctum')->get('/get_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'get_purchase_order'])->name('purchase_order.getInfo');
-    Route::middleware('auth:sanctum')->put('/update_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'update_purchase_order'])->name('purchase_order.update');
+    // Routes for purchase orders
+    Route::prefix('purchase_order')->middleware('auth:sanctum')->group(function() {
+        Route::get('/generate_po_number', [PurchaseOrderController::class, 'generate_po_number'])->name('purchase_order.generatePoNumber');
+        Route::post('/add_purchase_order', [PurchaseOrderController::class, 'add_purchase_order'])->name('purchase_order.add');
+        Route::get('/get_purchase_orders', [PurchaseOrderController::class, 'get_purchase_orders'])->name('purchase_order.getAll');
+        Route::get('/get_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'get_purchase_order'])->name('purchase_order.getInfo');
+        Route::put('/update_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'update_purchase_order'])->name('purchase_order.update');
+    });
+
+    Route::prefix('warehouse')->middleware('auth:sanctum')->group(function() {
+        Route::get('/get_types', [WarehouseTypeController::class, 'get_types'])->name('warehouse.getTypes');
+    });
 });
 
 // Routes for delivery hub
@@ -114,6 +128,7 @@ Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
         Route::get('/generate_po_number', [ProductDeliveryController::class, 'generate_delivery_poNumber'])->name('item_delivery.generatePoNumber');
         Route::get('/get_items', [ProductDeliveryController::class, 'get_delivery_items'])->name('item_delivery.getItemsInfos');
         Route::post('/deliver_items', [ProductDeliveryController::class, 'add_delivery_items'])->name('item_delivery.deliverItems');
+        Route::patch('/update_status/{status}/{delivery_id}', [ProductDeliveryController::class, 'update_status'])->name('item_delivery.updateStatus');
     });
 });
 

@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Supplier extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'suppliers';
     protected $fillable = [
@@ -18,12 +19,15 @@ class Supplier extends Model
         "supp_hotline",
         "contact_person",
         "contact_person_number",
-        "contract_expiry_date"
+        "contract_expiry_date",
+        "terms_and_conditions",
+        "agreement"
     ];
 
     protected $casts = [
         'supp_status' => 'boolean',
-        'contract_expiry_date' => 'date'
+        'contract_expiry_date' => 'date',
+        'deleted_at' => 'datetime'
     ];
 
     public function products()

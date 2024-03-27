@@ -122,7 +122,7 @@ return [
     |
     */
 
-    'key' => env('DARK_HORSE'),
+    'key' => env('APP_KEY'),
 
     'cipher' => 'AES-256-CBC',
 

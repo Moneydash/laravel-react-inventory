@@ -37,7 +37,7 @@ class SubNavigationController extends Controller
             // If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
                 // Attempt to retrieve the data from the cache
-                $product_delivery = Navigation::where('navigation_url', 'product-delivery')->first();
+                $product_delivery = Navigation::where('navigation_url', 'delivery')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $product_delivery->id);
             })->get();
         });
@@ -55,7 +55,7 @@ class SubNavigationController extends Controller
             // If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
                 // Attempt to retrieve the data from the cache
-                $products = Navigation::where('navigation_url', 'products')->first();
+                $products = Navigation::where('navigation_url', 'inventory')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $products->id);
             })->get();
         });
