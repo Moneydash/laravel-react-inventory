@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('billing_address');
             $table->string('shipping_address');
             $table->string('purchase_order_notes')->nullable();
-            $table->string('delivery_notes')->nullable();
+            $table->string('delivery_notes', 2000)->nullable();
             $table->smallInteger('order_status')->default(0); # 0 = open, 1 = pending, 2 = close
             $table->datetime('date_of_order')->nullable(false);
             $table->timestamps();

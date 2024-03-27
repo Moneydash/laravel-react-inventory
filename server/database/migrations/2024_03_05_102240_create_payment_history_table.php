@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('customer_id')->nullable(false);
             $table->uuid('credit_id')->nullable(false);
             $table->float('payment_amnt', 10, 2)->nullable(false);
-            $table->string('payment_description')->nullable(true);
+            $table->string('payment_description', 2000)->nullable(true);
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('customers');

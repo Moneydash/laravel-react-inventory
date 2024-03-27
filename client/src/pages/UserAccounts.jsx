@@ -3,9 +3,17 @@ import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, Dialog
 import { LoadingButton } from "@mui/lab";
 import { DataGrid } from "@mui/x-data-grid";
 import React, { Fragment, useEffect, useState } from "react";
-import { axios_get_header, axios_patch_header, axios_post_header, axios_put_header } from '../request/apiRequests';
+import { axios_get_header, axios_patch_header, axios_post_header, axios_put_header } from '../utils/requests';
 import * as EmailValidator from 'email-validator';
-import { decryptAccessToken, decryptAuthId } from '../auth/AuthUtils';  
+import { decryptAccessToken, decryptAuthId } from 'utils/auth';
+import {
+    get_Users,
+    get_Roles,
+    update_User,
+    create_User,
+    disable_User,
+    get_Account_info
+} from 'utils/services';
 
 function UserAccounts() {
     document.title = 'InventoryIQ: User Accounts';
@@ -66,7 +74,7 @@ function UserAccounts() {
 
     const get_users = () => {
         setTableLoading(true);
-        axios_get_header('/user/get_users', decrypted_access_token)
+        axios_get_header(get_Users, decrypted_access_token)
         .then(response => {
             const data = response.data.users_list;
             const transformedData = data.map(user => {
@@ -123,7 +131,7 @@ function UserAccounts() {
     }
 
     const get_roles = () => {
-        axios_get_header('/user/get_roles', decrypted_access_token)
+        axios_get_header(get_Roles, decrypted_access_token)
         .then(response => { setRoles(response.data.roles); })
         .catch(error => { console.log(error); });
     }
@@ -153,7 +161,7 @@ function UserAccounts() {
     const handleDisableDialog = (status) => { setDisableDialog(status); }
 
     const get_user = (editIndexValue, user_id) => {
-        axios_get_header('/user/get_user/' + user_id, decrypted_access_token)
+        axios_get_header(get_Account_info + user_id, decrypted_access_token)
         .then(response => {
             const user = response.data.user_info;
             if (editIndexValue === 2) {
@@ -254,7 +262,7 @@ function UserAccounts() {
         } else {
             setLoading(true);
             if (editIndex === 1) {
-                axios_put_header('/user/update_user/' + formData.id, payload, decrypted_access_token)
+                axios_put_header(update_User + formData.id, payload, decrypted_access_token)
                 .then(response => {
                     handleDialog(false);
                     setLoading(false);
@@ -263,7 +271,7 @@ function UserAccounts() {
                 })
                 .catch(error => { console.log(error); });
             } else {
-                axios_post_header('/user/create_user', payload, decrypted_access_token)
+                axios_post_header(create_User, payload, decrypted_access_token)
                 .then(response => {
                     handleDialog(false);
                     setLoading(false);
@@ -278,7 +286,7 @@ function UserAccounts() {
         e.preventDefault();
 
         setLoading(true);
-        axios_patch_header('/user/disable_user/' + formData.id, {}, decrypted_access_token)
+        axios_patch_header(disable_User + formData.id, {}, decrypted_access_token)
         .then(response => {
             handleSnackbar(true, response.data.message);
             handleDisableDialog(false);

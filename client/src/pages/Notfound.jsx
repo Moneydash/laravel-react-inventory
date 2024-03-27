@@ -1,55 +1,62 @@
-import React, {Component} from 'react';
+import React, { useEffect } from 'react';
 import * as Mui from '@mui/material';
+import { useMatch, useNavigate } from 'react-router-dom';
+import { KeyboardBackspaceOutlined } from '@mui/icons-material';
+import Cookies from 'js-cookie';
 
-export default class Notfound extends Component{
-    constructor(props) {
-        super(props);
+export default function Notfound() {
+    document.title = 'Page Not Found';
+    const color = '#787878';
+    const navigate = useNavigate();
+    const { previousIndex } = localStorage;
+    const access_token = Cookies.get('access_token');
+    const match = useMatch("*");
 
-        this.state = {
-            color: '#787878'
+    const backToPreviousRoute = () => {
+        if (access_token !== undefined && access_token !== null) {
+            if (match) {
+                navigate(-1);
+                localStorage.setItem('selectedIndex', previousIndex);
+            } else {
+                navigate(-1);
+            }
+        } else {
+            navigate('/');
         }
-    }
+    };
 
-    backToHome() {
-        window.location = "/main/page";
-        // localStorage.setItem('selectedIndex', 0);
-    }
-
-    render(){
-        document.title = 'Page Not Found';
-        return(
-            <Mui.Container
-                fixed
-                align="center"
-                justify="center"
-                sx={{ mb:30, mt: 10 }}
+    return(
+        <Mui.Container
+            fixed
+            align="center"
+            justify="center"
+            sx={{ mb:30, mt: 10 }}
+        >
+            <Mui.Typography
+                variant="h2"
+                component="div"
+                style={{ color: color }}
             >
-                <Mui.Typography
-                    variant="h2"
-                    component="div"
-                    style={{ color: this.state.color }}
-                >
-                    404
-                </Mui.Typography>
-                <Mui.Typography
-                    variant="h5"
-                    component="div"
-                    style={{ color: this.state.color, letterSpacing:'3px', marginInlineStart:'10px'}}
-                >
-                    PAGE NOT FOUND
-                </Mui.Typography>
-                <div style={{ marginTop: 10 }}></div>
-                <Mui.Typography
-                    variant="body2"
-                    component="div"
-                    style={{ color: this.state.color }}
-                >
-                The page you are looking for doesn't exist or another error occurred.
-                </Mui.Typography>
-                <Mui.Button variant="contained" onClick={this.backToHome} sx={{m:3}}>
-                    Return to Homepage
-                </Mui.Button>
-            </Mui.Container>
-        );
-    }
+                404
+            </Mui.Typography>
+            <Mui.Typography
+                variant="h5"
+                component="div"
+                style={{ color: color, letterSpacing:'3px', marginInlineStart:'10px'}}
+            >
+                PAGE NOT FOUND
+            </Mui.Typography>
+            <div style={{ marginTop: 10 }}></div>
+            <Mui.Typography
+                variant="body2"
+                component="div"
+                style={{ color: color }}
+            >
+            The page you are looking for doesn't exist or another error occurred.
+            </Mui.Typography>
+            <Mui.Button variant="contained" onClick={backToPreviousRoute} sx={{m:3}} startIcon={<KeyboardBackspaceOutlined fontSize="small" />}>
+                Go Back
+            </Mui.Button>
+        </Mui.Container>
+    );
 }

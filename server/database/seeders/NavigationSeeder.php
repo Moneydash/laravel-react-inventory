@@ -29,8 +29,8 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'Inventory Control',
-                'navigation_url' => 'products',
+                'navigation_name' => 'Inventory Management',
+                'navigation_url' => 'inventory',
                 'navigation_icon' => 'LayersOutlined',
                 'status' => 1,
                 'created_at' => now(),
@@ -38,8 +38,8 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'Supplier Partners',
-                'navigation_url' => 'suppliers',
+                'navigation_name' => 'Delivery Management',
+                'navigation_url' => 'delivery',
                 'navigation_icon' => 'LocalShippingOutlined',
                 'status' => 1,
                 'created_at' => now(),
@@ -47,26 +47,8 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'Purchase Orders',
-                'navigation_url' => 'purchase-orders',
-                'navigation_icon' => 'ShoppingCartOutlined',
-                'status' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'id' => Str::uuid(),
-                'navigation_name' => 'Delivery Hub',
-                'navigation_url' => 'product-delivery',
-                'navigation_icon' => 'LocalShippingOutlined',
-                'status' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'id' => Str::uuid(),
-                'navigation_name' => 'User Accounts',
-                'navigation_url' => 'user-accounts',
+                'navigation_name' => 'Lead Management',
+                'navigation_url' => 'leads',
                 'navigation_icon' => 'Groups2Outlined',
                 'status' => 1,
                 'created_at' => now(),
@@ -74,7 +56,16 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'User Preferences',
+                'navigation_name' => 'User Management',
+                'navigation_url' => 'users',
+                'navigation_icon' => 'Groups2Outlined',
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => Str::uuid(),
+                'navigation_name' => 'Profile Management',
                 'navigation_url' => 'profile',
                 'navigation_icon' => 'Person2Outlined',
                 'status' => 1,
@@ -83,7 +74,7 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'Inventory Reports',
+                'navigation_name' => 'Report Management',
                 'navigation_url' => 'reports',
                 'navigation_icon' => 'AnalyticsOutlined',
                 'status' => 1,
@@ -92,7 +83,7 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'Audit Trail',
+                'navigation_name' => 'Trail Management',
                 'navigation_url' => 'audit-trails',
                 'navigation_icon' => 'DevicesOutlined',
                 'status' => 1,
@@ -101,7 +92,7 @@ class NavigationSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'navigation_name' => 'App Configurations',
+                'navigation_name' => 'Application Configurations',
                 'navigation_url' => 'configurations',
                 'navigation_icon' => 'SettingsOutlined',
                 'status' => 1,
@@ -120,11 +111,9 @@ class NavigationSeeder extends Seeder
 
         // navigations
         $dashboard_nav = Navigation::where('navigation_url', 'dashboard')->first();
-        $products_nav = Navigation::where('navigation_url', 'products')->first();
-        $suppliers_nav = Navigation::where('navigation_url', 'suppliers')->first();
-        $po_nav = Navigation::where('navigation_url', 'purchase-orders')->first();
-        $prod_delivery_nav = Navigation::where('navigation_url', 'product-delivery')->first();
-        $user_list_nav = Navigation::where('navigation_url', 'user-accounts')->first();
+        $products_nav = Navigation::where('navigation_url', 'inventory')->first();
+        $prod_delivery_nav = Navigation::where('navigation_url', 'delivery')->first();
+        $user_list_nav = Navigation::where('navigation_url', 'users')->first();
         $profile_nav = Navigation::where('navigation_url', 'profile')->first();
         $reports_nav = Navigation::where('navigation_url', 'reports')->first();
         $audit_trail_nav = Navigation::where('navigation_url', 'audit-trails')->first();
@@ -148,8 +137,6 @@ class NavigationSeeder extends Seeder
                 // for staff manager access and permissions
                 $dashboard_nav->roles()->attach($staff_manager->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $products_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
-                $suppliers_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
-                $po_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $prod_delivery_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $profile_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $reports_nav->roles()->attach($staff_manager->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
@@ -157,8 +144,6 @@ class NavigationSeeder extends Seeder
                 // for staff access and permissions
                 $dashboard_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $products_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
-                $suppliers_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
-                $po_nav->roles()->attach($staff->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $profile_nav->roles()->attach($staff->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $reports_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('parent_navigation_id')->nullable(false);
             $table->string('sub_navigation_name')->nullable(false)->unique();
             $table->string('sub_navigation_url')->nullable(false)->unique();
-            $table->string('sub_navigation_desc')->nullable(false); // description of sub nav
+            $table->string('sub_navigation_desc', 1000)->nullable(false); // description of sub nav
             $table->boolean('status')->default(1);
             $table->timestamps();
 

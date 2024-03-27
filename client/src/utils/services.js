@@ -1,0 +1,100 @@
+const base_api = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const api = {
+    base_api,
+
+    // unauthenticated services
+    login: '/login',
+    register: '/register',
+
+    // authenticated services
+    // user auth
+    checkAuth: '/checkAuth',
+    logOut: '/user/logout',
+    get_Navs: '/user_nav/get_navigations/',
+    get_inventory_subNav: '/user_sub_nav/get_inventoryControl_sub_navigations/',
+    get_deliveryHub_subNav: '/user_sub_nav/get_prodDelivery_sub_navigations/',
+    get_profile_subNav: '/user_sub_nav/get_profile_sub_navigations/',
+    get_Users: '/user/get_users',
+    get_Roles: '/user/get_roles',
+    update_User: '/user/update_user/',
+    create_User: '/user/create_user',
+    disable_User: '/user/disable_user/',
+    change_Password: '/user/change_password/',
+    get_Account_info: '/user/get_user/',
+    update_Account: '/user/update_account/',
+    
+    // inventory
+    // inventory - suppliers submodules
+    get_Suppliers: '/inventory/supplier/get_suppliers',
+    get_Removed_suppliers: '/inventory/supplier/get_removed_suppliers',
+    get_Supplier: '/inventory/supplier/get_supplier/',
+    restore_Supplier: '/inventory/supplier/restore/',
+    update_Supplier: '/inventory/supplier/update_supplier/',
+    add_Supplier: '/inventory/supplier/add_supplier',
+    get_Supplier_products: '/inventory/supplier/get_supplier_products/',
+
+    // inventory - categories submodules
+    get_Categories: '/inventory/category/get_categories',
+    get_Category: '/inventory/category/get_category/',
+    update_Category: '/inventory/category/update/',
+    add_Category: '/inventory/category/create',
+
+    // inventory - products submodules
+    get_Products: '/inventory/product/get_products_infos',
+    get_Products_only: '/inventory/product/get_products',
+    get_Parent_products: '/inventory/product/get_parent_products',
+    get_Product: '/inventory/product/get_product/',
+    update_Product: '/inventory/product/update_product/',
+    add_Product: '/inventory/product/add_product',
+    remove_Product: '/inventory/product/remove_product/',
+    get_Product_price: '/inventory/product/get_price/',
+
+    // inventory - purchase orders submodules
+    get_Purchase_orders: '/inventory/purchase_order/get_purchase_orders',
+    generate_Po: '/inventory/purchase_order/generate_po_number',
+    get_Purchase_order: '/inventory/purchase_order/get_purchase_order/',
+    update_Purchase_order: '/inventory/purchase_order/update_purchase_order/',
+    add_Purchase_order: '/inventory/purchase_order/add_purchase_order',
+
+    // inventory - warehouse submodules
+    get_warehouse_types: '/inventory/warehouse/get_types',
+
+    // delivery
+    // delivery - customers submodules
+    get_Customers: '/delivery_hub/customer/get_customers',
+    get_Customer: '/delivery_hub/customer/get_customer/',
+    get_Customer_payment: '/delivery_hub/customer/get_customer_payment/',
+    update_Customer: '/delivery_hub/customer/update_customer/',
+    add_Customer: '/delivery_hub/customer/create_customer',
+    get_Paid_customers: '/delivery_hub/customer/get_paid_customers',
+
+    // delivery - delivery personnel submodules
+    get_Delivery_persons: '/delivery_hub/delivery_person/get_delivery_persons_infos',
+    get_Delivery_person: '/delivery_hub/delivery_person/get_info/',
+    get_Primary_ids: '/delivery_hub/delivery_person/get_primary',
+    get_Secondary_ids: '/delivery_hub/delivery_person/get_secondary',
+    add_Delivery_person: '/delivery_hub/delivery_person/add_delivery_person',
+    remove_Delivery_person: '/delivery_hub/delivery_person/remove_delivery_person/',
+
+    // delivery - product delivery submodules
+    get_Item_deliveries: '/delivery_hub/item_delivery/get_items',
+    update_Delivery_status: '/delivery_hub/item_delivery/update_status/',
+    generate_Batch_num: '/delivery_hub/item_delivery/generate_batch_number',
+    generate_Delivery_po: '/delivery_hub/item_delivery/generate_po_number',
+    deliver_Items: '/delivery_hub/item_delivery/deliver_items',
+
+};
+
+const addBaseApi = (endpoints) => {
+    const modifiedEndpoints = {};
+    Object.keys(endpoints).forEach((key) => {
+        if (key !== "base_api") {
+            modifiedEndpoints[key] = base_api + endpoints[key];
+        }
+    });
+    return modifiedEndpoints;
+};
+
+module.exports = {
+    ...addBaseApi(api)
+}
