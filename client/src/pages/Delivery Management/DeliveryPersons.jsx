@@ -3,10 +3,10 @@ import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, Dialog
 import { DataGrid } from '@mui/x-data-grid';
 import { LoadingButton } from "@mui/lab";
 import { AttachmentOutlined, CancelOutlined, CloseRounded, DeleteRounded, GroupAddOutlined, InfoOutlined, PersonRemoveAlt1Outlined, RefreshOutlined } from '@mui/icons-material';
-import { axios_get_header, axios_patch_header, axios_post_header_file } from "../../utils/requests";
-import { decryptAccessToken } from "../../utils/auth";
+import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
+import { decryptAccessToken } from "utils/auth";
 import { validate } from "email-validator";
-import VisuallyHidden from "../../components/elements/FileInputComponent";
+import VisuallyHidden from "components/elements/FileInputComponent";
 import {
     get_Delivery_persons,
     get_Delivery_person,

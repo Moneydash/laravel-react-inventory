@@ -21,7 +21,7 @@ import { Link } from 'react-router-dom';
 import MaterialUISwitch from './ThemeSwitch';
 import axios from 'axios';
 import { AES, enc } from 'crypto-js';
-import { axios_get_header } from '../../utils/requests';
+import { axios_get_header } from 'utils/requests';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer, openDrawer } from '../../redux/components/drawer/drawerActions';
@@ -292,9 +292,9 @@ export default function Navigation() {
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon fontSize="small"/>}
           </IconButton>
         </DrawerHeader>
-        <List>
+        <List sx={{ ml: open ? 1.5 : .5, mr: open ? 1.5 : .5 }}>
           <div>
-              <Divider sx={{ mx: open ? 2 : 0, mb: open ? 1.5 : (is_mobile ? 2.5 : .8), mt: open ? .5 : 0 }}>
+              <Divider sx={{ mx: 0, mb: open ? 1.5 : (is_mobile ? 2.5 : .8), mt: open ? .5 : 0 }}>
               </Divider>
             </div>
           {navigation.map(function(navlist, index) {
@@ -303,18 +303,19 @@ export default function Navigation() {
               <ListItem
                 key={navlist.navigation_name}
                 disablePadding
-                sx={{ display: 'block', color: 'inherit', my: .5 }}
+                sx={{ color: 'inherit', my: .5, borderRadius: 3 }}
                 to={navlist.navigation_url}
                 component={Link}
                 selected={selectedIndex === index}
                 onClick={(event) => handleListItemSelected(event, index)}
-                className={selectedIndex === index ? 'selected' : ''}
+                className={selectedIndex === index ? 'selectedListItem' : ''}
               >
                 <ListItemButton
                   sx={{
                     minHeight: 48,
                     justifyContent: open ? 'initial' : 'center',
                     pl: is_mobile ? 2.5 : 3,
+                    borderRadius: 3
                   }}
                 >
                   {open ? (
@@ -330,7 +331,7 @@ export default function Navigation() {
                     </ListItemIcon>
                   ) : (
                     <Tooltip title={navlist.navigation_name} arrow placement="right">
-                      <ListItemIcon sx={{ minWidth: 0 }}>
+                      <ListItemIcon sx={{ minWidth: 0, mr: open ? 0 : 1.2 }}>
                         {IconComponent && <IconComponent fontSize="inherit" />}
                       </ListItemIcon>
                     </Tooltip>

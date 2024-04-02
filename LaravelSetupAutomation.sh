@@ -16,3 +16,6 @@ php artisan db:seed --class=NavigationSeeder
 php artisan db:seed --class=SubNavigationSeeder
 php artisan db:seed --class=EquipmentSeeder
 php artisan db:seed --class=WarehouseTypeSeeder
+
+# uncomment this if first time setup, for the uploaded file storage
+# php artisan storage:link

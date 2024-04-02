@@ -80,7 +80,6 @@ function Login() {
             localStorage.setItem('previousIndex', 1);
             localStorage.setItem('selectedIndex', 1);
 
-
             /* for cookie */
             Cookies.set('isLoggedIn', 1, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
             Cookies.set('access_token', AES.encrypt(response.data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...

@@ -2,7 +2,19 @@ import { Button, InputAdornment, TextField } from "@mui/material";
 import React from "react";
 import VisuallyHidden from "./FileInputComponent";
 
-const FileUploadCmp = ({ name, fileName, fileNameError, fileNameHelperText, fileNameValue, placeholder, accept, endIcon, disabled, handleChange }) => {
+const FileUploadCmp = ({
+    name,
+    fileName,
+    fileNameError,
+    fileNameHelperText,
+    fileNameValue,
+    placeholder,
+    accept,
+    endIcon,
+    disabled,
+    handleChange,
+    size
+}) => {
     return (
         <TextField
             variant="outlined"
@@ -12,6 +24,7 @@ const FileUploadCmp = ({ name, fileName, fileNameError, fileNameHelperText, file
             helperText={fileNameHelperText}
             placeholder={placeholder}
             value={fileNameValue ? `C:\\fakepath\\${fileNameValue}` : ''}
+            size={size}
             InputProps={{
                 startAdornment: (
                 <InputAdornment position="start">
@@ -21,6 +34,7 @@ const FileUploadCmp = ({ name, fileName, fileNameError, fileNameHelperText, file
                         sx={{ ml: -1 }}
                         component="label"
                         disabled={disabled}
+                        size={size}
                     >
                         Upload File
                         <VisuallyHidden type="file" name={name} accept={accept} onChange={handleChange} />
@@ -32,6 +46,20 @@ const FileUploadCmp = ({ name, fileName, fileNameError, fileNameHelperText, file
             }}
         />
     );
-}
+};
+
+FileUploadCmp.defaultProps = {
+    name: '',
+    fileName: '',
+    fileNameError: false,
+    fileNameHelperText: '',
+    fileNameValue: null,
+    placeholder: '',
+    accept: "*",
+    endIcon: '',
+    disabled: false,
+    handleChange: () => {},
+    size: 'medium'
+};
 
 export default FileUploadCmp;

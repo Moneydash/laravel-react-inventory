@@ -1,10 +1,10 @@
 import { Button, Card, CardActions, CardContent, Divider, Grid, IconButton, Snackbar, TextField, Typography } from "@mui/material";
 import React, { Fragment, useEffect, useState } from "react";
-import { axios_get_header, axios_put_header } from '../../utils/requests';
+import { axios_get_header, axios_put_header } from 'utils/requests';
 import { LoadingButton } from "@mui/lab";
 import { CloseRounded, ManageAccountsOutlined, RefreshOutlined } from "@mui/icons-material";
 import * as EmailValidator from 'email-validator';
-import { decryptAccessToken, decryptAuthId } from "../../utils/auth";
+import { decryptAccessToken, decryptAuthId } from "utils/auth";
 
 function UpdateProfile() {
     document.title = 'InventoryIQ: User Preferences - Update Profile';
