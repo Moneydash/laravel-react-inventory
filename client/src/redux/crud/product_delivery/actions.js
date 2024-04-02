@@ -1,4 +1,4 @@
-import { axios_get_header } from '../../../request/apiRequests';
+import { axios_get_header } from 'utils/requests';
 import * as types from './types';
 
 export const request_update = (editIndexVal) => dispatch => {

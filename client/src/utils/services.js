@@ -57,7 +57,16 @@ const api = {
     add_Purchase_order: '/inventory/purchase_order/add_purchase_order',
 
     // inventory - warehouse submodules
-    get_warehouse_types: '/inventory/warehouse/get_types',
+    get_Warehouse_types: '/inventory/warehouse/get_types',
+    add_Warehouse: '/inventory/warehouse/create',
+    get_Warehouses: '/inventory/warehouse/get_warehouses',
+    get_Warehouse: '/inventory/warehouse/get_warehouse/',
+    update_Warehouse: '/inventory/warehouse/update_warehouse/',
+    remove_Warehouse: '/inventory/warehouse/remove/',
+    download_File: '/download/',
+
+    // inventory - equipment submodules
+    get_Equipments: '/inventory/equipment/get_equipments',
 
     // delivery
     // delivery - customers submodules

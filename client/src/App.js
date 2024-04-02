@@ -3,7 +3,7 @@ import './fonts/Fonts';
 
 // react related
 import React, { useEffect } from 'react';
-import { createBrowserRouter, RouterProvider, createRoutesFromElements } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import { Provider } from 'react-redux';
 import appRoutes from './routes';

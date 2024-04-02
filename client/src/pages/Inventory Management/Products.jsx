@@ -2,14 +2,14 @@ import { AttachmentOutlined, CancelOutlined, DeleteOutlineRounded, DeleteRounded
 import { AppBar, Button, Card, CardContent, Checkbox, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormGroup, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Slide, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import React, { forwardRef, useEffect, useState } from "react";
-import { axios_get_header, axios_patch_header, axios_post_header_file } from '../../utils/requests';
+import { axios_get_header, axios_patch_header, axios_post_header_file } from 'utils/requests';
 import { LoadingButton } from "@mui/lab";
-import { decryptAccessToken } from "../../utils/auth";
-import ToastCmp from "../../components/elements/ToastComponent";
+import { decryptAccessToken } from "utils/auth";
+import ToastCmp from "components/elements/ToastComponent";
 import { toast } from "react-toastify";
-import BreadCrumbsCmp from "../../components/elements/BreadcrumbsComponent";
-import { inventoryCrumbs } from "../../utils/breadCrumbs";
-import VisuallyHidden from "../../components/elements/FileInputComponent";
+import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
+import { inventoryCrumbs } from "utils/breadCrumbs";
+import VisuallyHidden from "components/elements/FileInputComponent";
 import {
     get_Products,
     get_Parent_products,

@@ -2,8 +2,8 @@ import { Button, Card, CardActions, CardContent, Checkbox, Dialog, DialogActions
 import React, { Fragment, useState } from "react";
 import { LoadingButton } from "@mui/lab";
 import { CancelOutlined, CloseRounded, LockResetOutlined, RefreshOutlined, SendRounded } from "@mui/icons-material";
-import { axios_patch_header } from '../../utils/requests';
-import { decryptAccessToken, decryptAuthId } from "../../utils/auth";
+import { axios_patch_header } from 'utils/requests';
+import { decryptAccessToken, decryptAuthId } from "utils/auth";
 
 function ChangePassword() {
     document.title = 'InventoryIQ: User Preferences - Change Password';

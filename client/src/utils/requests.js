@@ -65,3 +65,11 @@ export const axios_delete_header = (url, payload, token) => {
         data: payload
     });
 }
+
+export const axios_get_header_download = (url, token) => {
+    return axios({
+        headers: { Authorization: "Bearer " + token },
+        method: "GET",
+        responseType: 'blob'
+    });
+}

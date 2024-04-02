@@ -2,7 +2,7 @@ import React, { Fragment, forwardRef, useEffect, useState } from "react";
 import { DataGrid } from '@mui/x-data-grid'
 import { AppBar, Button, Card, CardContent, Container, Dialog, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Slide, Snackbar, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { AddShoppingCartOutlined, CloseRounded, EditRounded, InfoOutlined, KeyboardArrowDownRounded, RefreshOutlined } from "@mui/icons-material";
-import { axios_get_header, axios_post_header, axios_put_header } from "../../utils/requests";
+import { axios_get_header, axios_post_header, axios_put_header } from "utils/requests";
 import { LoadingButton } from "@mui/lab";
 import { decryptAccessToken } from "utils/auth";
 import {
