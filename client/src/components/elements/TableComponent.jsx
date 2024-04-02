@@ -1,5 +1,5 @@
 import { Card, CardContent, Grid } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import React from "react";
 
 const TableComponent = ({ columns, rows, loadingTable }) => {

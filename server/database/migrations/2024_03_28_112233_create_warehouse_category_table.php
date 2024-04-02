@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('warehouse_warehouse_type', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('warehouse_type_id');
+        Schema::create('warehouse_category', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('category_id');
             $table->uuid('warehouse_id');
             $table->timestamps();
 
-            $table->foreign('warehouse_type_id')->references('id')->on('warehouse_type');
+            $table->foreign('category_id')->references('id')->on('category');
             $table->foreign('warehouse_id')->references('id')->on('warehouse');
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('warehouse_warehouse_type');
+        Schema::dropIfExists('warehouse_category');
     }
 };

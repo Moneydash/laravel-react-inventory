@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContentSecurityPolicy
@@ -16,7 +17,13 @@ class ContentSecurityPolicy
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        $response->header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval';");
+
+        if ($response instanceof Response) {
+            $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval';");
+        } elseif ($response instanceof BinaryFileResponse) {
+            $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval';");
+        }
+
         return $response;
     }
 }

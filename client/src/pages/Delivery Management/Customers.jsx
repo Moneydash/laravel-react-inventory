@@ -4,7 +4,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { LoadingButton } from "@mui/lab";
 import React, { Fragment, useEffect, useState } from "react";
 import { validate } from "email-validator";
-import { axios_get_header, axios_patch_header, axios_post_header_file } from "../../utils/requests";
+import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
 import { decryptAccessToken } from 'utils/auth';
 import {
     get_Customers,
