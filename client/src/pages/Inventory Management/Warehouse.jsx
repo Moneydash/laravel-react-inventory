@@ -1,8 +1,8 @@
-import { CancelOutlined, DeleteRounded, DomainAddOutlined, DomainDisabledOutlined, DownloadRounded, EditRounded, RefreshOutlined } from "@mui/icons-material";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, Typography } from "@mui/material";
+import { CancelOutlined, DeleteRounded, DomainAddOutlined, DownloadRounded, EditRounded, RefreshOutlined } from "@mui/icons-material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid } from "@mui/material";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
-import { ErrorColorBtn, ErrorColorLoadingBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import { ErrorColorBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import TableComponent from "components/elements/TableComponent";
 import ToastCmp from "components/elements/ToastComponent";
 import dayjs from "dayjs";
@@ -24,6 +24,7 @@ import {
     download_File
 } from 'utils/services';
 import {
+    apiGetHelper,
     fileNameSplit,
     setErrorHelper
 } from "utils/helper";
@@ -159,7 +160,15 @@ function Warehouse() {
         vendor_contracts_name: '',
     };
 
-    const optional = ['id', 'description', 'min_temp', 'max_temp', 'facebook_link', 'twitter_link', 'special_handling_info'];
+    const optional = [
+        'id',
+        'description',
+        'min_temp',
+        'max_temp',
+        'facebook_link',
+        'twitter_link',
+        'special_handling_info'
+    ];
 
     const [rows, setRows] = useState([]);
     const [loadingTable, setLoadingTable] = useState(false);
@@ -221,20 +230,7 @@ function Warehouse() {
     }
 
     const get_categories = async () => {
-        axios_get_header(get_Categories, decrypt_access_token)
-        .then(response => {
-            const data = response.data;
-            const transformData = data.categories.map(category => {
-                return {
-                    id: category?.id,
-                    name: category?.category_name
-                };
-            });
-            setCategories(transformData);
-        }).catch(error => {
-            console.error('Error: ', error);
-            toast.error(try_again);
-        });
+        apiGetHelper(get_Categories, setCategories, 'categories');
     };
 
     const get_equipments = async () => {
@@ -384,12 +380,12 @@ function Warehouse() {
                     } else {
                         setForm((prevState) => ({ ...prevState, [name]: '', [`${name}_name`]: '' }));
                         setErrorHelper(`${name}_name`, true, 'File size limit is 5MB, please select another file.', setFormError, setFormHelper);
-                        toast.error('File size limit is 5MB');
+                        toast.error('File size limit is only 5MB');
                     }
                 } else {
                     setForm((prevState) => ({ ...prevState, [name]: '', [`${name}_name`]: '' }));
                     setErrorHelper(`${name}_name`, true, 'Please select a valid file (pdf, doc, docx)', setFormError, setFormHelper);
-                    toast.error('.pdf, .doc and .docx file are only allowed');
+                    toast.error('.pdf, .doc or .docx file are only allowed');
                 }
             }
         }
@@ -542,7 +538,7 @@ function Warehouse() {
             {/* dialog for adding and updating of warehouses */}
             <Dialog open={dialog} fullWidth maxWidth="lg">
                 <DialogTitle>
-                    New Warehouse
+                    { editIndex === 1 ? 'Update Warehouse' : 'New Warehouse' }
                 </DialogTitle>
                 <Divider />
                 <DialogContent>

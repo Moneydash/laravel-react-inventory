@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('supp_name')->nullable(false);
-            $table->string('supp_loc')->nullable(false);
-            $table->string('supp_email')->unique();
-            $table->string('supp_hotline')->nullable(false);
+            $table->string('name')->nullable(false);
+            $table->string('location')->nullable(false);
+            $table->string('email')->unique();
+            $table->string('hotline')->nullable(false);
             $table->string('contact_person')->nullable(false);
             $table->string('contact_person_number')->nullable(false);
             $table->date('contract_expiry_date')->nullable(false);

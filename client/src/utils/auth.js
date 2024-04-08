@@ -28,4 +28,4 @@ const decryptRoleId = () => decryptToken(role_id, '/');
 const decryptedEmailToken = () => decryptToken(email_token, '/');
 const decryptedRoleName = () => decryptToken(role_name, '/');
 
-export { decryptAccessToken, decryptAuthId, decryptRoleId };
+export { decryptAccessToken, decryptAuthId, decryptRoleId, decryptedEmailToken, decryptedRoleName };

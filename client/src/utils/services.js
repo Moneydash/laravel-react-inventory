@@ -43,11 +43,13 @@ const api = {
     get_Products: '/inventory/product/get_products_infos',
     get_Products_only: '/inventory/product/get_products',
     get_Parent_products: '/inventory/product/get_parent_products',
+    get_Parent_products_exclude_self: '/inventory/product/get_parent_products_exclude_self/',
     get_Product: '/inventory/product/get_product/',
     update_Product: '/inventory/product/update_product/',
     add_Product: '/inventory/product/add_product',
     remove_Product: '/inventory/product/remove_product/',
     get_Product_price: '/inventory/product/get_price/',
+    download_Product_image: '/product-image/download/',
 
     // inventory - purchase orders submodules
     get_Purchase_orders: '/inventory/purchase_order/get_purchase_orders',
@@ -60,10 +62,11 @@ const api = {
     get_Warehouse_types: '/inventory/warehouse/get_types',
     add_Warehouse: '/inventory/warehouse/create',
     get_Warehouses: '/inventory/warehouse/get_warehouses',
+    get_Categories_warehouses: '/inventory/warehouse/get_category_warehouse/',
     get_Warehouse: '/inventory/warehouse/get_warehouse/',
     update_Warehouse: '/inventory/warehouse/update_warehouse/',
     remove_Warehouse: '/inventory/warehouse/remove/',
-    download_File: '/download/',
+    download_File: '/warehouse-file/download/',
 
     // inventory - equipment submodules
     get_Equipments: '/inventory/equipment/get_equipments',

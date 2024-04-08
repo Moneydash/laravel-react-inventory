@@ -3,7 +3,8 @@ import { DatePicker, LocalizationProvider, MobileTimePicker, TimePicker } from "
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import dayjs from "dayjs";
-import React, { useState } from "react";
+import React from "react";
+import PropTypes from "prop-types";
 
 const DatePickerCmp = ({ onChange, label, name, value, helperText, error }) => {
     return (
@@ -52,10 +53,10 @@ const TimePickerCmp = ({ label, name, value, helperText, error, size, onChange }
     );
 };
 
-const SelectCmp = ({ id, value, label, onChange, items, size, name, error }) => {
+const SelectCmp = ({ id, value, label, onChange, items, size, name, error, noItemsText }) => {
     return (
         <FormControl fullWidth size={size}>
-            <InputLabel id={id}>{items?.length > 0 ? label : 'Loading ...'}</InputLabel>
+            <InputLabel id={id}>{items?.length > 0 ? label : noItemsText}</InputLabel>
             { items?.length > 0
             ? <Select
                 labelId={id}
@@ -97,13 +98,15 @@ const MultipleSelectCmp = ({ id, label, value, onChange, items, size, name, erro
                 error={error}
                 input={<OutlinedInput id={id} label={label} size={size} />}
                 renderValue={(selected) => {
-                    // console.log('Selected: ', selected);
                     return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {selected.map((value, index) => (
                                 <Chip
                                     key={index}
                                     label={items.find(item => item?.id === value || item?.value === value)?.name ?? ''}
+                                    size={size}
+                                    variant="outlined"
+                                    color="primary"
                                 />
                             ))}
                         </Box>
@@ -134,6 +137,17 @@ DatePickerCmp.defaultProps = {
     helperText: '',
     error: false
 };
+
+// prop types of datepicker
+DatePickerCmp.propTypes = {
+    onChange: PropTypes.func,
+    label: PropTypes.string,
+    name: PropTypes.string,
+    value: PropTypes.instanceOf(dayjs),
+    helperText: PropTypes.string,
+    error: PropTypes.bool
+};
+
 // default value of time picker
 TimePickerCmp.defaultProps = {
     onChange: () => {},
@@ -144,6 +158,18 @@ TimePickerCmp.defaultProps = {
     error: false,
     size: 'medium'
 };
+
+// prop types of timepicker
+TimePickerCmp.propTypes = {
+    onChange: PropTypes.func,
+    label: PropTypes.string,
+    name: PropTypes.string,
+    value: PropTypes.instanceOf(dayjs),
+    helperText: PropTypes.string,
+    error: PropTypes.bool,
+    size: PropTypes.string
+};
+
 // default value of select component
 SelectCmp.defaultProps = {
     onChange: () => {},
@@ -154,7 +180,25 @@ SelectCmp.defaultProps = {
     size: 'medium',
     name: '',
     error: false,
+    noItemsText: 'Loading ...',
 };
+
+// prop types of select component
+SelectCmp.propTypes = {
+    onChange: PropTypes.func,
+    id: PropTypes.string,
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number
+    ]),
+    label: PropTypes.string,
+    items: PropTypes.array,
+    size: PropTypes.string,
+    name: PropTypes.string,
+    error: PropTypes.bool,
+    noItemsText: PropTypes.string
+};
+
 // default value of multiple select component
 MultipleSelectCmp.defaultProps = {
     onChange: () => {},
@@ -165,6 +209,18 @@ MultipleSelectCmp.defaultProps = {
     size: 'medium',
     name: '',
     error: false
+};
+
+// prop types of multiple select component
+MultipleSelectCmp.propTypes = {
+    onChange: PropTypes.func,
+    id: PropTypes.string,
+    value: PropTypes.array,
+    label: PropTypes.string,
+    items: PropTypes.array,
+    size: PropTypes.string,
+    name: PropTypes.string,
+    error: PropTypes.bool
 };
 
 export { DatePickerCmp, TimePickerCmp, SelectCmp, MultipleSelectCmp };
