@@ -13,15 +13,15 @@ class ProductController extends Controller
 {
     public function add_product(Request $request) {
         $request->validate([
-            'prod_img' => 'required|mimes:jpeg,jpg,png,gif|max:5120', // max of 5MB
-            'prod_name' => 'required',
-            'prod_sku' => 'required',
-            'prod_barcode' => 'required',
-            'prod_price' => 'required',
+            'image' => 'required|mimes:jpeg,jpg,png,gif|max:5120', // max of 5MB
+            'name' => 'required',
+            'sku' => 'required',
+            'barcode' => 'required',
+            'price' => 'required',
             'stocks' => 'required|integer',
             'weight' => 'required',
             'dimensions' => 'required',
-            'prod_desc' => 'required',
+            'description' => 'required',
             'is_variant' => 'required',
             'parent_product_id' => [
                 'nullable',
@@ -29,30 +29,42 @@ class ProductController extends Controller
                     return $request->is_variant === true;
                 }),
             ],
+            'has_serial' => 'required',
+            'serial_number' => 'required_if:has_serial,==,1',
             'category_id' => 'required',
+            'warehouse_id' => 'required',
             'suppliers' => 'required'
         ]);
 
-        if ($request->hasFile('prod_img')) {
-            $uploadedFile = $request->file('prod_img');
+        if ($request->hasFile('image')) {
+            $uploadedFile = $request->file('image');
             $filepath = $uploadedFile->store('public/products'); // store the file in the "public" directory
         }
 
         $product_data = [
-            'prod_img' => $filepath, // store the file path in the database
-            'prod_name' => $request->prod_name,
-            'prod_sku' => $request->prod_sku,
-            'prod_barcode' => $request->prod_barcode,
-            'prod_price' => $request->prod_price,
+            'image' => $filepath, // store the file path in the database
+            'name' => $request->name,
+            'sku' => $request->sku,
+            'barcode' => $request->barcode,
+            'price' => $request->price,
             'stocks' => $request->stocks,
             'weight' => $request->weight,
             'dimensions' => $request->dimensions,
-            'prod_desc' => $request->prod_desc,
+            'description' => $request->description,
             'is_variant' => $request->is_variant,
             'parent_product_id' => $request->parent_product_id,
+            'has_serial' => $request->has_serial,
+            'serial_number' => $request->serial_number,
             'category_id' => $request->category_id,
+            'warehouse_id' => $request->warehouse_id,
             'warranty_info' => $request->warranty_info,
-            'prod_status' => 1,
+            'status' => $request->stocks <= 0
+            ? 0 
+            : ($request->stocks <= 20
+            ? 2
+            : ($request->stocks >= 100
+            ? 1
+            : 0)),
         ];
 
         $supplier_ids = explode(',', $request->suppliers);
@@ -62,20 +74,19 @@ class ProductController extends Controller
             $product = Product::create($product_data);
             
             foreach ($supplier_ids as $key) {
-                $insert = $product->suppliers()->attach($key, ['status' => 1]);
+                $product->suppliers()->attach($key, ['status' => 1]);
             }
 
             DB::commit();
-            return response()->json([ 'message' => 'New inventory item has been added successfully!' ]);
+            return response()->json([ 'message' => 'New inventory item has been added successfully!' ], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([ 'error_message' => $e->getMessage() ]);
+            return response()->json([ 'error_message' => $e->getMessage() ], 500);
         }
     }
 
     public function get_products_infos() {
-        $products = Product::with('category', 'suppliers')
-        ->where('prod_status', 1)
+        $products = Product::with('category', 'suppliers', 'warehouse')
         ->orderBy('created_at', 'desc')
         ->get();
 
@@ -83,7 +94,7 @@ class ProductController extends Controller
     }
 
     public function get_products() {
-        $products = Product::where('prod_status', 1)
+        $products = Product::where('status', 1)
         ->orderBy('created_at', 'desc')
         ->get();
 
@@ -99,23 +110,30 @@ class ProductController extends Controller
     }
 
     public function get_parent_products() {
-        $parent_products = Product::where('prod_status', 1)
-        ->where('parent_product_id', null)
+        $parent_products = Product::where('parent_product_id', null)
         ->get();
         
-        return response()->json([ 'parent_products' => $parent_products ]);
+        return response()->json([ 'parent_products' => $parent_products ], 200);
+    }
+
+    public function get_parent_products_exclude_self($product_id) {
+        $parent_products = Product::where('parent_product_id', null)
+        ->where('id', '!=', $product_id)
+        ->get();
+
+        return response()->json([ 'parent_products' => $parent_products ], 200);
     }
 
     public function update_product($product_id, Request $request) {
         $request->validate([
-            'prod_name' => 'required',
-            'prod_desc' => 'required',
+            'name' => 'required',
+            'description' => 'required',
             'category_id' => 'required',
             'suppliers' => 'required',
-            'prod_barcode' => 'required',
+            'barcode' => 'required',
             'weight' => 'required',
             'dimensions' => 'required',
-            'prod_price' => 'required'
+            'price' => 'required'
         ]);
 
         DB::beginTransaction();
@@ -128,48 +146,18 @@ class ProductController extends Controller
             $suppliers_to_detach = array_diff($original_suppliers, $updated_suppliers);
             $suppliers_to_attach = array_diff($updated_suppliers, $original_suppliers);
             
-            if ($request->hasFile('prod_img')) {
+            foreach ($request->except(['image', 'suppliers']) as $key => $value) {
+                if ($value != $product->$key) {
+                    $product->$key = $value;
+                }
+            }
+
+            if ($request->hasFile('image')) {
                 $request->validate([
-                    'prod_img' => 'mimes:jpeg,jpg,png,gif|max:5120', // max of 5MB
+                    'image' => 'mimes:jpeg,jpg,png,gif|max:5120', // max of 5MB
                 ]);
-                $filepath = $request->file('prod_img')->store('public/products');
-                $product->prod_img = $filepath;
-            }
-
-            if ($request->prod_name != $product->prod_name) {
-                $product->prod_name = $request->prod_name;
-            }
-
-            if ($request->prod_sku != $product->prod_sku) {
-                $product->prod_sku = $request->prod_sku;
-            }
-
-            if ($request->prod_barcode != $product->prod_barcode) {
-                $product->prod_barcode = $request->prod_barcode;
-            }
-
-            if ($request->weight != $product->weight) {
-                $product->weight = $request->weight;
-            }
-
-            if ($request->dimensions != $product->dimensions) {
-                $product->dimensions = $request->dimensions;
-            }
-
-            if ($request->prod_price != $product->prod_price) {
-                $product->prod_price = $request->prod_price;
-            }
-
-            if ($request->prod_desc != $product->prod_desc) {
-                $product->prod_desc = $request->prod_desc;
-            }
-
-            if ($request->category_id != $product->category_id) {
-                $product->category_id = $request->category_id;
-            }
-
-            if ($request->warranty_info != $product->warranty_info) {
-                $product->warranty_info = $request->warranty_info;
+                $filepath = $request->file('image')->store('public/products');
+                $product->image = $filepath;
             }
 
             if (!empty($suppliers_to_detach)) {
@@ -181,7 +169,6 @@ class ProductController extends Controller
             }
 
             $product->save();
-
             DB::commit();
             return response()->json([ 'message' => 'Inventory item has been updated successfully!' ]);
         } catch (ModelNotFoundException $e) {
@@ -192,13 +179,10 @@ class ProductController extends Controller
 
     public function remove_product($product_id) {
         DB::beginTransaction();
-
         try {
             $product = Product::findOrFail($product_id);
 
-            $product->prod_status = 0;
-            $product->save();
-
+            $product->delete();
             DB::commit();
             return response()->json([ 'message' => 'Inventory item has been removed.' ]);
         } catch (ModelNotFoundException $e) {
@@ -210,12 +194,25 @@ class ProductController extends Controller
     public function get_product_price($product_id) {
         try {
             $product = Product::where('id', $product_id)
-            ->where('prod_status', 1)
+            ->where('status', 1)
             ->firstOrFail();
 
-            return response()->json([ 'price' => $product->prod_price ], 200);
+            return response()->json([ 'price' => $product->price ], 200);
         } catch (\Exception $e) {
             return response()->json([ 'error' => $e->getMessage(), 'message' => 'Oops, something went wrong, try again later.' ]);
         }
+    }
+
+    public function download_image($product_id) {
+        $product = Product::where('id', $product_id)->first();
+
+        $path = $product->image;
+        $sanitized_path = trim($path);
+        $ext = pathinfo($sanitized_path, PATHINFO_EXTENSION);
+
+        $file_path = storage_path("app/".$sanitized_path);
+        $file_name = $product_id.'_Product Image.'.$ext;
+
+        return response()->download($file_path, $file_name);
     }
 }

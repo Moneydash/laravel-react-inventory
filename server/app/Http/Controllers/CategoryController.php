@@ -17,14 +17,14 @@ class CategoryController extends Controller
 
     public function store(Request $request) {
         $request->validate([
-            'category_name' => 'required|unique:category',
+            'name' => 'required|unique:category',
             'slug' => 'required|unique:category'
         ]);
 
         $category_data = [
-            'category_name' => $request->category_name,
+            'name' => $request->name,
             'slug' => $request->slug,
-            'category_description' => trim($request->category_description)
+            'description' => trim($request->description)
         ];
 
         DB::beginTransaction();
@@ -51,11 +51,6 @@ class CategoryController extends Controller
     }
 
     public function update_category(Request $request, $category_id) {
-        $request->validate([
-            'category_name' => 'required|unique:category,category_name, ' . $category_id,
-            'slug' => 'required|unique:category,slug, '. $category_id
-        ]);
-
         DB::beginTransaction();
         try {
             $category = Category::where('id', $category_id)
@@ -63,7 +58,14 @@ class CategoryController extends Controller
 
             foreach($request->all() as $key => $value) {
                 if ($category->$key != $value) {
-                    $category->$key = $value;
+                    if ($key != 'description') {
+                        $request->validate([
+                            $key => "unique:category,$key," . $category_id,
+                        ]);
+                        $category->$key = $value;
+                    } else {
+                        $category->$key = $value;
+                    }
                 }
             }
 

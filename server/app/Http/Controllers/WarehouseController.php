@@ -30,7 +30,7 @@ class WarehouseController extends Controller
             'certifications_compliance' => 'required|mimes:pdf,doc,docx|max:5120',
             'usage' => 'required',
             'is_biohazard' => 'required|boolean',
-            'precautionary_measure' => 'required_if:is_bioharzard,==,true',
+            'precautionary_measure' => 'required_if:is_biohazard,==,true',
             'maintenance_schedule' => 'required',
             'vendor_contracts' => 'required|mimes:pdf,doc,docx|max:5120',
             'equipments' => 'required',
@@ -277,5 +277,16 @@ class WarehouseController extends Controller
         $file_name = $warehouse->id.$file_name.$ext;
         
         return response()->download($file_path, $file_name);
+    }
+
+    public function get_category_warehouse($category_id) {
+        try {
+            $warehouses = Warehouse::whereHas('category', function($query) use ($category_id) {
+                $query->where('category.id', $category_id); // Specify the table name for the id column
+            })->get();
+            return response()->json([ 'warehouses' => $warehouses ], 200);
+        } catch (ModelNotFoundException | \Exception $e) {
+            return response()->json([ 'error' => $e->getMessage() ]);
+        }
     }
 }

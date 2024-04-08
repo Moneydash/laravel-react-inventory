@@ -13,10 +13,10 @@ class SupplierController extends Controller
     private $_try_again = 'Oops, something went wrong. Please try again later.';
     public function add_supplier(Request $request) {
         $request->validate([
-            'supp_name' => 'required',
-            'supp_loc' => 'required',
-            'supp_email' => 'required|email|unique:suppliers',
-            'supp_hotline' => 'required|integer',
+            'name' => 'required',
+            'location' => 'required',
+            'email' => 'required|email|unique:suppliers',
+            'hotline' => 'required|integer',
             'contact_person' => 'required',
             'contact_person_number' => 'required',
             'contract_expiry_date' => 'required|date',
@@ -38,10 +38,10 @@ class SupplierController extends Controller
         DB::beginTransaction();
         try {
             Supplier::create([
-                'supp_name' => $request->supp_name,
-                'supp_loc' => $request->supp_loc,
-                'supp_email' => strtolower($request->supp_email),
-                'supp_hotline' => $request->supp_hotline,
+                'name' => $request->name,
+                'location' => $request->location,
+                'email' => strtolower($request->email),
+                'hotline' => $request->hotline,
                 'contact_person' => $request->contact_person,
                 'contact_person_number' => $request->contact_person_number,
                 'contract_expiry_date' => $request->contract_expiry_date,
@@ -75,10 +75,10 @@ class SupplierController extends Controller
 
     public function update_supplier($supplier_id, Request $request) {
         $request->validate([
-            'supp_name' => 'required',
-            'supp_loc' => 'required',
-            'supp_email' => 'required|email',
-            'supp_hotline' => 'required|integer',
+            'name' => 'required',
+            'location' => 'required',
+            'email' => 'required|email',
+            'hotline' => 'required|integer',
             'contact_person' => 'required',
             'contact_person_number' => 'required',
             'contract_expiry_date' => 'required|date',
@@ -89,21 +89,21 @@ class SupplierController extends Controller
             $supplier = Supplier::findOrFail($supplier_id);
 
             // check if there are changes on the fields.
-            if ($request->supp_name !== $supplier->supp_name) {
-                $supplier->supp_name = $request->supp_name;
+            if ($request->name !== $supplier->name) {
+                $supplier->name = $request->name;
             }
 
-            if ($request->supp_loc !== $supplier->supp_loc) {
-                $supplier->supp_loc = $request->supp_loc;
+            if ($request->location !== $supplier->location) {
+                $supplier->location = $request->location;
             }
 
-            if (strtolower($request->supp_email) !== strtolower($supplier->supp_email)) {
-                $request->validate([ 'supp_email' => 'unique:suppliers' ]);
-                $supplier->supp_email = strtolower($request->supp_email);
+            if (strtolower($request->email) !== strtolower($supplier->email)) {
+                $request->validate([ 'email' => 'unique:suppliers' ]);
+                $supplier->email = strtolower($request->email);
             }
 
-            if ($request->supp_hotline !== $supplier->supp_hotline) {
-                $supplier->supp_hotline = $request->supp_hotline;
+            if ($request->hotline !== $supplier->hotline) {
+                $supplier->hotline = $request->hotline;
             }
 
             if ($request->contact_person !== $supplier->contact_person) {

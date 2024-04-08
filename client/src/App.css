@@ -2,54 +2,11 @@
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-/* Footer styles based on the App-header class */
-.App-header::after {
-  content: ''; /* Create a pseudo-element to push the footer below App-header */
-  display: block;
-  height: 50px; /* Adjust this height as needed for separation */
-}
-
 body.darkmode,
 .darkmode {
   background-color: rgba(80, 80, 80, 1);
   height: 100vh !important;
   color: #fff;
-}
-
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .footer {
