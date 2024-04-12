@@ -17,17 +17,17 @@ class CategorySeeder extends Seeder
         DB::table('category')->insert([
             [
                 'id' => Str::uuid(),
-                'category_name' => 'Goods',
+                'name' => 'Goods',
                 'slug' => 'goods',
-                'category_description' => 'Items or merchandise available for sale or distribution, encompassing a wide range of consumer goods such as foods and drinks.',
+                'description' => 'Items or merchandise available for sale or distribution, encompassing a wide range of consumer goods such as foods and drinks.',
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'category_name' => 'Stationary',
+                'name' => 'Stationary',
                 'slug' => 'stationary',
-                'category_description' => 'Stationery refers to a category of office and personal supplies that are used for writing, drawing, organizing, and other administrative tasks. It typically includes items such as pens, pencils, paper, notebooks, folders, and other related accessories.',
+                'description' => 'Stationery refers to a category of office and personal supplies that are used for writing, drawing, organizing, and other administrative tasks. It typically includes items such as pens, pencils, paper, notebooks, folders, and other related accessories.',
                 'created_at' => now(),
                 'updated_at' => now()
             ]

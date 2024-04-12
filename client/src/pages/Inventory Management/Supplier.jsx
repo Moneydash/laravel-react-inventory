@@ -51,10 +51,10 @@ function Supplier() {
 
     // table columns
     const columns = [
-        { field: 'supp_name', headerName: 'Supplier Name', flex: 1 },
-        { field: 'supp_loc', headerName: 'Supplier Location', flex: 1 },
-        { field: 'supp_email', headerName: 'Supplier Email', flex: 1 },
-        { field: 'supp_hotline', headerName: 'Supplier Hotline', flex: 1 },
+        { field: 'name', headerName: 'Supplier Name', flex: 1 },
+        { field: 'location', headerName: 'Supplier Location', flex: 1 },
+        { field: 'email', headerName: 'Supplier Email', flex: 1 },
+        { field: 'hotline', headerName: 'Supplier Hotline', flex: 1 },
         { field: 'contact_person', headerName: 'Contact Person', flex: 1 },
         { field: 'contact_person_number', headerName: 'Contact Person #', flex: 1 },
         { field: 'contract_expiry_date', headerName: 'Contract Expiry Date', flex: 1 },
@@ -63,8 +63,8 @@ function Supplier() {
 
     // columns for removed suppliers
     const remove_columns = [
-        { field: 'supp_name', headerName: 'Supplier Name', flex: 1 },
-        { field: 'supp_email', headerName: 'Supplier Email', flex: 1 },
+        { field: 'name', headerName: 'Supplier Name', flex: 1 },
+        { field: 'email', headerName: 'Supplier Email', flex: 1 },
         { field: 'supp_status', headerName: 'Status', flex: 1 },
         { field: 'id', headerName: 'Restore', flex: 1, renderCell: renderRestoreBtns }
     ];
@@ -80,10 +80,10 @@ function Supplier() {
     // initial data
     const initialFormData = {
         id: '',
-        supp_name: '',
-        supp_loc: '',
-        supp_email: '',
-        supp_hotline: '',
+        name: '',
+        location: '',
+        email: '',
+        hotline: '',
         contact_person: '',
         contact_person_number: '',
         contract_expiry_date: dayjs(),
@@ -93,10 +93,10 @@ function Supplier() {
 
     };
     const initialError = {
-        supp_name: false,
-        supp_loc: false,
-        supp_email: false,
-        supp_hotline: false,
+        name: false,
+        location: false,
+        email: false,
+        hotline: false,
         contact_person: false,
         contact_person_number: false,
         contract_expiry_date: false,
@@ -104,10 +104,10 @@ function Supplier() {
         agreement_name: false
     };
     const initialTextHelper = {
-        supp_name: '',
-        supp_loc: '',
-        supp_email: '',
-        supp_hotline: '',
+        name: '',
+        location: '',
+        email: '',
+        hotline: '',
         contact_person: '',
         contact_person_number: '',
         contract_expiry_date: '',
@@ -139,10 +139,10 @@ function Supplier() {
                 
                 return {
                     id: item["id"],
-                    supp_name: item["supp_name"],
-                    supp_loc: item["supp_loc"],
-                    supp_email: item["supp_email"],
-                    supp_hotline: item["supp_hotline"],
+                    name: item["name"],
+                    location: item["location"],
+                    email: item["email"],
+                    hotline: item["hotline"],
                     contact_person: item['contact_person'],
                     contact_person_number: item['contact_person_number'],
                     contract_expiry_date: formattedDate
@@ -162,8 +162,8 @@ function Supplier() {
 
                 return {
                     id: item['id'],
-                    supp_name: item['supp_name'],
-                    supp_email: item['supp_email'],
+                    name: item['name'],
+                    email: item['email'],
                     supp_status: supp_status
                 }
             });
@@ -183,10 +183,10 @@ function Supplier() {
             setFormData((prevState) => ({
                 ...prevState,
                 id: data.id,
-                supp_name: data.supp_name,
-                supp_loc: data.supp_loc,
-                supp_email: data.supp_email,
-                supp_hotline: data.supp_hotline,
+                name: data.name,
+                location: data.location,
+                email: data.email,
+                hotline: data.hotline,
                 contact_person: data.contact_person,
                 contact_person_number: data.contact_person_number,
                 contract_expiry_date: dayjs(data.contract_expiry_date),
@@ -227,7 +227,7 @@ function Supplier() {
         const { name, value, files } = e.target;
         
         // email validation
-        if(name === 'supp_email') {
+        if(name === 'email') {
             setFormData((prevState) => ({ ...prevState, [name]: value }));
             if (!EmailValidator.validate(value)) {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
@@ -242,7 +242,7 @@ function Supplier() {
         }
 
         // basic input validation
-        if (name === 'supp_name' || name === 'supp_loc' || name === 'supp_hotline' || name === 'contact_person') {
+        if (name === 'name' || name === 'location' || name === 'hotline' || name === 'contact_person') {
             setFormData((prevState) => ({ ...prevState, [name]: value }));
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
@@ -360,10 +360,10 @@ function Supplier() {
 
         const formattedDate = dayjs(formData.contract_expiry_date).format('YYYY-MM-DD');
         const transformData = {
-            supp_name: formData.supp_name,
-            supp_loc: formData.supp_loc,
-            supp_email: formData.supp_email,
-            supp_hotline: formData.supp_hotline,
+            name: formData.name,
+            location: formData.location,
+            email: formData.email,
+            hotline: formData.hotline,
             contact_person: formData.contact_person,
             contact_person_number: formData.contact_person_number,
             contract_expiry_date: formattedDate,
@@ -429,16 +429,16 @@ function Supplier() {
                 <DialogContent>
                     <Grid container direction="column" rowSpacing={2}>
                         <Grid item>
-                            <TextField variant="outlined" placeholder="Name of Supplier" label="Supplier Name" name="supp_name" value={formData.supp_name} error={formDataError.supp_name} helperText={formDataHelperText.supp_name} onChange={handleChange} fullWidth/>
+                            <TextField variant="outlined" placeholder="Name of Supplier" label="Supplier Name" name="name" value={formData.name} error={formDataError.name} helperText={formDataHelperText.name} onChange={handleChange} fullWidth/>
                         </Grid>
                         <Grid item>
-                            <TextField variant="outlined" placeholder="Location of Supplier" label="Supplier Location" name="supp_loc" value={formData.supp_loc} error={formDataError.supp_loc} helperText={formDataHelperText.supp_loc} onChange={handleChange} fullWidth/>
+                            <TextField variant="outlined" placeholder="Location of Supplier" label="Supplier Location" name="location" value={formData.location} error={formDataError.location} helperText={formDataHelperText.location} onChange={handleChange} fullWidth/>
                         </Grid>
                         <Grid item>
-                            <TextField variant="outlined" placeholder="Email of Supplier" label="Supplier Email" name="supp_email" value={formData.supp_email} error={formDataError.supp_email} type="email" helperText={formDataHelperText.supp_email} onChange={handleChange} fullWidth/>
+                            <TextField variant="outlined" placeholder="Email of Supplier" label="Supplier Email" name="email" value={formData.email} error={formDataError.email} type="email" helperText={formDataHelperText.email} onChange={handleChange} fullWidth/>
                         </Grid>
                         <Grid item>
-                            <TextField variant="outlined" placeholder="Hotline of Supplier" label="Supplier Hotline" name="supp_hotline" value={formData.supp_hotline} error={formDataError.supp_hotline} type="number" helperText={formDataHelperText.supp_hotline} onChange={handleChange} fullWidth/>
+                            <TextField variant="outlined" placeholder="Hotline of Supplier" label="Supplier Hotline" name="hotline" value={formData.hotline} error={formDataError.hotline} type="number" helperText={formDataHelperText.hotline} onChange={handleChange} fullWidth/>
                         </Grid>
                         <Grid item>
                             <TextField variant="outlined" placeholder="Point of Contact" label="Contact Person" name="contact_person" value={formData.contact_person} onChange={handleChange} error={formDataError.contact_person} helperText={formDataHelperText.contact_person} fullWidth />

@@ -13,10 +13,10 @@ class Supplier extends Model
 
     protected $table = 'suppliers';
     protected $fillable = [
-        "supp_name",
-        "supp_loc",
-        "supp_email",
-        "supp_hotline",
+        "name",
+        "location",
+        "email",
+        "hotline",
         "contact_person",
         "contact_person_number",
         "contract_expiry_date",
@@ -25,7 +25,6 @@ class Supplier extends Model
     ];
 
     protected $casts = [
-        'supp_status' => 'boolean',
         'contract_expiry_date' => 'date',
         'deleted_at' => 'datetime'
     ];

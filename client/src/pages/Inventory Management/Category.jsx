@@ -22,9 +22,9 @@ function Category() {
     const try_again = 'Oops, something went wrong. Please try again later.';
 
     const columns = [
-        { field: 'category_name', headerName: 'Category Name', flex: 1 },
+        { field: 'name', headerName: 'Category Name', flex: 1 },
         { field: 'slug', headerName: 'Slug', flex: 1 },
-        { field: 'category_description', headerName: 'Description', flex: 1 },
+        { field: 'description', headerName: 'Description', flex: 1 },
         { field: 'id', headerName: 'Action', width: 100, renderCell: (params) => (
             <div>
                 <IconButton onClick={() => get_category(params.value)} color="primary">
@@ -36,16 +36,16 @@ function Category() {
 
     const initialForm = {
         id: '',
-        category_name: '',
+        name: '',
         slug: '',
-        category_description: ''
+        description: ''
     };
     const initialFormError = {
-        category_name: false,
+        name: false,
         slug: false
     };
     const initialFormHelper = {
-        category_name: '',
+        name: '',
         slug: ''
     };
 
@@ -98,9 +98,9 @@ function Category() {
             setForm((prevState) => ({
                 ...prevState,
                 id: category.id,
-                category_name: category.category_name,
+                name: category.name,
                 slug: category.slug,
-                category_description: category.category_description
+                description: category.description
             }));
             toggleDialog(true);
         })
@@ -114,7 +114,7 @@ function Category() {
         const { name, value } = event.target;
         setForm((prevState) => ({ ...prevState, [name]: value }));
 
-        if (name === 'category_name' || name === 'slug') {
+        if (name === 'name' || name === 'slug') {
             if (value === '') {
                 setFormError((prevError) => ({ ...prevError, [name]: true }));
                 setFormHelper((prevText) => ({ ...prevText, [name]: 'Please fill up required field!'}));
@@ -130,7 +130,7 @@ function Category() {
 
         let hasError = false;
         for (const field in form) {
-            if (field !== 'id' && field !== 'category_description') {
+            if (field !== 'id' && field !== 'description') {
                 if (formError[field] === true || form[field] === '') {
                     hasError = true;
                     setFormError((prevError) => ({ ...prevError, [field]: true }));
@@ -190,10 +190,10 @@ function Category() {
                             <TextField
                                 label="Name"
                                 placeholder="Category Name (Required)"
-                                name="category_name"
-                                value={form.category_name}
-                                error={formError.category_name}
-                                helperText={formHelper.category_name}
+                                name="name"
+                                value={form.name}
+                                error={formError.name}
+                                helperText={formHelper.name}
                                 fullWidth
                                 onChange={handleChange}
                             />
@@ -214,8 +214,8 @@ function Category() {
                             <TextField
                                 label="Description"
                                 placeholder="Category Description (Optional)"
-                                name="category_description"
-                                value={form.category_description}
+                                name="description"
+                                value={form.description}
                                 fullWidth
                                 multiline
                                 minRows={3}

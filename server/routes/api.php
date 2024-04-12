@@ -34,7 +34,8 @@ use App\Http\Controllers\WarehouseController;
 Route::post('register', [UserController::class, 'register_user'])->name('user.register');
 Route::post('login', [UserController::class, 'login'])->name('user.login');
 
-Route::get('download/{type}/{warehouse_id}', [WarehouseController::class, 'download_file'])->name('downloadFile');
+Route::get('warehouse-file/download/{type}/{warehouse_id}', [WarehouseController::class, 'download_file'])->name('warehouse.downloadFile');
+Route::get('product-image/download/{product_id}', [ProductController::class, 'download_image'])->name('product.downloadImage');
 
 // Routes for users
 Route::middleware(['auth:sanctum'])->prefix('user')->group(function() {
@@ -63,9 +64,10 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::get('get_products', [ProductController::class, 'get_products'])->name('product.getProductsOnly');
         Route::get('get_product/{product_id}', [ProductController::class, 'get_product'])->name('product.getInfo');
         Route::post('update_product/{product_id}', [ProductController::class, 'update_product'])->name('product.update');
-        Route::patch('remove_product/{product_id}', [ProductController::class, 'remove_product'])->name('product.remove');
+        Route::delete('remove_product/{product_id}', [ProductController::class, 'remove_product'])->name('product.remove');
         Route::get('get_parent_products', [ProductController::class, 'get_parent_products'])->name('product.getParent');
         Route::get('get_price/{product_id}', [ProductController::class, 'get_product_price'])->name('product.getPrice');
+        Route::get('get_parent_products_exclude_self/{product_id}', [ProductController::class, 'get_parent_products_exclude_self'])->name('product.getParentExcludeSelf');
     });
 
     // Routes for categories
@@ -101,6 +103,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::get('get_types', [WarehouseTypeController::class, 'get_types'])->name('warehouse.getTypes');
         Route::get('get_warehouses', [WarehouseController::class, 'get_warehouses'])->name('warehouse.getAll');
         Route::get('get_warehouse/{warehouse_id}', [WarehouseController::class, 'get_warehouse'])->name('warehouse.getInfos');
+        Route::get('get_category_warehouse/{category_id}', [WarehouseController::class, 'get_category_warehouse'])->name('warehouse.getCategoryBased');
         Route::post('create', [WarehouseController::class, 'store'])->name('warehouse.create');
         Route::post('update_warehouse/{warehouse_id}', [WarehouseController::class, 'update_warehouse'])->name('warehouse.updateInfo');
         Route::delete('remove/{warehouse_id}', [WarehouseController::class, 'remove_warehouse'])->name('warehouse.remove');

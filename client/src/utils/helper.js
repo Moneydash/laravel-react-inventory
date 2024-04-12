@@ -12,6 +12,14 @@ export const fetcher = async (url) => {
     }
 };
 
+export const nullCheck = (string) => {
+    if (string === null || string === undefined || string === '' || string === 'null') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 export const militaryTimeToCommon = (time) => {
     // Split the time string into hours and minutes
     const [hours, minutes] = time.split(':');
@@ -45,7 +53,50 @@ export const fileNameSplit = (string) => {
     }
 };
 
+export const pathCleaner = (string) => {
+    const cleanedPath = string.substring(string.indexOf('/') + 1);
+    return cleanedPath;
+}
+
+export const setData = (setter, fieldName, value) => {
+    setter((prevState) => ({ ...prevState, [fieldName]: value }));
+}
+
 export const setErrorHelper = (fieldName, error, text, setError, setHelper) => {
     setError((prevError) => ({ ...prevError, [fieldName]: error }));
     setHelper((prevText) => ({ ...prevText, [fieldName]: text }));
+}
+
+export const firstCap = (string) => {
+    const text = string.charAt(0).toUpperCase() + string.slice(1);
+    return text;
+}
+
+export const apiGetHelper = async (url, setter, arrayField) => {
+    const decrypt_access_token = decryptAccessToken();
+    try {
+        const response = await axios_get_header(url, decrypt_access_token);
+        const data = response.data;
+
+        setter(data[arrayField]);
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const phNumRegex = (string) => {
+    const ph_mobile_regex = /^(09|\+639)\d{9}$/;
+    const isValidPhNum = ph_mobile_regex.test(string) ? true : false;
+    return isValidPhNum;
+}
+
+export const wholeNumRegex = (string) => {
+    const number = /^[1-9]\d*$/;
+    return number.test(string);
+}
+
+export const decimalNumRegex = (string) => {
+    const number = /^[1-9]\d*(\.\d+)?$/
+    return number.test(string);
 }

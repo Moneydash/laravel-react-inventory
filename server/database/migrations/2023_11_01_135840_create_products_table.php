@@ -13,20 +13,22 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('prod_img')->nullable(false);
-            $table->string('prod_name')->nullable(false);
-            $table->string('prod_sku')->unique()->nullable(false);
-            $table->string('prod_barcode')->unique()->nullable(false);
+            $table->string('image')->nullable(false);
+            $table->string('name')->nullable(false);
+            $table->string('sku')->unique()->nullable(false);
+            $table->string('barcode')->unique()->nullable(false);
             $table->string('weight');
             $table->string('dimensions');
-            $table->float('prod_price', 8, 2)->nullable(false);
-            $table->string('prod_desc', 2000)->nullable(false);
+            $table->float('price', 8, 2)->nullable(false);
+            $table->string('description', 2000)->nullable(false);
             $table->boolean('is_variant');
-            $table->uuid('parent_product_id')->nullable();
+            $table->uuid('parent_product_id')->nullable(true);
             $table->integer('stocks')->nullable(false);
             $table->uuid('category_id');
-            $table->boolean('prod_status')->default(1);
-            $table->string('warranty_info')->nullable();
+            $table->boolean('status')->default(1); // 0 = out of stocks, 1 = available, 2 = low stocks
+            $table->string('warranty_info')->nullable(true);
+            $table->boolean('has_serial')->default(0);
+            $table->string('serial_number')->nullable(true);
             $table->softDeletes($column = 'deleted_at');
             $table->timestamps();
 

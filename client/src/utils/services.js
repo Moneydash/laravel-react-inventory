@@ -1,7 +1,5 @@
 const base_api = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 const api = {
-    base_api,
-
     // unauthenticated services
     login: '/login',
     register: '/register',
@@ -43,11 +41,13 @@ const api = {
     get_Products: '/inventory/product/get_products_infos',
     get_Products_only: '/inventory/product/get_products',
     get_Parent_products: '/inventory/product/get_parent_products',
+    get_Parent_products_exclude_self: '/inventory/product/get_parent_products_exclude_self/',
     get_Product: '/inventory/product/get_product/',
     update_Product: '/inventory/product/update_product/',
     add_Product: '/inventory/product/add_product',
     remove_Product: '/inventory/product/remove_product/',
     get_Product_price: '/inventory/product/get_price/',
+    download_Product_image: '/product-image/download/',
 
     // inventory - purchase orders submodules
     get_Purchase_orders: '/inventory/purchase_order/get_purchase_orders',
@@ -60,10 +60,11 @@ const api = {
     get_Warehouse_types: '/inventory/warehouse/get_types',
     add_Warehouse: '/inventory/warehouse/create',
     get_Warehouses: '/inventory/warehouse/get_warehouses',
+    get_Categories_warehouses: '/inventory/warehouse/get_category_warehouse/',
     get_Warehouse: '/inventory/warehouse/get_warehouse/',
     update_Warehouse: '/inventory/warehouse/update_warehouse/',
     remove_Warehouse: '/inventory/warehouse/remove/',
-    download_File: '/download/',
+    download_File: '/warehouse-file/download/',
 
     // inventory - equipment submodules
     get_Equipments: '/inventory/equipment/get_equipments',
@@ -90,20 +91,14 @@ const api = {
     update_Delivery_status: '/delivery_hub/item_delivery/update_status/',
     generate_Batch_num: '/delivery_hub/item_delivery/generate_batch_number',
     generate_Delivery_po: '/delivery_hub/item_delivery/generate_po_number',
-    deliver_Items: '/delivery_hub/item_delivery/deliver_items',
+    deliver_Items: '/delivery_hub/item_delivery/deliver_items'
 
 };
 
-const addBaseApi = (endpoints) => {
-    const modifiedEndpoints = {};
-    Object.keys(endpoints).forEach((key) => {
-        if (key !== "base_api") {
-            modifiedEndpoints[key] = base_api + endpoints[key];
-        }
-    });
-    return modifiedEndpoints;
-};
+// Prepend base_api to each endpoint
+const modifiedEndpoints = {};
+Object.keys(api).forEach((key) => {
+    modifiedEndpoints[key] = base_api + api[key];
+});
 
-module.exports = {
-    ...addBaseApi(api)
-}
+module.exports = modifiedEndpoints;

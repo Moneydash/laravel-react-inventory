@@ -1,6 +1,7 @@
 import { Button, InputAdornment, TextField } from "@mui/material";
 import React from "react";
 import VisuallyHidden from "./FileInputComponent";
+import PropTypes from "prop-types";
 
 const FileUploadCmp = ({
     name,
@@ -46,6 +47,20 @@ const FileUploadCmp = ({
             }}
         />
     );
+};
+
+FileUploadCmp.propTypes = {
+    name: PropTypes.string,
+    fileName: PropTypes.string,
+    fileNameError: PropTypes.bool,
+    fileNameHelperText: PropTypes.string,
+    fileNameValue: PropTypes.string,
+    placeholder: PropTypes.string,
+    accept: PropTypes.string,
+    endIcon: PropTypes.element,
+    disabled: PropTypes.bool,
+    handleChange: PropTypes.func,
+    size: PropTypes.string
 };
 
 FileUploadCmp.defaultProps = {
