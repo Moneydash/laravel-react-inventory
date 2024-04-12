@@ -5,15 +5,31 @@ FROM php:8.2
 RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
         git \
-        libpq-dev \
-        libsqlite3-dev \
+        curl \
         default-mysql-client \
+        libpng-dev \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        build-essential \
+        libssl-dev \
+        zlib1g-dev \
+        libjpeg-dev \
+        libzip-dev \
+        libxrender-dev \
+        libfontconfig \
+        libxext-dev \
+        libsndfile1 \
+        ffmpeg \
+        zip \
+        unzip \
+        supervisor \
         sudo \
-        nano \
-    && rm -rf /var/lib/apt/lists/*
+        nano
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql pdo_sqlite
+RUN docker-php-ext-install pdo pdo_mysql
 
 # Install Composer
 RUN wget -O /usr/local/bin/composer https://getcomposer.org/composer-stable.phar && chmod +x /usr/local/bin/composer
@@ -28,12 +44,8 @@ COPY . .
 RUN composer install
 RUN composer dump-autoload
 
-# Expose the port on which the app will run
+# expose the port that is going to use by the backend
 EXPOSE 8000
 
-# Run the automated backend setup script
-# RUN chmod +x BackendSetup.sh
-# RUN ./BackendSetup.sh
-
 # Command to run the React app in build mode (for production)
-ENTRYPOINT ["php", "artisan", "serve"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0"]

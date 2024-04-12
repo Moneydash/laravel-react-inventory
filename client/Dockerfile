@@ -1,14 +1,6 @@
 # Use a Node.js base image
 FROM node:20
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        wget \
-        git \
-        sudo \
-        nano \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
@@ -31,4 +23,4 @@ RUN npm run build
 RUN npm install -g serve
 
 # Command to run the React app in build mode (for production)
-ENTRYPOINT ["serve", "-s", "build"]
+CMD ["serve", "-s", "build"]
