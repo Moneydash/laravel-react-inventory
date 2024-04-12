@@ -1,8 +1,5 @@
 # !/bin/bash -v
 
-# proceed to server or the backend folder
-cd server
-
 # migrate all the tables
 php artisan migrate
 

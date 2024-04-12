@@ -1,7 +1,5 @@
 const base_api = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 const api = {
-    base_api,
-
     // unauthenticated services
     login: '/login',
     register: '/register',
@@ -93,20 +91,14 @@ const api = {
     update_Delivery_status: '/delivery_hub/item_delivery/update_status/',
     generate_Batch_num: '/delivery_hub/item_delivery/generate_batch_number',
     generate_Delivery_po: '/delivery_hub/item_delivery/generate_po_number',
-    deliver_Items: '/delivery_hub/item_delivery/deliver_items',
+    deliver_Items: '/delivery_hub/item_delivery/deliver_items'
 
 };
 
-const addBaseApi = (endpoints) => {
-    const modifiedEndpoints = {};
-    Object.keys(endpoints).forEach((key) => {
-        if (key !== "base_api") {
-            modifiedEndpoints[key] = base_api + endpoints[key];
-        }
-    });
-    return modifiedEndpoints;
-};
+// Prepend base_api to each endpoint
+const modifiedEndpoints = {};
+Object.keys(api).forEach((key) => {
+    modifiedEndpoints[key] = base_api + api[key];
+});
 
-module.exports = {
-    ...addBaseApi(api)
-}
+module.exports = modifiedEndpoints;
