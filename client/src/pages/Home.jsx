@@ -38,13 +38,14 @@ function Home() {
 
             // Now, check if the decryptedToken is not null or undefined
             if (decryptedToken) {
-                axios_get_header(checkAuth, decryptedToken)
-                    .catch(error => {
-                      console.log(error);
-                      localStorage.clear();
-                      Cookies.remove();
-                      navigate("/");
-                    });
+              try {
+                axios_get_header(checkAuth, decryptedToken);
+              } catch (error) {
+                console.log(error);
+                localStorage.clear();
+                Cookies.remove();
+                navigate("/");
+              }
             } else {
                 // Handle the case when decryption fails
                 console.log("Failed to decrypt access_token");

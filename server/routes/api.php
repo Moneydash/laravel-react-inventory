@@ -93,10 +93,13 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     // Routes for purchase orders
     Route::prefix('purchase_order')->middleware('auth:sanctum')->group(function() {
         Route::get('generate_po_number', [PurchaseOrderController::class, 'generate_po_number'])->name('purchase_order.generatePoNumber');
+        Route::get('generate_track_number', [PurchaseOrderController::class, 'generate_tracking_number'])->name('purchase_order.generateTrackingNumber');
         Route::post('add_purchase_order', [PurchaseOrderController::class, 'add_purchase_order'])->name('purchase_order.add');
-        Route::get('get_purchase_orders', [PurchaseOrderController::class, 'get_purchase_orders'])->name('purchase_order.getAll');
+        Route::get('get_purchase_orders/{approval_status}', [PurchaseOrderController::class, 'get_purchase_orders'])->name('purchase_order.getAll');
         Route::get('get_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'get_purchase_order'])->name('purchase_order.getInfo');
-        Route::put('update_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'update_purchase_order'])->name('purchase_order.update');
+        Route::post('update_purchase_order/{purchase_order_number}', [PurchaseOrderController::class, 'update_purchase_order'])->name('purchase_order.update');
+        Route::patch('purchase_approval/{po_number}/{status}', [PurchaseOrderController::class, 'purchase_approval'])->name('purchase_order.updateApproval');
+        Route::patch('close_order/{po_number}', [PurchaseOrderController::class, 'closeOrder'])->name('purchase_order.close');
     });
 
     Route::prefix('warehouse')->middleware('auth:sanctum')->group(function() {

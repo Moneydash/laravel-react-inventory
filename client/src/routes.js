@@ -16,8 +16,13 @@ import ItemDelivery from "./pages/Delivery Management/ItemDelivery";
 import Customers from "./pages/Delivery Management/Customers";
 import DeliveryPersons from "./pages/Delivery Management/DeliveryPersons";
 import Notfound from "./pages/Notfound";
+import { redirect } from "react-router-dom";
 
 const childRoutes = [
+    {
+        index: true,
+        loader: () => redirect("/main/page/inventory")
+    },
     {
         path: 'inventory',
         element: <InventoryControl />

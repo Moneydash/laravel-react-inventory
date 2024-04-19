@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseOrder extends Model
 {
@@ -18,25 +19,42 @@ class PurchaseOrder extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'tax_rate',
+        'tax_amount',
+        'discount',
+        'total',
+        'shipping_date',
+        'shipping_method',
         'billing_address',
-        'shipping_address',
-        'purchase_order_notes',
-        'delivery_notes',
+        'additional_charges',
+        'documents',
+        'po_notes',
+        'priority_lvl',
+        'tracking_num',
         'order_status',
-        'date_of_order'
+        'approval_status',
+        'date_of_order',
+        'warehouse_id'
     ];
 
     protected $casts = [
         'date_of_order' => 'datetime',
         'unit_price' => 'float',
+        'tax_amount' => 'float',
+        'subtotal' => 'float',
+        'total' => 'float',
         'subtotal' => 'float'
     ];
 
-    public function suppliers() {
+    public function suppliers(): BelongsTo {
         return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
     }
 
-    public function products() {
+    public function products(): BelongsTo {
         return $this->belongsTo(Product::class, 'product_id', 'id');
+    }
+
+    public function warehouse(): BelongsTo {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 }
