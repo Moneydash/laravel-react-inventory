@@ -50,11 +50,14 @@ const api = {
     download_Product_image: '/product-image/download/',
 
     // inventory - purchase orders submodules
-    get_Purchase_orders: '/inventory/purchase_order/get_purchase_orders',
+    get_Purchase_orders: '/inventory/purchase_order/get_purchase_orders/',
     generate_Po: '/inventory/purchase_order/generate_po_number',
+    generate_Track_number: '/inventory/purchase_order/generate_track_number',
     get_Purchase_order: '/inventory/purchase_order/get_purchase_order/',
     update_Purchase_order: '/inventory/purchase_order/update_purchase_order/',
     add_Purchase_order: '/inventory/purchase_order/add_purchase_order',
+    update_Purchase_approval: '/inventory/purchase_order/purchase_approval/',
+    close_Order: '/inventory/purchase_order/close_order/',
 
     // inventory - warehouse submodules
     get_Warehouse_types: '/inventory/warehouse/get_types',

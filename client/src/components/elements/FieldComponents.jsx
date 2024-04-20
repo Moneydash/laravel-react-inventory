@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import React from "react";
 import PropTypes from "prop-types";
 
-const DatePickerCmp = ({ onChange, label, name, value, helperText, error }) => {
+const DatePickerCmp = ({ onChange, label, name, value, helperText, error, size, sx, disabled }) => {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DemoContainer components={['DatePicker']}>
@@ -15,12 +15,14 @@ const DatePickerCmp = ({ onChange, label, name, value, helperText, error }) => {
                     onChange={onChange}
                     name={name}
                     value={value}
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', ...sx }}
                     minDate={dayjs()}
+                    disabled={disabled}
                     slotProps={{
                         textField: {
                             helperText: helperText,
-                            error: error
+                            error: error,
+                            size: size
                         }
                     }}
                 />
@@ -83,47 +85,49 @@ const SelectCmp = ({ id, value, label, onChange, items, size, name, error, noIte
     );
 }
 
-const MultipleSelectCmp = ({ id, label, value, onChange, items, size, name, error }) => {    
+const MultipleSelectCmp = ({ id, label, value, onChange, items, size, name, error, noItemsText }) => {    
     return (
         <FormControl fullWidth size={size}>
-            <InputLabel id={id}>{label}</InputLabel>
-            <Select
-                labelId={id}
-                id={id}
-                multiple
-                value={value}
-                onChange={onChange}
-                name={name}
-                size={size}
-                error={error}
-                input={<OutlinedInput id={id} label={label} size={size} />}
-                renderValue={(selected) => {
-                    return (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value, index) => (
-                                <Chip
-                                    key={index}
-                                    label={items.find(item => item?.id === value || item?.value === value)?.name ?? ''}
-                                    size={size}
-                                    variant="outlined"
-                                    color="primary"
-                                />
-                            ))}
-                        </Box>
-                    );
-                }}
+            <InputLabel id={id}>{items?.length > 0 ? label : noItemsText}</InputLabel>
+            { items?.length > 0
+            ? <Select
+            labelId={id}
+            id={id}
+            multiple
+            value={value}
+            onChange={onChange}
+            name={name}
+            size={size}
+            error={error}
+            input={<OutlinedInput id={id} label={label} size={size} />}
+            renderValue={(selected) => {
+                return (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value, index) => (
+                            <Chip
+                                key={index}
+                                label={items.find(item => item?.id === value || item?.value === value)?.name ?? ''}
+                                size={size}
+                                variant="outlined"
+                                color="primary"
+                            />
+                        ))}
+                    </Box>
+                );
+            }}
+        >
+        { items?.length > 0 ? items?.map((item, index) => (
+            <MenuItem
+                key={index}
+                value={item?.value ? item?.value : item?.id}
             >
-            { items?.length > 0 ? items?.map((item, index) => (
-                <MenuItem
-                    key={index}
-                    value={item?.value ? item?.value : item?.id}
-                >
-                    { item?.name ?? '' }
-                </MenuItem>
-            ))
-            : <MenuItem value="">&nbsp;</MenuItem>
-            }
-            </Select>
+                { item?.name ?? '' }
+            </MenuItem>
+        ))
+        : <MenuItem value="">&nbsp;</MenuItem>
+        }
+        </Select>
+        : '' }
         </FormControl>
     );
 }
@@ -135,7 +139,10 @@ DatePickerCmp.defaultProps = {
     name: '',
     value: null,
     helperText: '',
-    error: false
+    error: false,
+    size: 'medium',
+    sx: {},
+    disabled: false,
 };
 
 // prop types of datepicker
@@ -145,7 +152,10 @@ DatePickerCmp.propTypes = {
     name: PropTypes.string,
     value: PropTypes.instanceOf(dayjs),
     helperText: PropTypes.string,
-    error: PropTypes.bool
+    error: PropTypes.bool,
+    size: PropTypes.string,
+    sx: PropTypes.object,
+    disabled: PropTypes.bool
 };
 
 // default value of time picker
@@ -208,7 +218,8 @@ MultipleSelectCmp.defaultProps = {
     items: [],
     size: 'medium',
     name: '',
-    error: false
+    error: false,
+    noItemsText: 'Loading ...',
 };
 
 // prop types of multiple select component
@@ -220,7 +231,8 @@ MultipleSelectCmp.propTypes = {
     items: PropTypes.array,
     size: PropTypes.string,
     name: PropTypes.string,
-    error: PropTypes.bool
+    error: PropTypes.bool,
+    noItemsText: PropTypes.string
 };
 
 export { DatePickerCmp, TimePickerCmp, SelectCmp, MultipleSelectCmp };

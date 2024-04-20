@@ -177,7 +177,7 @@ class SupplierController extends Controller
     public function get_supplier_products($supplier_id) {
         $supplier_products = Product::whereHas('suppliers', function ($query) use ($supplier_id) {
             $query->where('suppliers.id', $supplier_id); // get the specific supplier id
-        })->where('products.prod_status', 1)->get(); // get the active product status
+        })->get();
     
         return response()->json([ 'supplier_products' => $supplier_products ]);
     }

@@ -1,9 +1,24 @@
-import React, { Fragment, forwardRef, useEffect, useState } from "react";
-import { DataGrid } from '@mui/x-data-grid'
-import { AppBar, Button, Card, CardContent, Container, Dialog, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Slide, Snackbar, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
-import { AddShoppingCartOutlined, CloseRounded, EditRounded, InfoOutlined, KeyboardArrowDownRounded, RefreshOutlined } from "@mui/icons-material";
-import { axios_get_header, axios_post_header, axios_put_header } from "utils/requests";
-import { LoadingButton } from "@mui/lab";
+import React, { useEffect, useState } from "react";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid,
+    Typography
+} from "@mui/material";
+import { 
+    AddShoppingCartOutlined,
+    CancelOutlined,
+    EditRounded,
+    FlagRounded,
+    RefreshOutlined,
+    ThumbDownAltRounded,
+    ThumbUpAltRounded
+} from "@mui/icons-material";
+import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
 import { decryptAccessToken } from "utils/auth";
 import {
     get_Purchase_orders,
@@ -12,30 +27,99 @@ import {
     update_Purchase_order,
     add_Purchase_order,
     get_Suppliers,
-    get_Supplier_products
+    get_Supplier_products,
+    get_Warehouses,
+    generate_Track_number,
+    update_Purchase_approval,
+    close_Order
 } from 'utils/services';
-
-const transitionStyle = forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
+import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
+import {
+    apiFormGetHelper,
+    apiGetHelper,
+    crumbsHelper,
+    decimalNumRegex,
+    firstCap, 
+    nullCheck,
+    setData,
+    setErrorHelper,
+    setErrorOnly,
+    twoDigitDecimal,
+    validate_file,
+    wholeNumRegex
+} from "utils/helper";
+import TableComponent from "components/elements/TableComponent";
+import ToastCmp from "components/elements/ToastComponent";
+import { toast } from "react-toastify";
+import { SelectCmp } from "components/elements/FieldComponents";
+import AddUpdateContent from "components/pages/Inventory/PurchaseOrder/Add_Update";
+import { ErrorColorBtn, ErrorColorIconBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import dayjs from "dayjs";
+import CloseOrder from "components/pages/Inventory/PurchaseOrder/Close";
 
 function PurchaseOrder() {
     document.title = 'InventoryIQ: Purchase Order';
     const decrypted_access_token = decryptAccessToken(); // decrypt access token
-
-    // temporarily hard coded, but will add on the app configurations later.
-    const billing_addr = 'East Rembo, Makati City';
-    const shipping_addr = 'Comembo, Makati City';
-
     const renderActionButtons = (params) => {
-        return <div>
-                <IconButton onClick={() => get_purchase_order(params.value, 2)} color="primary">
-                    <Tooltip title="View Product Information" placement="bottom" arrow><InfoOutlined fontSize="small"/></Tooltip>
-                </IconButton>
-                <IconButton onClick={() => get_purchase_order(params.value, 1)} color="primary" sx={{ ml: 1 }}>
-                    <Tooltip title="Update Product Information" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
-                </IconButton>
-        </div>
+        const approve_btn = (
+            <PrimaryColorIconBtn
+                fn={() => purchase_approval(params.value, 1)}
+                title="Approve Purchase"
+                icon={<ThumbUpAltRounded fontSize="small" />}
+            />
+        );
+        const disapprove_btn = (
+            <ErrorColorIconBtn
+                fn={() => purchase_approval(params.value, 2)}
+                title="Disapprove Purchase"
+                icon={<ThumbDownAltRounded fontSize="small" />}
+                sx={{ ml: 1 }}
+                disabled={params.row.order_status === 1}
+            />
+        );
+        const edit_btn = (
+            <PrimaryColorIconBtn
+                fn={() => get_purchase_order(params.value, 1)}
+                title="Update Purchase Order"
+                icon={<EditRounded fontSize="small" />}
+                sx={{ ml: 1 }}
+            />
+        );
+        const close_btn = (
+            <PrimaryColorIconBtn
+                fn={() => get_purchase_order(params.value, 0)}
+                title="Flagged as Closed"
+                icon={<FlagRounded />}
+                sx={{ ml: 1 }}
+                disabled={params.row.order_status === 1}
+            />
+        );
+        
+        switch(params.row.approval) {
+            case 0:
+                return (
+                    <>
+                        { approve_btn }
+                        { disapprove_btn }
+                        { edit_btn }
+                    </>
+                );
+            case 1:
+                return (
+                    <>
+                        { disapprove_btn }
+                        { close_btn }
+                    </>
+                );
+            case 2:
+                return (
+                    <>
+                        { approve_btn }
+                    </>
+                );
+            default:
+                return null;
+        }
     }
 
     const columns = [
@@ -44,8 +128,11 @@ function PurchaseOrder() {
         { field: 'product_id', headerName: 'Product Name', flex: 1 },
         { field: 'quantity', headerName: 'Quantity', flex: 1 },
         { field: 'unit_price', headerName: 'Unit Price', flex: 1 },
+        { field: 'discount', headerName: 'Discount', flex: 1 },
         { field: 'subtotal', headerName: 'SubTotal', flex: 1 },
-        { field: 'date_of_order', headerName: 'Order Date', flex: 1 },
+        { field: 'tax_rate', headerName: 'Tax Rate', flex: 1 },
+        { field: 'tax_amount', headerName: 'Tax Amount', flex: 1 },
+        { field: 'total', headerName: 'Total Amount', flex: 1 },
         { field: 'id', headerName: 'Actions', flex: 1, renderCell: renderActionButtons }
     ];
     const [rows, setRows] = useState([]);
@@ -56,59 +143,84 @@ function PurchaseOrder() {
     const [productPrice, setProductPrice] = useState('');
     const [loadingTable, setLoadingTable] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [fullDisable, setFullDisable] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: ''
-    });
-
-    // forms
-    const [formData, setFormData] = useState({
+    const [warehouse, setWarehouse] = useState([]);
+    const [approvalType, setApprovalType] = useState(0);
+    const [closeDialog, setCloseDialog] = useState(false);
+    const initialState = {
         po_number: '',
         supplier_id: '',
-        billing_address: billing_addr,
-        shipping_address: shipping_addr,
+        billing_address: 'Comembo, Makati City', // temporarily hard coded, will add on the configurations later.
         product_id: '',
-        quantity: 1,
-        unit_price: 0,
-        subtotal: 0,
-        purchase_order_notes: '',
-        delivery_notes: '',
-        order_status: 0
-    });
-    const [formDataError, setFormDataError] = useState({
+        tracking_num: '',
+        quantity: '',
+        unit_price: '',
+        subtotal: '',
+        po_notes: '',
+        tax_rate: 12, // temporarily hard coded, will also add to the configurations later.
+        tax_amount: '',
+        total: '',
+        shipping_date: 'No shipping date until approved.',
+        discount: 0,
+        shipping_method: '',
+        additional_charges: '',
+        documents: '',
+        documents_name: '',
+        priority_lvl: 3,
+        warehouse_id: ''
+    };
+    const initialError = {
         supplier_id: false,
         product_id: false,
         quantity: false,
-        unit_price: false
-    });
-    const [formDataHelpertext, setFormDataHelperText] = useState({
+        unit_price: false,
+        discount: false,
+        shipping_method: false,
+        documents_name: false,
+        priority_lvl: false,
+        warehouse_id: false
+    };
+    const initialHelper = {
         quantity: '',
         unit_price: '',
-    });
+        documents_name: '',
+    };
+    const [formData, setFormData] = useState(initialState);
+    const [formDataError, setFormDataError] = useState(initialError);
+    const [formDataHelpertext, setFormDataHelperText] = useState(initialHelper);
+    const approval_list = [
+        { id: 0, name: 'Pending' },
+        { id: 1, name: 'Approved' },
+        { id: 2, name: 'Disapprove' }
+    ];
 
-    const get_purchase_orders = () => {
-        setRows([]);
+    const calculateSubtotal = (price, quantity) => {
+        return parseFloat(price * quantity).toFixed(2);
+    }
+
+    const calculateDiscountSubtotal = (subtotal, discount) => {
+        const disc_subtot = subtotal - (subtotal * (discount / 100));
+        return parseFloat(disc_subtot).toFixed(2);
+    }
+
+    const calculateTaxAmnt = (disc_subtotal, taxRate) => {
+        return parseFloat(disc_subtotal * (taxRate / 100)).toFixed(2);
+    }
+
+    const calculateTotalAmnt = (disc_subtotal, taxAmnt) => {
+        const disc_sub = parseFloat(disc_subtotal);
+        const taxAmt = parseFloat(taxAmnt);
+        return parseFloat(disc_sub + taxAmt).toFixed(2);
+    }
+
+    const get_purchase_orders = (approval_type) => {
         setLoadingTable(true);
-        axios_get_header(get_Purchase_orders, decrypted_access_token)
+        axios_get_header(`${get_Purchase_orders}${approval_type}`, decrypted_access_token)
         .then(response => {
-            const data = response.data.purchase_order_data;
-            const transformedData = data.map(purchase_order => {
-                const date = new Date(purchase_order["date_of_order"]);
-                // Extract the date components
-                const year = date.getFullYear();
-                const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, so add 1
-                const day = date.getDate().toString().padStart(2, '0');
-
-                // Extract the time components
-                const hours = date.getHours().toString().padStart(2, '0');
-                const minutes = date.getMinutes().toString().padStart(2, '0');
-                const seconds = date.getSeconds().toString().padStart(2, '0');
-
-                // Create the formatted date string in "yyyy-mm-dd HH:mm:ss" format
-                const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                const supplierName = purchase_order.suppliers.supp_name;
-                const productName = purchase_order.products.prod_name;
+            const data = response.data;
+            const po_data = data.purchase_order_data;
+            const transformedData = po_data.map(purchase_order => {
+                const supplierName = purchase_order.suppliers.name;
+                const productName = purchase_order.products.name;
 
                 return {
                     id: purchase_order['po_number'],
@@ -116,9 +228,14 @@ function PurchaseOrder() {
                     supplier_id: supplierName,
                     product_id: productName,
                     quantity: purchase_order['quantity'],
-                    unit_price: purchase_order['unit_price'],
-                    subtotal: parseFloat(purchase_order['subtotal']).toFixed(2),
-                    date_of_order: formattedDate
+                    unit_price: `₱ ${twoDigitDecimal(purchase_order['unit_price'])}`,
+                    discount: `${purchase_order['discount']} %`,
+                    subtotal: `₱ ${twoDigitDecimal(purchase_order['subtotal'])}`,
+                    tax_rate: `${purchase_order['tax_rate']} %`,
+                    tax_amount: `₱ ${twoDigitDecimal(purchase_order['tax_amount'])}`,
+                    total: `₱ ${twoDigitDecimal(purchase_order['total'])}`,
+                    approval: purchase_order['approval_status'],
+                    order_status: purchase_order['order_status']
                 }
             });
             setLoadingTable(false);
@@ -130,404 +247,406 @@ function PurchaseOrder() {
         });
     }
 
+    const handleApprovalTypeChange = (e) => {
+        let appr_type = e.target.value;
+        setApprovalType(appr_type);
+        get_purchase_orders(appr_type);
+    }
+
     /* eslint-disable */
     useEffect(() => {
-        get_purchase_orders();
+        get_purchase_orders(approvalType);
     }, []);
     /* eslint-disable */
 
     const generate_po_number = () => {
-        axios_get_header(generate_Po, decrypted_access_token)
-        .then(response => { setFormData((prevState) => ({ ...prevState, po_number: response.data.po_number })); })
-        .catch(error => { console.log(error); });
-    }
+        apiFormGetHelper(generate_Po, setFormData, 'po_number', 'po_number');
+    };
+
+    const generate_tracking_num = () => {
+        apiFormGetHelper(generate_Track_number, setFormData, 'tracking_num', 'tracking_number');
+    };
 
     const get_suppliers = () => {
-        axios_get_header(get_Suppliers, decrypted_access_token)
-        .then(response => { setSuppliers(response.data.suppliers); })
-        .catch(error => { console.log(error); });
-    }
+        apiGetHelper(get_Suppliers, setSuppliers, 'suppliers');
+    };
 
     const get_supplier_products = (supplier_id) => {
-        axios_get_header(get_Supplier_products + supplier_id, decrypted_access_token)
-        .then(response => { setProducts(response.data.supplier_products); })
-        .catch(error => { console.log(error); });
-    }
+        apiGetHelper(`${get_Supplier_products}${supplier_id}`, setProducts, 'supplier_products');
+    };
+
+    const get_warehouses = () => {
+        apiGetHelper(get_Warehouses, setWarehouse, 'warehouses');
+    };
 
     const formDataReset = () => {
-        setFormData((prevState) => ({
-            ...prevState,
-            po_number: '',
-            supplier_id: '',
-            billing_address: billing_addr,
-            shipping_address: shipping_addr,
-            product_id: '',
-            quantity: 0,
-            unit_price: 0,
-            subtotal: 0,
-            purchase_order_notes: '',
-            delivery_notes: '',
-            order_status: 0
-        }));
+        setFormData(initialState);
+        setFormDataError(initialError);
+        setFormDataHelperText(initialHelper);
+        setSuppliers([]);
         setProducts([]);
+        setWarehouse([]);
         setProductPrice('');
-        setFullDisable(false);
         setEditIndex(0);
+    };
+
+    const refresh_table = () => {
+        setApprovalType(0);
+        get_purchase_orders(0);
     }
 
     const handleDialog = (status) => {
-        if (formData.po_number === null || formData.po_number === '') {
+        get_suppliers();
+        get_warehouses();
+        if (nullCheck(formData?.po_number)) {
             generate_po_number();
         }
-        get_suppliers();
-        setDialog(status);
+
+        if (nullCheck(formData?.tracking_num)) {
+            generate_tracking_num();
+        }
         if (status === false) {
             formDataReset();
         }
-    }
+        setDialog(status);
+    };
 
-    const get_purchase_order = (param, status) => {
-        setEditIndex(status);
+    const get_purchase_order = async (param, status) => {
 
         get_suppliers();
-        axios_get_header(get_Purchase_order + param, decrypted_access_token)
-        .then(response => {
-            const data = response.data.purchase_order_data;
-            get_supplier_products(data.supplier_id);
-            setFullDisable(data.order_status === 2 ? true : false);
-            setFormData((prevState) => ({
-                ...prevState,
-                po_number: data.po_number,
-                supplier_id: data.supplier_id,
-                billing_address: data.billing_address,
-                shipping_address: data.shipping_address,
-                product_id: data.product_id,
-                quantity: data.quantity,
-                unit_price: data.unit_price,
-                subtotal: data.subtotal,
-                purchase_order_notes: data.purchase_order_notes,
-                delivery_notes: data.delivery_notes === null ? '' : data.delivery_notes,
-                order_status: data.order_status
-            }));
-            setDialog(true);
-        })
-        .catch(error => { console.log(error); });
+        get_warehouses();
+        try {
+            const response = await axios_get_header(get_Purchase_order + param, decrypted_access_token);
+            const data = response.data;
+            const po_data = data.purchase_order_data;
+            get_supplier_products(po_data?.supplier_id);
+
+            if (status === 1) {
+                setEditIndex(status);
+                setFormData((prevState) => ({
+                    ...prevState,
+                    po_number: po_data?.po_number,
+                    supplier_id: po_data?.supplier_id,
+                    product_id: po_data?.product_id,
+                    quantity: po_data?.quantity,
+                    unit_price: po_data?.unit_price,
+                    subtotal: po_data?.subtotal,
+                    tax_rate: po_data?.tax_rate,
+                    tax_amount: po_data?.tax_amount,
+                    total: po_data?.total,
+                    discount: po_data?.discount,
+                    shipping_date: dayjs(),
+                    shipping_method: po_data?.shipping_method,
+                    billing_address: po_data?.billing_address,
+                    additional_charges: nullCheck(po_data?.additional_charges) ? '' : po_data?.additional_charges,
+                    documents_name: po_data?.documents,
+                    po_notes: nullCheck(po_data?.po_notes) ? '' : po_data?.po_notes,
+                    priority_lvl: po_data?.priority_lvl,
+                    tracking_num: po_data?.tracking_num,
+                    warehouse_id: po_data?.warehouse_id
+                }));
+                setDialog(true);
+            } else {
+                setData(setFormData, 'id', po_data?.po_number);
+                setCloseDialog(true);
+            }
+        } catch (error) {
+            console.error("Fetch Error: ", error);
+            throw error;
+        }
+    };
+
+    const purchase_approval = async (id, status) => {
+        try {
+            const response = await axios_patch_header(`${update_Purchase_approval}${id}/${status}`, {}, decrypted_access_token);
+            const data = response.data;
+            
+            get_purchase_orders(approvalType);
+            toast.success(data.message);
+        } catch (error) {
+            console.error('Approval Error: ', error);
+            throw error;
+        }
+    }
+
+    const close_order = async (id) => {
+        try {
+            const response = await axios_patch_header(`${close_Order}${id}`, {}, decrypted_access_token);
+            const data = response.data;
+            
+            get_purchase_orders(approvalType);
+            setCloseDialog(false);
+            toast.success(data.message);
+        } catch (error) {
+            console.error('Closing Error: ', error);
+            throw error;
+        }
     }
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        if (name === 'supplier_id') {
-            setFormData((prevState) => ({ ...prevState, [name]: value, product_id: '' }));
-
-            if (value !== '') {
-                get_supplier_products(value);
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-            }
-        }
-
-        if (name === 'product_id') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            const selected_product = products.find((product) => product.id === value);
-
-            if (value !== '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                if (selected_product) {
-                    setProductPrice(selected_product.prod_price);
-                }
-            }
-        }
-
-        if (name === 'unit_price') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            const modifiedString = name.replace(/_/, ' ');
-
-            const isValidNumber = /^[1-9]\d*(\.\d+)?$/;
-
-            if (isValidNumber.test(value)) {
-                const numericValue = parseFloat(value);
-
-                if (numericValue === '' || numericValue <= 0) {
-                    setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: modifiedString.charAt(0).toUpperCase() + modifiedString.slice(1) + ' must not be empty or zero value!' }));
-                } else if (numericValue >= productPrice) {
-                    setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: modifiedString.charAt(0).toUpperCase() + modifiedString.slice(1) + ' must be less than the price of the chosen product' }));
+        const { name, value, files } = e.target;
+        switch (name) {
+            case 'documents':
+                const file = files[0];
+                validate_file(
+                    file,
+                    'file',
+                    name,
+                    setFormData,
+                    setFormDataError,
+                    setFormDataHelperText
+                );
+                break;
+            case 'supplier_id':
+                setData(setFormData, name, value);
+                if (!nullCheck(value)) {
+                    get_supplier_products(value);
+                    setErrorOnly(setFormDataError, name, false);
                 } else {
-                    if (formData.quantity !== null && formData.quantity > 0) {
-                        setFormData((prevState) => ({ ...prevState, subtotal: parseFloat(value * formData.quantity).toFixed(2) }));
-                    }
-                    setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
+                    setProducts([]);
+                    setErrorOnly(setFormDataError, name, true);
                 }
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: modifiedString.charAt(0).toUpperCase() + modifiedString.slice(1) + ' must be a number' }));
-            }
-        }
+                break;
+            case 'product_id':
+                setData(setFormData, name, value);
+                const selected_product = products.find((product) => product.id === value);
+                if (!nullCheck(value)) {
+                    setErrorOnly(setFormDataError, name, false);
+                    if (selected_product) {
+                        setProductPrice(selected_product.price);
+                    }
+                }
+                break;
+            case 'unit_price':
+                setData(setFormData, name, value);
+                const modifiedString = name.replace(/_/, ' ');
+                if (decimalNumRegex(value)) {
+                    const numericValue = parseFloat(value);
 
-        if (name === 'quantity') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            const isValidNumber = /^[1-9]\d*(\.\d+)?$/.test(value);
+                    if (numericValue === '') {
+                        setErrorHelper(name, true, 'Please fill up required field!', setFormDataError, setFormDataHelperText);
+                    } else if (numericValue <= 0 || isNaN(numericValue)) {
+                        setErrorHelper(name, true, `${firstCap(modifiedString)} must be a valid number and greater than zero!`, setFormDataError, setFormDataHelperText);
+                    } else if (numericValue >= productPrice) {
+                        setErrorHelper(name, true, `${firstCap(modifiedString)} must be less than the price of the chosen product`, setFormDataError, setFormDataHelperText);
+                    } else {
+                        if (!nullCheck(formData?.quantity) && !nullCheck(formData?.discount)) {
+                            const subtot = calculateSubtotal(value, formData?.quantity);
+                            const discounted_subtotal = calculateDiscountSubtotal(subtot, formData?.discount);
+                            const taxAmount = calculateTaxAmnt(discounted_subtotal, formData?.tax_rate);
+                            const totalAmnt = calculateTotalAmnt(discounted_subtotal, taxAmount);
 
-            if (value === '' || !isValidNumber) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: name.charAt(0).toUpperCase() + name.slice(1) + ' must not be empty, equals or less than to zero' }));
-            } else {
-                setFormData((prevState) => ({ ...prevState, subtotal: parseFloat(formData.unit_price * value).toFixed(2) }));
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'purchase_order_notes' || name === 'delivery_notes') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-        }
-
-        if (name === 'order_status') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
+                            setData(setFormData, 'subtotal', discounted_subtotal);
+                            setData(setFormData, 'tax_amount', taxAmount);
+                            setData(setFormData, 'total', totalAmnt);
+                        }
+                        setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                    }
+                } else {
+                    setErrorHelper(name, true, `${firstCap(modifiedString)} must be a valid number or a valid decimal number`, setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'quantity':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, 'Please fill up required field!', setFormDataError, setFormDataHelperText);
+                } else if (!wholeNumRegex(value) || isNaN(value)) {
+                    setErrorHelper(name, true, `${firstCap(name)} must be a valid number and greater than zero`, setFormDataError, setFormDataHelperText);
+                } else {
+                    if (!nullCheck(formData?.unit_price) && !nullCheck(formData?.discount)) {
+                        const subtot = calculateSubtotal(formData?.unit_price, value);
+                        const discounted_subtotal = calculateDiscountSubtotal(subtot, formData?.discount);
+                        const taxAmount = calculateTaxAmnt(discounted_subtotal, formData?.tax_rate);
+                        const totalAmnt = calculateTotalAmnt(discounted_subtotal, taxAmount);
+    
+                        setData(setFormData, 'subtotal', discounted_subtotal);
+                        setData(setFormData, 'tax_amount', taxAmount);
+                        setData(setFormData, 'total', totalAmnt);
+                    }
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'discount':
+                setData(setFormData, name, value);
+                if (!nullCheck(formData?.unit_price) && !nullCheck(formData?.quantity)) {
+                    const subtot = calculateSubtotal(formData?.unit_price, formData?.quantity);
+                    const discounted_subtotal = calculateDiscountSubtotal(subtot, value);
+                    const taxAmount = calculateTaxAmnt(discounted_subtotal, formData?.tax_rate);
+                    const totalAmnt = calculateTotalAmnt(discounted_subtotal, taxAmount);
+    
+                    setData(setFormData, 'subtotal', discounted_subtotal);
+                    setData(setFormData, 'tax_amount', taxAmount);
+                    setData(setFormData, 'total', totalAmnt);
+                }
+                break;
+            default:
+                setData(setFormData, name, value);
+                if (name !== 'additional_charges' || name !== 'po_notes') {
+                    if (nullCheck(value)) {
+                        setErrorHelper(name, true, 'Please fill up required field', setFormDataError, setFormDataHelperText);
+                    } else {
+                        setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                    }
+                }
+                break;
         }
     }
-    
-    const handleSnackbar = (status, message) => { setSnackbar((prevSnack) => ({ ...prevSnack, open: status, message: message })); }
+
     const handleSubmit = (e) => {
         e.preventDefault();
+        const formDataSubmit = new FormData();
+        const excluded = ['documents_name', 'shipping_date']; // do not include shipping, will update upon approval
+        for (const field in formData) {
+            if (!excluded.includes(field)) {
+                formDataSubmit.append(field, formData[field]);
+            }
+        }
+        
+        const optional = ['additional_charges', 'po_notes'];
+        const optional_update = ['documents', 'documents_name'];
         let hasError = false;
 
-        for (const field in formDataError) {
-            if (formData[field] === true) {
-                hasError = true;
+        for (const field in formData) {
+            const isFieldEmpty = nullCheck(formData[field]);
+            const isFieldError = formDataError[field] === true;
+            const isOptional = optional.includes(field);
+            const isOptionalUpdate = optional_update.includes(field);
+
+            if (editIndex === 1) {
+                if (!isOptional && !isOptionalUpdate && isFieldError) {
+                    hasError = true;
+                    setErrorHelper(field, true, 'Please fill up required field!', setFormDataError, setFormDataHelperText);
+                }
+            } else if (editIndex === 0) {
+                if (!isOptional && (isFieldEmpty && isFieldError)) {
+                    hasError = true;
+                    setErrorHelper(field, true, 'Please fill up required field!', setFormDataError, setFormDataHelperText);
+                }
             }
         }
 
-        if (formData.supplier_id === '') {
-            setFormDataError((prevError) => ({ ...prevError, supplier_id: true }));
-            handleSnackbar(true, 'Supplier field must not be empty!');
-        } else if (formData.product_id === '') {
-            setFormDataError((prevError) => ({ ...prevError, product_id: true }));
-            handleSnackbar(true, 'Product field must not be empty!');
-        } else if (hasError) {
-            handleSnackbar(true, 'Check for empty or error fields!');
+        if (hasError) {
+            toast.error('Oops, something went wrong. Please check for incorrect or empty fields!');
         } else {
             setLoading(true);
             if (editIndex === 1) {
-                axios_put_header(update_Purchase_order + formData.po_number, formData, decrypted_access_token)
-                .then(() => {
+                axios_post_header_file(`${update_Purchase_order}${formData.po_number}`, formDataSubmit, decrypted_access_token)
+                .then(response => {
                     setLoading(false);
-                    setDialog(false);
-                    formDataReset();
-                    get_purchase_order();
+                    handleDialog(false);
+                    setApprovalType(0);
+                    get_purchase_orders(0);
+                    toast.success(response.data.message);
                 })
-                .catch(error => { console.log(error); });
+                .catch(error => {
+                    console.error('Update Error: ', error);
+                    toast.error('Oops, something went wrong. Please try again later.');
+                    setLoading(false);
+                });
             } else {
-                axios_post_header(add_Purchase_order, formData, decrypted_access_token)
-                .then(() => {
+                axios_post_header_file(add_Purchase_order, formDataSubmit, decrypted_access_token)
+                .then(response => {
                     setLoading(false);
-                    setDialog(false);
-                    formDataReset();
-                    get_purchase_orders();
+                    handleDialog(false);
+                    setApprovalType(0)
+                    get_purchase_orders(0);
+                    toast.success(response.data.message);
                 })
-                .catch(error => { console.log(error); });
+                .catch(error => {
+                    console.error('Create error: ', error);
+                    toast.error('Oops, something went wrong. Please try again later.');
+                    setLoading(false);
+                });
             }
         }
     }
 
-    // close button on snackbar
-    const action = (
-        <Fragment>
-            <IconButton
-                size="small"
-                aria-label="cancel"
-                color="inherit"
-                onClick={() => handleSnackbar(false, '')}
-            >
-                <CloseRounded fontSize="small" />
-            </IconButton>
-        </Fragment>
-    );
-
     return (
-        <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 5 }}>
-            <Snackbar open={snackbar.open} onClose={() => handleSnackbar(false, '')} message={snackbar.message} autoHideDuration={3000} action={action} anchorOrigin={{ vertical: 'bottom', horizontal: 'center'}} />
-            <Dialog open={dialog} fullScreen TransitionComponent={transitionStyle}>
-                <AppBar sx={{ position: 'relative' }}>
-                    <Toolbar>
-                        <IconButton edge="start" color="inherit" onClick={() => handleDialog(false)} aria-label="close">
-                            <KeyboardArrowDownRounded fontSize="small"/>
-                        </IconButton>
-                        <Typography variant="body2" sx={{ ml: 2, flex: 1 }} component="div">
-                            { editIndex === 0 ? 'Add New' : (editIndex === 1 ? 'Update' : 'View') } Purchase Order { editIndex === 1 || editIndex === 2 ? 'Information' : '' }
-                        </Typography>
-                        { editIndex === 2 || fullDisable ? '' : (loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>{ editIndex === 0 ? 'Purchasing ...' : 'Submitting...' }</LoadingButton> : <Button color="inherit" onClick={handleSubmit}>
-                            { editIndex === 0 ? 'Purchase Now' : 'Submit Order' }
-                        </Button>) }
-                    </Toolbar>
-                </AppBar>
-                <Container>
-                    <Grid container direction="row" columnSpacing={{ lg: 3, xl: 3 }} rowSpacing={3} sx={{ mt: 7 }}>
-                        <Grid item xl={6} lg={6}>
-                            <Grid container direction="column" justifyContent="center" rowSpacing={3}>
-                                <Grid item>
-                                    <TextField variant="outlined" label="PO Number" name="po_number" value={formData.po_number} disabled fullWidth />
-                                </Grid>
-                                <Grid item>
-                                    <FormControl fullWidth>
-                                        <InputLabel id="supplier_id">Suppliers</InputLabel>
-                                        <Select
-                                            labelId="supplier_id"
-                                            id="supplier_id"
-                                            label="Supplier"
-                                            name="supplier_id"
-                                            fullWidth
-                                            value={formData.supplier_id}
-                                            onChange={handleChange}
-                                            error={formDataError.supplier_id}
-                                            disabled={ editIndex === 2 || fullDisable }
-                                        >
-                                            { suppliers.map(supplier => (
-                                                <MenuItem key={supplier.id} value={supplier.id}>
-                                                    { supplier.supp_name }
-                                                </MenuItem>
-                                            )) }
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item>
-                                    <FormControl fullWidth>
-                                        { products.length > 0 || editIndex === 0 ? <InputLabel id="product_id">Products</InputLabel> : '' }
-                                        {editIndex === 0 ? (
-                                            <Select
-                                                labelId="product_id"
-                                                id="parent_id"
-                                                label="Products"
-                                                name="product_id"
-                                                fullWidth
-                                                value={formData.product_id}
-                                                onChange={handleChange}
-                                            >
-                                                {products.map(product => (
-                                                    <MenuItem key={product.id} value={product.id}>
-                                                        {product.prod_name}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        ) : (
-                                            products.length > 0 ? (
-                                                <Select
-                                                    labelId="product_id"
-                                                    id="parent_id"
-                                                    label="Products"
-                                                    name="product_id"
-                                                    fullWidth
-                                                    value={formData.product_id}
-                                                    onChange={handleChange}
-                                                    disabled={ editIndex === 2 || fullDisable }
-                                                >
-                                                    {products.map(product => (
-                                                        <MenuItem key={product.id} value={product.id}>
-                                                            {product.prod_name}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            ) : (
-                                                <p>Loading products...</p>
-                                            )
-                                        )}
-                                    </FormControl>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Unit Price"
-                                        name="unit_price"
-                                        value={formData.unit_price}
-                                        InputProps={{
-                                            startAdornment: <InputAdornment position="start">&#8369;</InputAdornment>,
-                                        }}
-                                        onChange={handleChange}
-                                        error={formDataError.unit_price}
-                                        helperText={formDataHelpertext.unit_price}
-                                        fullWidth
-                                        disabled={formData.supplier_id === '' || formData.product_id === '' || editIndex === 2 || fullDisable}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Quantity"
-                                        name="quantity"
-                                        type="number"
-                                        value={formData.quantity}
-                                        onChange={handleChange}
-                                        error={formDataError.quantity}
-                                        helperText={formDataHelpertext.quantity}
-                                        fullWidth
-                                        InputProps={{ inputProps: { min: 1 } }}
-                                        disabled={formData.supplier_id === '' || formData.product_id === '' || editIndex === 2 || fullDisable}
-                                    />
-                                </Grid>
-                            </Grid>
+        <Grid container justifyContent="flex-start" alignItems="flex-start" sx={{ px: 2, mt: 3 }} display="flex">
+            <ToastCmp />
+            {/* add and edit dialog */}
+            <Dialog open={dialog} fullWidth maxWidth="lg">
+                <DialogTitle>{ editIndex === 1 ? 'Update' : 'New'} Purchase Order</DialogTitle>
+                <Divider sx={{ mt: -1.5 }}>
+                    <Typography variant="body1">Primary Information</Typography>
+                </Divider>
+                <DialogContent>
+                    <AddUpdateContent
+                        formData={formData}
+                        formDataError={formDataError}
+                        formDataHelpertext={formDataHelpertext}
+                        handleChange={handleChange}
+                        suppliers={suppliers}
+                        products={products}
+                        warehouse={warehouse}
+                        editIndex={editIndex}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Grid container justifyContent="flex-end" columnSpacing={{ lg: 1, xl: 1 }} sx={{ mr: 2, mb: 1 }}>
+                        <Grid item>
+                            <PrimaryColorLoadingBtn
+                                displayText={loading && editIndex === 1
+                                ? 'Updating Purchase Order'
+                                : (!loading && editIndex === 1
+                                ? 'Update Purchase Order'
+                                : (loading && editIndex === 0
+                                ? 'Creating new Purchase Order'
+                                : (!loading && editIndex === 0
+                                ? 'Create New Purchase Order'
+                                : '')))}
+                                endIcon={<AddShoppingCartOutlined />}
+                                onClick={handleSubmit}
+                                loading={loading}
+                            />
                         </Grid>
-                        <Grid item lg={6} xl={6}>
-                            <Grid container direction="column" justifyContent="center" rowSpacing={3}>
-                                <Grid item>
-                                    <TextField variant="outlined" label="Purchase Order notes" name="purchase_order_notes" value={formData.purchase_order_notes} onChange={handleChange} disabled={editIndex === 2 || fullDisable} fullWidth/>
-                                </Grid>
-                                <Grid item>
-                                    <TextField variant="outlined" label="Subtotal" name="subtotal" value={formData.subtotal} onChange={handleChange} disabled={ editIndex === 2 || fullDisable } fullWidth/>
-                                </Grid>
-                                <Grid item>
-                                    <FormControl fullWidth>
-                                        <InputLabel id="order_status">Order Status</InputLabel>
-                                        <Select
-                                            labelId="order_status"
-                                            id="order_status"
-                                            label="Order Status"
-                                            name="order_status"
-                                            fullWidth
-                                            value={formData.order_status}
-                                            onChange={handleChange}
-                                            disabled={ editIndex === 2 || fullDisable }
-                                        >
-                                            <MenuItem value={0}>Open</MenuItem>
-                                            <MenuItem value={1}>Pending</MenuItem>
-                                            {editIndex === 0 ? '' : <MenuItem value={2}>Close</MenuItem>}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item>
-                                    <TextField variant="outlined" label="Billing Address" name="billing_address" value={formData.billing_address} disabled fullWidth />
-                                </Grid>
-                                <Grid item>
-                                    <TextField variant="outlined" label="Shipping Address" name="shipping_addr" value={formData.shipping_address} disabled fullWidth />
-                                </Grid>
-                            </Grid>
+                        <Grid item>
+                            <ErrorColorBtn
+                                displayText="Cancel"
+                                endIcon={<CancelOutlined />}
+                                onClick={() => handleDialog(false)}
+                            />
                         </Grid>
-                        { editIndex === 1 || editIndex === 2 ? (
-                            <Grid item lg={12} xl={12}>
-                                <TextField multiline variant="outlined" rows={4} label="Delivery Notes" name="delivery_notes" disabled={ fullDisable } value={formData.delivery_notes} onChange={handleChange} fullWidth />
-                            </Grid>
-                        ) : '' }
                     </Grid>
-                </Container>
+                </DialogActions>
             </Dialog>
-            <Grid container justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }}>
-                <Grid item>
-                    <Button variant="contained" endIcon={<RefreshOutlined />} onClick={get_purchase_orders}>Refresh Table</Button>
+
+            {/* flagged as close - dialog */}
+            <CloseOrder
+                close_order={close_order}
+                closeDialog={closeDialog}
+                setCloseDialog={setCloseDialog}
+                loading={loading}
+                id={formData?.id}
+            />
+
+            {/* table buttons */}
+            <Grid container justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
+                <Grid item lg={3} xl={3} sm={3} xs={12}>
+                    <BreadCrumbsCmp data={ crumbsHelper('Purchase Order', 'Inventory', '../inventory') } />
                 </Grid>
-                <Grid item>
-                    <Button variant="contained" endIcon={<AddShoppingCartOutlined />} onClick={() => handleDialog(true)}>Add Purhase Order</Button>
+                <Grid item lg={9} xl={9} md={9} sm={9} xs={12}>
+                    <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
+                        <Grid item>
+                            <SelectCmp
+                                size="small"
+                                id="approval-type"
+                                items={approval_list}
+                                value={approvalType}
+                                name="approval_status"
+                                onChange={handleApprovalTypeChange}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <Button variant="contained" endIcon={<RefreshOutlined />} onClick={refresh_table}>Refresh Table</Button>
+                        </Grid>
+                        <Grid item>
+                            <Button variant="contained" endIcon={<AddShoppingCartOutlined />} onClick={() => handleDialog(true)}>New Purhase Order</Button>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
-            <Grid container justifyContent="flex-start" alignItems="center" sx={{ mt: 2 }}>
-                <Grid item lg={12} xl={12}>
-                    <Card raised sx={{ width: '100%' }}>
-                        <CardContent>
-                            <DataGrid rows={rows} columns={columns} loading={loadingTable} autoHeight/>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+            <TableComponent columns={columns} rows={rows} loadingTable={loadingTable} sx={{ mb: 5 }} />
         </Grid>
     );
 }

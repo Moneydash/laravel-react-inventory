@@ -22,6 +22,7 @@ import {
     add_Supplier
 } from 'utils/services';
 import { DatePickerCmp } from "components/elements/FieldComponents";
+import { phNumRegex } from "utils/helper";
 
 function Supplier() {
     document.title = "InventoryIQ: Supplier Partners";
@@ -255,12 +256,11 @@ function Supplier() {
 
         // ph mobile number validation
         if (name === 'contact_person_number') {
-            const ph_mobile_regex = /^(09|\+639)\d{9}$/;
             setFormData((prevState) => ({ ...prevState, [name]: value }));
             if (value === '') {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
                 setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (!ph_mobile_regex.test(value)) {
+            } else if (!phNumRegex(value)) {
                 setFormDataError((prevError) => ({ ...prevError, [name]: true }));
                 setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid Philippine mobile number. It should start with \'09\' or \'+639\' followed by 9 digits.' }));
             } else {

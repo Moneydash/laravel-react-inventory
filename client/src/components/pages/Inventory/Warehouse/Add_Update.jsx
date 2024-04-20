@@ -22,7 +22,7 @@ const AddUpdateContent = ({
         { id: 'thursday', name: 'Every Thursday' },
         { id: 'friday', name: 'Every Friday' },
         { id: 'saturday', name: 'Every Saturday' },
-        { id: 'sundday', name: 'Every Sunday' }
+        { id: 'sunday', name: 'Every Sunday' }
     ];
 
     const is_bio = [
