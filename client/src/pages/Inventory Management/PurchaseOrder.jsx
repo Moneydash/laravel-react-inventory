@@ -13,7 +13,6 @@ import {
     AddShoppingCartOutlined,
     CancelOutlined,
     EditRounded,
-    FlagOutlined,
     FlagRounded,
     RefreshOutlined,
     ThumbDownAltRounded,
@@ -56,6 +55,7 @@ import { SelectCmp } from "components/elements/FieldComponents";
 import AddUpdateContent from "components/pages/Inventory/PurchaseOrder/Add_Update";
 import { ErrorColorBtn, ErrorColorIconBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import dayjs from "dayjs";
+import CloseOrder from "components/pages/Inventory/PurchaseOrder/Close";
 
 function PurchaseOrder() {
     document.title = 'InventoryIQ: Purchase Order';
@@ -611,35 +611,14 @@ function PurchaseOrder() {
                 </DialogActions>
             </Dialog>
 
-            {/* flagged as close dialog */}
-            <Dialog open={closeDialog} fullWidth maxWidth="sm">
-                <DialogTitle>Order Completion</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Typography variant="body1">Would you like to complete and close this purchase order?</Typography>
-                    <br />
-                    <Typography variant="body1"><b style={{ color: 'red' }}>Note</b>: Once you close this, you cannot approve nor disapprove purhase anymore.</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container justifyContent="flex-end" columnSpacing={{ lg: 1, xl: 1 }} sx={{ mr: 2, mb: 1 }}>
-                        <Grid item>
-                            <PrimaryColorLoadingBtn
-                                loading={loading}
-                                displayText={loading ? 'Closing Purchase' : 'Close Purchase'}
-                                endIcon={<FlagOutlined />}
-                                onClick={() => close_order(formData?.id)}
-                            />
-                        </Grid>
-                        <Grid item>
-                            <ErrorColorBtn
-                                displayText="Cancel"
-                                endIcon={<CancelOutlined />}
-                                onClick={() => setCloseDialog(false)}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+            {/* flagged as close - dialog */}
+            <CloseOrder
+                close_order={close_order}
+                closeDialog={closeDialog}
+                setCloseDialog={setCloseDialog}
+                loading={loading}
+                id={formData?.id}
+            />
 
             {/* table buttons */}
             <Grid container justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
