@@ -13,6 +13,7 @@ import {
     AddShoppingCartOutlined,
     CancelOutlined,
     EditRounded,
+    FlagOutlined,
     FlagRounded,
     RefreshOutlined,
     ThumbDownAltRounded,
@@ -86,7 +87,7 @@ function PurchaseOrder() {
         );
         const close_btn = (
             <PrimaryColorIconBtn
-                fn={() => close_order(params.value)}
+                fn={() => get_purchase_order(params.value, 0)}
                 title="Flagged as Closed"
                 icon={<FlagRounded />}
                 sx={{ ml: 1 }}
@@ -144,6 +145,7 @@ function PurchaseOrder() {
     const [loading, setLoading] = useState(false);
     const [warehouse, setWarehouse] = useState([]);
     const [approvalType, setApprovalType] = useState(0);
+    const [closeDialog, setCloseDialog] = useState(false);
     const initialState = {
         po_number: '',
         supplier_id: '',
@@ -309,41 +311,49 @@ function PurchaseOrder() {
         setDialog(status);
     };
 
-    const get_purchase_order = (param, status) => {
-        setEditIndex(status);
+    const get_purchase_order = async (param, status) => {
 
         get_suppliers();
         get_warehouses();
-        axios_get_header(get_Purchase_order + param, decrypted_access_token)
-        .then(response => {
+        try {
+            const response = await axios_get_header(get_Purchase_order + param, decrypted_access_token);
             const data = response.data;
-            const po_data = data?.purchase_order_data;
+            const po_data = data.purchase_order_data;
             get_supplier_products(po_data?.supplier_id);
-            setFormData((prevState) => ({
-                ...prevState,
-                po_number: po_data?.po_number,
-                supplier_id: po_data?.supplier_id,
-                product_id: po_data?.product_id,
-                quantity: po_data?.quantity,
-                unit_price: po_data?.unit_price,
-                subtotal: po_data?.subtotal,
-                tax_rate: po_data?.tax_rate,
-                tax_amount: po_data?.tax_amount,
-                total: po_data?.total,
-                discount: po_data?.discount,
-                shipping_date: dayjs(),
-                shipping_method: po_data?.shipping_method,
-                billing_address: po_data?.billing_address,
-                additional_charges: nullCheck(po_data?.additional_charges) ? '' : po_data?.additional_charges,
-                documents_name: po_data?.documents,
-                po_notes: nullCheck(po_data?.po_notes) ? '' : po_data?.po_notes,
-                priority_lvl: po_data?.priority_lvl,
-                tracking_num: po_data?.tracking_num,
-                warehouse_id: po_data?.warehouse_id
-            }));
-            setDialog(true);
-        })
-        .catch(error => { console.log(error); });
+
+            if (status === 1) {
+                setEditIndex(status);
+                setFormData((prevState) => ({
+                    ...prevState,
+                    po_number: po_data?.po_number,
+                    supplier_id: po_data?.supplier_id,
+                    product_id: po_data?.product_id,
+                    quantity: po_data?.quantity,
+                    unit_price: po_data?.unit_price,
+                    subtotal: po_data?.subtotal,
+                    tax_rate: po_data?.tax_rate,
+                    tax_amount: po_data?.tax_amount,
+                    total: po_data?.total,
+                    discount: po_data?.discount,
+                    shipping_date: dayjs(),
+                    shipping_method: po_data?.shipping_method,
+                    billing_address: po_data?.billing_address,
+                    additional_charges: nullCheck(po_data?.additional_charges) ? '' : po_data?.additional_charges,
+                    documents_name: po_data?.documents,
+                    po_notes: nullCheck(po_data?.po_notes) ? '' : po_data?.po_notes,
+                    priority_lvl: po_data?.priority_lvl,
+                    tracking_num: po_data?.tracking_num,
+                    warehouse_id: po_data?.warehouse_id
+                }));
+                setDialog(true);
+            } else {
+                setData(setFormData, 'id', po_data?.po_number);
+                setCloseDialog(true);
+            }
+        } catch (error) {
+            console.error("Fetch Error: ", error);
+            throw error;
+        }
     };
 
     const purchase_approval = async (id, status) => {
@@ -365,6 +375,7 @@ function PurchaseOrder() {
             const data = response.data;
             
             get_purchase_orders(approvalType);
+            setCloseDialog(false);
             toast.success(data.message);
         } catch (error) {
             console.error('Closing Error: ', error);
@@ -553,8 +564,9 @@ function PurchaseOrder() {
     return (
         <Grid container justifyContent="flex-start" alignItems="flex-start" sx={{ px: 2, mt: 3 }} display="flex">
             <ToastCmp />
+            {/* add and edit dialog */}
             <Dialog open={dialog} fullWidth maxWidth="lg">
-                <DialogTitle>New Purchase Order</DialogTitle>
+                <DialogTitle>{ editIndex === 1 ? 'Update' : 'New'} Purchase Order</DialogTitle>
                 <Divider sx={{ mt: -1.5 }}>
                     <Typography variant="body1">Primary Information</Typography>
                 </Divider>
@@ -598,6 +610,38 @@ function PurchaseOrder() {
                     </Grid>
                 </DialogActions>
             </Dialog>
+
+            {/* flagged as close dialog */}
+            <Dialog open={closeDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Order Completion</DialogTitle>
+                <Divider />
+                <DialogContent>
+                    <Typography variant="body1">Would you like to complete and close this purchase order?</Typography>
+                    <br />
+                    <Typography variant="body1"><b style={{ color: 'red' }}>Note</b>: Once you close this, you cannot approve nor disapprove purhase anymore.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container justifyContent="flex-end" columnSpacing={{ lg: 1, xl: 1 }} sx={{ mr: 2, mb: 1 }}>
+                        <Grid item>
+                            <PrimaryColorLoadingBtn
+                                loading={loading}
+                                displayText={loading ? 'Closing Purchase' : 'Close Purchase'}
+                                endIcon={<FlagOutlined />}
+                                onClick={() => close_order(formData?.id)}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <ErrorColorBtn
+                                displayText="Cancel"
+                                endIcon={<CancelOutlined />}
+                                onClick={() => setCloseDialog(false)}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* table buttons */}
             <Grid container justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
                 <Grid item lg={3} xl={3} sm={3} xs={12}>
                     <BreadCrumbsCmp data={ crumbsHelper('Purchase Order', 'Inventory', '../inventory') } />
@@ -623,7 +667,7 @@ function PurchaseOrder() {
                     </Grid>
                 </Grid>
             </Grid>
-            <TableComponent columns={columns} rows={rows} loadingTable={loadingTable} />
+            <TableComponent columns={columns} rows={rows} loadingTable={loadingTable} sx={{ mb: 5 }} />
         </Grid>
     );
 }
