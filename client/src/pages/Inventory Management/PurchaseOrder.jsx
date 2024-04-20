@@ -14,6 +14,7 @@ import {
     CancelOutlined,
     EditRounded,
     FlagRounded,
+    InfoRounded,
     RefreshOutlined,
     ThumbDownAltRounded,
     ThumbUpAltRounded
@@ -85,6 +86,13 @@ function PurchaseOrder() {
                 sx={{ ml: 1 }}
             />
         );
+        const info_btn = (
+            <PrimaryColorIconBtn
+                fn={() => get_purchase_order(params.value, 2)}
+                title="View Purchase Information"
+                icon={<InfoRounded fontSize="small" />}
+            />
+        );
         const close_btn = (
             <PrimaryColorIconBtn
                 fn={() => get_purchase_order(params.value, 0)}
@@ -107,6 +115,7 @@ function PurchaseOrder() {
             case 1:
                 return (
                     <>
+                        { info_btn }
                         { disapprove_btn }
                         { close_btn }
                     </>
@@ -146,6 +155,7 @@ function PurchaseOrder() {
     const [warehouse, setWarehouse] = useState([]);
     const [approvalType, setApprovalType] = useState(0);
     const [closeDialog, setCloseDialog] = useState(false);
+    const [approvalStatus, setApprovalStatus] = useState(0);
     const initialState = {
         po_number: '',
         supplier_id: '',
@@ -321,7 +331,7 @@ function PurchaseOrder() {
             const po_data = data.purchase_order_data;
             get_supplier_products(po_data?.supplier_id);
 
-            if (status === 1) {
+            if (status !== 0) {
                 setEditIndex(status);
                 setFormData((prevState) => ({
                     ...prevState,
@@ -335,7 +345,7 @@ function PurchaseOrder() {
                     tax_amount: po_data?.tax_amount,
                     total: po_data?.total,
                     discount: po_data?.discount,
-                    shipping_date: dayjs(),
+                    shipping_date: approvalStatus === 0 ? 'No Shipping Date until Approved.' : dayjs(po_data?.shipping_date),
                     shipping_method: po_data?.shipping_method,
                     billing_address: po_data?.billing_address,
                     additional_charges: nullCheck(po_data?.additional_charges) ? '' : po_data?.additional_charges,
@@ -345,6 +355,7 @@ function PurchaseOrder() {
                     tracking_num: po_data?.tracking_num,
                     warehouse_id: po_data?.warehouse_id
                 }));
+                setApprovalStatus(po_data?.approval_status);
                 setDialog(true);
             } else {
                 setData(setFormData, 'id', po_data?.po_number);
@@ -566,7 +577,7 @@ function PurchaseOrder() {
             <ToastCmp />
             {/* add and edit dialog */}
             <Dialog open={dialog} fullWidth maxWidth="lg">
-                <DialogTitle>{ editIndex === 1 ? 'Update' : 'New'} Purchase Order</DialogTitle>
+                <DialogTitle>{ editIndex === 1 ? 'Update' : (editIndex === 2 ? 'View' : 'New')} Purchase Order</DialogTitle>
                 <Divider sx={{ mt: -1.5 }}>
                     <Typography variant="body1">Primary Information</Typography>
                 </Divider>
@@ -580,29 +591,33 @@ function PurchaseOrder() {
                         products={products}
                         warehouse={warehouse}
                         editIndex={editIndex}
+                        approvalStatus={approvalStatus}
+                        readOnly={editIndex === 2}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Grid container justifyContent="flex-end" columnSpacing={{ lg: 1, xl: 1 }} sx={{ mr: 2, mb: 1 }}>
-                        <Grid item>
-                            <PrimaryColorLoadingBtn
-                                displayText={loading && editIndex === 1
-                                ? 'Updating Purchase Order'
-                                : (!loading && editIndex === 1
-                                ? 'Update Purchase Order'
-                                : (loading && editIndex === 0
-                                ? 'Creating new Purchase Order'
-                                : (!loading && editIndex === 0
-                                ? 'Create New Purchase Order'
-                                : '')))}
-                                endIcon={<AddShoppingCartOutlined />}
-                                onClick={handleSubmit}
-                                loading={loading}
-                            />
-                        </Grid>
+                        {editIndex !== 2 && (
+                            <Grid item>
+                                <PrimaryColorLoadingBtn
+                                    displayText={loading && editIndex === 1
+                                    ? 'Updating Purchase Order'
+                                    : (!loading && editIndex === 1
+                                    ? 'Update Purchase Order'
+                                    : (loading && editIndex === 0
+                                    ? 'Creating new Purchase Order'
+                                    : (!loading && editIndex === 0
+                                    ? 'Create New Purchase Order'
+                                    : '')))}
+                                    endIcon={<AddShoppingCartOutlined />}
+                                    onClick={handleSubmit}
+                                    loading={loading}
+                                />
+                            </Grid>
+                        )}
                         <Grid item>
                             <ErrorColorBtn
-                                displayText="Cancel"
+                                displayText={editIndex === 2 ? 'Close' : 'Cancel'}
                                 endIcon={<CancelOutlined />}
                                 onClick={() => handleDialog(false)}
                             />

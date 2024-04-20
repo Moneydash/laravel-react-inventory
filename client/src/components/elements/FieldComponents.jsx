@@ -1,12 +1,23 @@
 import { Box, Chip, FormControl, InputLabel, MenuItem, OutlinedInput, Select } from "@mui/material";
-import { DatePicker, LocalizationProvider, MobileTimePicker, TimePicker } from "@mui/x-date-pickers";
+import { DatePicker, LocalizationProvider, MobileTimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import dayjs from "dayjs";
 import React from "react";
 import PropTypes from "prop-types";
 
-const DatePickerCmp = ({ onChange, label, name, value, helperText, error, size, sx, disabled }) => {
+const DatePickerCmp = ({
+    onChange,
+    label,
+    name,
+    value,
+    helperText,
+    error,
+    size,
+    sx,
+    disabled,
+    readOnly
+}) => {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DemoContainer components={['DatePicker']}>
@@ -18,6 +29,7 @@ const DatePickerCmp = ({ onChange, label, name, value, helperText, error, size, 
                     sx={{ width: '100%', ...sx }}
                     minDate={dayjs()}
                     disabled={disabled}
+                    readOnly={readOnly}
                     slotProps={{
                         textField: {
                             helperText: helperText,
@@ -31,7 +43,17 @@ const DatePickerCmp = ({ onChange, label, name, value, helperText, error, size, 
     );
 }
 
-const TimePickerCmp = ({ label, name, value, helperText, error, size, onChange }) => {
+const TimePickerCmp = ({
+    label,
+    name,
+    value,
+    helperText,
+    error,
+    size,
+    onChange,
+    disabled,
+    readOnly
+}) => {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DemoContainer components={['TimePicker']}>
@@ -40,6 +62,8 @@ const TimePickerCmp = ({ label, name, value, helperText, error, size, onChange }
                     name={name}
                     value={value}
                     sx={{ width: '100%' }}
+                    disabled={disabled}
+                    readOnly={readOnly}
                     onChange={onChange}
                     openTo="minutes"
                     slotProps={{
@@ -55,7 +79,18 @@ const TimePickerCmp = ({ label, name, value, helperText, error, size, onChange }
     );
 };
 
-const SelectCmp = ({ id, value, label, onChange, items, size, name, error, noItemsText }) => {
+const SelectCmp = ({
+    id,
+    value,
+    label,
+    onChange,
+    items,
+    size,
+    name,
+    error,
+    noItemsText,
+    readOnly
+}) => {
     return (
         <FormControl fullWidth size={size}>
             <InputLabel id={id}>{items?.length > 0 ? label : noItemsText}</InputLabel>
@@ -70,6 +105,7 @@ const SelectCmp = ({ id, value, label, onChange, items, size, name, error, noIte
                 size={size}
                 sx={{ pt: size === "small" ? -1 : 0 }}
                 error={error}
+                readOnly={readOnly}
             >
                 {items?.length > 0 ? items.map((item, index) => (
                     <MenuItem key={index} value={item?.id ?? ''}>
@@ -85,7 +121,18 @@ const SelectCmp = ({ id, value, label, onChange, items, size, name, error, noIte
     );
 }
 
-const MultipleSelectCmp = ({ id, label, value, onChange, items, size, name, error, noItemsText }) => {    
+const MultipleSelectCmp = ({
+    id,
+    label,
+    value,
+    onChange,
+    items,
+    size,
+    name,
+    error,
+    noItemsText,
+    readOnly
+}) => {
     return (
         <FormControl fullWidth size={size}>
             <InputLabel id={id}>{items?.length > 0 ? label : noItemsText}</InputLabel>
@@ -100,6 +147,7 @@ const MultipleSelectCmp = ({ id, label, value, onChange, items, size, name, erro
             size={size}
             error={error}
             input={<OutlinedInput id={id} label={label} size={size} />}
+            readOnly={readOnly}
             renderValue={(selected) => {
                 return (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -143,6 +191,7 @@ DatePickerCmp.defaultProps = {
     size: 'medium',
     sx: {},
     disabled: false,
+    readOnly: false
 };
 
 // prop types of datepicker
@@ -155,7 +204,8 @@ DatePickerCmp.propTypes = {
     error: PropTypes.bool,
     size: PropTypes.string,
     sx: PropTypes.object,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
+    readOnly: PropTypes.bool
 };
 
 // default value of time picker
@@ -166,7 +216,9 @@ TimePickerCmp.defaultProps = {
     value: null,
     helperText: '',
     error: false,
-    size: 'medium'
+    size: 'medium',
+    disabled: false,
+    readOnly: false
 };
 
 // prop types of timepicker
@@ -177,7 +229,9 @@ TimePickerCmp.propTypes = {
     value: PropTypes.instanceOf(dayjs),
     helperText: PropTypes.string,
     error: PropTypes.bool,
-    size: PropTypes.string
+    size: PropTypes.string,
+    disabled: PropTypes.bool,
+    readOnly: PropTypes.bool
 };
 
 // default value of select component
@@ -191,6 +245,7 @@ SelectCmp.defaultProps = {
     name: '',
     error: false,
     noItemsText: 'Loading ...',
+    readOnly: false
 };
 
 // prop types of select component
@@ -206,7 +261,8 @@ SelectCmp.propTypes = {
     size: PropTypes.string,
     name: PropTypes.string,
     error: PropTypes.bool,
-    noItemsText: PropTypes.string
+    noItemsText: PropTypes.string,
+    readOnly: PropTypes.bool
 };
 
 // default value of multiple select component
@@ -220,6 +276,7 @@ MultipleSelectCmp.defaultProps = {
     name: '',
     error: false,
     noItemsText: 'Loading ...',
+    readOnly: false
 };
 
 // prop types of multiple select component
@@ -232,7 +289,8 @@ MultipleSelectCmp.propTypes = {
     size: PropTypes.string,
     name: PropTypes.string,
     error: PropTypes.bool,
-    noItemsText: PropTypes.string
+    noItemsText: PropTypes.string,
+    readOnly: PropTypes.bool
 };
 
 export { DatePickerCmp, TimePickerCmp, SelectCmp, MultipleSelectCmp };

@@ -14,7 +14,9 @@ const AddUpdateContent = ({
     suppliers,
     products,
     warehouse,
-    editIndex
+    editIndex,
+    approvalStatus,
+    readOnly
 }) => {
     const prio_lvl = [
         { id: '3', name: 'Low' },
@@ -63,6 +65,7 @@ const AddUpdateContent = ({
                         value={formData?.supplier_id}
                         error={formDataError.supplier_id}
                         onChange={handleChange}
+                        readOnly={readOnly}
                     />
                 </Grid>
                 { formData?.supplier_id !== ''
@@ -78,6 +81,7 @@ const AddUpdateContent = ({
                             value={formData?.product_id}
                             error={formDataError?.product_id}
                             onChange={handleChange}
+                            readOnly={readOnly}
                         />
                     </Grid>
                 )
@@ -93,7 +97,7 @@ const AddUpdateContent = ({
                         helperText={formDataHelpertext?.unit_price}
                         onChange={handleChange}
                         name="unit_price"
-                        InputProps={{ readOnly: nullCheck(formData?.product_id) }}
+                        InputProps={{ readOnly: nullCheck(formData?.product_id) || readOnly }}
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12}>
@@ -107,7 +111,7 @@ const AddUpdateContent = ({
                         helperText={formDataHelpertext?.quantity}
                         onChange={handleChange}
                         name="quantity"
-                        InputProps={{ readOnly: nullCheck(formData?.product_id) }}
+                        InputProps={{ readOnly: nullCheck(formData?.product_id) || readOnly }}
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12}>
@@ -121,6 +125,7 @@ const AddUpdateContent = ({
                         error={formDataError?.discount}
                         name="discount"
                         onChange={handleChange}
+                        readOnly={readOnly}
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12}>
@@ -130,6 +135,7 @@ const AddUpdateContent = ({
                         size="small" 
                         fullWidth
                         value={formData?.subtotal}
+                        InputProps={{ readOnly: true }}
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12}>
@@ -153,7 +159,7 @@ const AddUpdateContent = ({
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12} sx={{ mt: editIndex === 0 ? 0 : -1 }}>
-                    { editIndex === 0
+                    { editIndex === 0 || approvalStatus === 0
                     ? (<TextField
                         label="Shipping Date"
                         size="small"
@@ -165,7 +171,7 @@ const AddUpdateContent = ({
                         label="Shipping Date"
                         name="shipping_date"
                         size="small"
-                        disabled={true}
+                        readOnly={true}
                         value={dayjs()}
                     />)}
                 </Grid>
@@ -180,6 +186,7 @@ const AddUpdateContent = ({
                         value={formData?.shipping_method}
                         error={formDataError?.shipping_method}
                         onChange={handleChange}
+                        readOnly={readOnly}
                     />
                 </Grid>
                 <Grid item xl={4} lg={4} md={4} sm={6} xs={12}>
@@ -204,6 +211,7 @@ const AddUpdateContent = ({
                         fullWidth
                         value={formData?.additional_charges}
                         onChange={handleChange}
+                        InputProps={{ readOnly: readOnly }}
                     />
                 </Grid>
                 <Grid item lg={6} xl={6} md={6} sm={6} xs={12}>
@@ -218,6 +226,7 @@ const AddUpdateContent = ({
                         fileNameError={formDataError?.documents_name}
                         fileNameHelperText={formDataHelpertext?.documents_name}
                         handleChange={handleChange}
+                        disabled={readOnly}
                     />
                 </Grid>
                 <Grid item lg={6} xl={6} md={6} sm={6} xs={12}>
@@ -242,6 +251,7 @@ const AddUpdateContent = ({
                         value={formData?.warehouse_id}
                         error={formDataError?.warehouse_id}
                         onChange={handleChange}
+                        readOnly={readOnly}
                     />
                 </Grid>
                 <Grid item lg={6} xl={6} md={6} sm={6} xs={12}>
@@ -254,6 +264,7 @@ const AddUpdateContent = ({
                         value={formData?.priority_lvl}
                         error={formDataError?.priority_lvl}
                         onChange={handleChange}
+                        readOnly={readOnly}
                     />
                 </Grid>
                 <Grid item lg={6} xl={6} md={6} sm={6} xs={12}>
@@ -279,6 +290,7 @@ const AddUpdateContent = ({
                         multiline
                         value={formData?.po_notes}
                         onChange={handleChange}
+                        InputProps={{ readOnly: readOnly }}
                     />
                 </Grid>
             </Grid>
