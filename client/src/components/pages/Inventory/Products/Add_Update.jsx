@@ -35,7 +35,7 @@ const AddUpdateContent = ({
         return (
             <img
                 src={imgSrc}
-                alt="Image Preview"
+                alt="Preview"
                 style={{
                     height: '100px',
                     width: '100px',
