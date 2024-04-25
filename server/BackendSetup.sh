@@ -1,18 +1,25 @@
 # !/bin/bash -v
 
+# install composer on the project
+# composer install
+
+# dump autoload packages of composer
+# composer dump-autoload
+
 # migrate all the tables
 php artisan migrate
 
 # migrate the seeder in order
-php artisan db:seed --class=CategorySeeder
-php artisan db:seed --class=RoleSeeder
-php artisan db:seed --class=PrimaryIdSeeder
-php artisan db:seed --class=SecondaryIdSeeder
-php artisan db:seed --class=UserSeeder
-php artisan db:seed --class=NavigationSeeder
-php artisan db:seed --class=SubNavigationSeeder
-php artisan db:seed --class=EquipmentSeeder
-php artisan db:seed --class=WarehouseTypeSeeder
+php artisan db:seed
 
-# uncomment this if first time setup, for the uploaded file storage
-# php artisan storage:link
+# clear all data in the project
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+
+# cache the data after clearing for optimization
+php artisan config:cache
+php artisan route:cache
+
+# access uploaded file storage
+php artisan storage:link
