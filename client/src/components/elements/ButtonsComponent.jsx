@@ -1,6 +1,7 @@
 import { LoadingButton } from "@mui/lab";
-import { Button } from "@mui/material";
+import { Button, IconButton, Tooltip } from "@mui/material";
 import React from "react";
+import PropTypes from 'prop-types';
 
 const PrimaryColorBtn = ({ displayText, endIcon, onClick }) => {
     return (
@@ -16,7 +17,7 @@ const ErrorColorBtn = ({ displayText, endIcon, onClick }) => {
             { displayText }
         </Button>
     );
-}
+};
 
 const SuccessColorBtn = ({ displayText, endIcon, onClick }) => {
     return (
@@ -24,7 +25,7 @@ const SuccessColorBtn = ({ displayText, endIcon, onClick }) => {
             { displayText }
         </Button>
     );
-}
+};
 
 const PrimaryColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
     return (
@@ -32,7 +33,7 @@ const PrimaryColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
             { displayText }
         </LoadingButton>
     );
-}
+};
 
 const ErrorColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
     return (
@@ -40,13 +41,36 @@ const ErrorColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
             { displayText }
         </LoadingButton>
     );
-}
+};
+
+const PrimaryColorIconBtn = ({ fn, title, icon, disabled, sx }) => {
+    return (
+        <IconButton onClick={fn} color="primary" disabled={disabled} sx={{ ...sx }}>
+            <Tooltip title={title} placement="bottom" arrow>{icon}</Tooltip>
+        </IconButton>
+    );
+};
+
+const ErrorColorIconBtn = ({ fn, title, icon, disabled, sx }) => {
+    return (
+        <IconButton onClick={fn} color="error" disabled={disabled} sx={{ ...sx }}>
+            <Tooltip title={title} placement="bottom" arrow>{icon}</Tooltip>
+        </IconButton>
+    );
+};
 
 PrimaryColorLoadingBtn.defaultProps = {
     displayText: '',
     endIcon: '',
     onClick: () => {},
     loading: false
+};
+
+PrimaryColorLoadingBtn.propTypes = {
+    displayText: PropTypes.string,
+    endIcon: PropTypes.element,
+    onClick: PropTypes.func,
+    loading: PropTypes.bool
 };
 
 ErrorColorLoadingBtn.defaultProps = {
@@ -56,22 +80,87 @@ ErrorColorLoadingBtn.defaultProps = {
     loading: false
 };
 
+ErrorColorLoadingBtn.propTypes = {
+    displayText: PropTypes.string,
+    endIcon: PropTypes.element,
+    onClick: PropTypes.func,
+    loading: PropTypes.bool
+};
+
 ErrorColorBtn.defaultProps = {
     displayText: '',
     endIcon: '',
-    onClick: () => {},
+    onClick: () => {}
+};
+
+ErrorColorBtn.propTypes = {
+    displayText: PropTypes.string,
+    endIcon: PropTypes.element,
+    onClick: PropTypes.func
 };
 
 PrimaryColorBtn.defaultProps = {
     displayText: '',
     endIcon: '',
-    onClick: () => {},
+    onClick: () => {}
+};
+
+PrimaryColorBtn.propTypes = {
+    displayText: PropTypes.string,
+    endIcon: PropTypes.element,
+    onClick: PropTypes.func
 };
 
 SuccessColorBtn.defaultProps = {
     displayText: '',
     endIcon: '',
-    onClick: () => {},
+    onClick: () => {}
 };
 
-export { PrimaryColorBtn, ErrorColorBtn, SuccessColorBtn, PrimaryColorLoadingBtn, ErrorColorLoadingBtn };
+SuccessColorBtn.propTypes = {
+    displayText: PropTypes.string,
+    endIcon: PropTypes.element,
+    onClick: PropTypes.func
+};
+
+PrimaryColorIconBtn.defaultProps = {
+    fn: () => {},
+    title: '',
+    icon: '',
+    disabled: false,
+    sx: {},
+};
+
+PrimaryColorIconBtn.propTypes = {
+    fn: PropTypes.func,
+    title: PropTypes.string,
+    icon: PropTypes.element,
+    disabled: PropTypes.bool,
+    sx: PropTypes.object
+};
+
+ErrorColorIconBtn.defaultProps = {
+    fn: () => {},
+    title: '',
+    icon: '',
+    disabled: false,
+    sx: {}
+};
+
+ErrorColorIconBtn.propTypes = {
+    fn: PropTypes.func,
+    title: PropTypes.string,
+    icon: PropTypes.element,
+    disabled: PropTypes.bool,
+    sx: PropTypes.object
+};
+
+export {
+    PrimaryColorBtn,
+    ErrorColorBtn,
+    SuccessColorBtn,
+    PrimaryColorLoadingBtn,
+    ErrorColorLoadingBtn,
+    PrimaryColorIconBtn,
+    ErrorColorIconBtn
+};

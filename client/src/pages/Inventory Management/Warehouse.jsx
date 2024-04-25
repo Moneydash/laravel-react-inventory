@@ -370,7 +370,6 @@ function Warehouse() {
             if (file) {
                 const filereader = new FileReader();
                 filereader.readAsDataURL(file);
-                console.log(file.type);
                 if (file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword') {
                     if (file.size <= parseInt((5 * 1024) * 1024)) {
                         filereader.onloadend = function(e) {

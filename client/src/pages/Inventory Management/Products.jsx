@@ -26,7 +26,6 @@ import React, { useEffect, useState } from "react";
 import {
     axios_delete_header,
     axios_get_header,
-    axios_patch_header,
     axios_post_header_file
 } from 'utils/requests';
 import { decryptAccessToken } from "utils/auth";
@@ -152,7 +151,6 @@ function Products() {
     const [loadingTable, setLoadingTable] = useState(false);
     const [loading, setLoading] = useState(false);
     const [editIndex, setEditIndex] = useState(0); // 0 = add, 1 = edit, 2 = view
-    const [parentProductDisable, setParentProductDisable] = useState(true);
     const [parentProducts, setParentProducts] = useState([]);
     const [warehouses, setWarehouses] = useState([]);
     const [imgSrc, setImgSrc] = useState('');
@@ -364,14 +362,12 @@ function Products() {
             if (value === 0) {
                 setData(setFormData, 'parent_product_id', '');
                 setParentProducts([]);
-                setParentProductDisable(true);
             } else {
                 if (editIndex === 1) {
                     get_parent_products_exclude_self(formData?.id);
                 } else {
                     get_parent_products();
                 }
-                setParentProductDisable(false);
             }
         }
 
