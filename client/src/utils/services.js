@@ -30,6 +30,8 @@ const api = {
     update_Supplier: '/inventory/supplier/update_supplier/',
     add_Supplier: '/inventory/supplier/add_supplier',
     get_Supplier_products: '/inventory/supplier/get_supplier_products/',
+    remove_Supplier: '/inventory/supplier/remove_supplier/',
+    download_Supplier_file: '/supplier-file/download/',
 
     // inventory - categories submodules
     get_Categories: '/inventory/category/get_categories',

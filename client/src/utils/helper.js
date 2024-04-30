@@ -143,6 +143,19 @@ export const twoDigitDecimal = (number) => {
     } else {
         console.error('Not a decimal number');
     }
+};
+
+export const createFormData = (data) => {
+    if (typeof data === 'object') {
+        const createdFormData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            createdFormData.append(key, value);
+        });
+        return createdFormData;
+    } else {
+        console.error('Data is not an object');
+        return null;
+    }
 }
 
 export const crumbsHelper = ( submodule, module, module_link ) => {
@@ -193,4 +206,12 @@ export const validate_file = (file, type, fieldName, setter, setError, setHelper
     } else {
         console.log('No file detected.');
     }
+};
+
+export const downloadWithType = async (url, id, type) => {
+    try {
+        window.open(`${url}${type}/${id}`);
+    } catch (error) {
+        toast.error('Oops, something went wrong. Please try again later.');
+    }   
 };
