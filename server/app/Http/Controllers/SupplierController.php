@@ -34,7 +34,6 @@ class SupplierController extends Controller
             $filepath_agreement = $uploaded_agreement->store('public/suppliers/agreements'); // store the file in the "public" directory
         }
 
-
         DB::beginTransaction();
         try {
             Supplier::create([
@@ -57,6 +56,7 @@ class SupplierController extends Controller
         }
     }
 
+    # get all suppliers
     public function get_suppliers() {
         $suppliers = Supplier::where('contract_expiry_date', '>', today())
         ->orderBy('created_at', 'desc')
@@ -64,6 +64,7 @@ class SupplierController extends Controller
         return response()->json([ 'suppliers' => $suppliers ]);
     }
 
+    # get specific supplier
     public function get_supplier($supplier_id) {
         try {
             $supplier = Supplier::where('id', $supplier_id)->firstOrFail();
@@ -77,7 +78,7 @@ class SupplierController extends Controller
         $request->validate([
             'name' => 'required',
             'location' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:suppliers,email,'.$supplier_id,
             'hotline' => 'required|integer',
             'contact_person' => 'required',
             'contact_person_number' => 'required',
@@ -88,34 +89,11 @@ class SupplierController extends Controller
         try {
             $supplier = Supplier::findOrFail($supplier_id);
 
-            // check if there are changes on the fields.
-            if ($request->name !== $supplier->name) {
-                $supplier->name = $request->name;
-            }
-
-            if ($request->location !== $supplier->location) {
-                $supplier->location = $request->location;
-            }
-
-            if (strtolower($request->email) !== strtolower($supplier->email)) {
-                $request->validate([ 'email' => 'unique:suppliers' ]);
-                $supplier->email = strtolower($request->email);
-            }
-
-            if ($request->hotline !== $supplier->hotline) {
-                $supplier->hotline = $request->hotline;
-            }
-
-            if ($request->contact_person !== $supplier->contact_person) {
-                $supplier->contact_person = $request->contact_person;
-            }
-
-            if ($request->contact_person_number !== $supplier->contact_person_number) {
-                $supplier->contact_person_number = $request->contact_person_number;
-            }
-
-            if ($request->contract_expiry_date !== $supplier->contract_expiry_date) {
-                $supplier->contract_expiry_date = $request->contract_expiry_date;
+            foreach ($request->except(['terms', 'agreement']) as $key => $value) {
+                if ($value != $supplier->$key) {
+                    $sanitized_value = strip_tags(trim($value));
+                    $supplier->$key = $sanitized_value;
+                }
             }
 
             if ($request->hasFile('terms')) {
@@ -154,11 +132,13 @@ class SupplierController extends Controller
         }
     }
 
+    # get the removed or deleted suppliers
     public function get_removed_suppliers() {
         $suppliers = Supplier::onlyTrashed()->get();
         return response()->json([ 'removed_suppliers' => $suppliers ]);
     }
 
+    # restore the deleted or removed supplier
     public function restore_supplier($supplier_id) {
         DB::beginTransaction();
         try {
@@ -174,11 +154,36 @@ class SupplierController extends Controller
         }
     }
 
+    # get the provided products of a specific supplier
     public function get_supplier_products($supplier_id) {
         $supplier_products = Product::whereHas('suppliers', function ($query) use ($supplier_id) {
             $query->where('suppliers.id', $supplier_id); // get the specific supplier id
         })->get();
     
         return response()->json([ 'supplier_products' => $supplier_products ]);
+    }
+
+    public function download_file($type, $supplier_id) {
+        $supplier = Supplier::where('id', $supplier_id)->first();
+
+        if (!$supplier) {
+            return response()->json([ 'message' => 'Supplier does not exists.' ], 404);
+        }
+        
+        $path = $type == 'terms'
+        ? $supplier->terms_and_conditions
+        : ($type == 'agreement'
+        ? $supplier->agreement
+        : '');
+
+        // sanitized the file path, avoiding directory traversal attack
+        $sanitized_path = trim($path);
+        $ext = pathinfo($sanitized_path, PATHINFO_EXTENSION);
+
+        $filepath = storage_path("app/".$sanitized_path);
+        $filename = $type == 'terms' ? '_Terms and Conditions.' : ($type == 'agreement' ? '_Contract Agreement.' : '');
+        $filename = $supplier->id.$filename.$ext;
+        
+        return response()->download($filepath, $filename);
     }
 }

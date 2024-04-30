@@ -1,16 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { DataGrid } from '@mui/x-data-grid';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, IconButton, TextField, Tooltip, Typography } from "@mui/material";
-import { AddBoxOutlined, CancelOutlined, DeleteOutlineRounded, DeleteRounded, EditRounded, GroupAddOutlined, GroupRemoveOutlined, InsertDriveFileOutlined, RefreshOutlined, RestoreOutlined } from "@mui/icons-material";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid,
+    Tooltip
+} from "@mui/material";
+import {
+    AddBoxOutlined,
+    CancelOutlined,
+    DeleteRounded,
+    DownloadRounded,
+    EditRounded,
+    GroupAddOutlined,
+    GroupRemoveOutlined,
+    RefreshOutlined,
+    RestoreOutlined
+} from "@mui/icons-material";
 import * as EmailValidator from 'email-validator';
-import { axios_delete_header, axios_get_header, axios_post_header_file, axios_put_header } from "utils/requests";
-import { LoadingButton } from "@mui/lab";
+import {
+    axios_delete_header,
+    axios_get_header,
+    axios_post_header_file,
+    axios_put_header
+} from "utils/requests";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import { inventoryCrumbs } from "utils/breadCrumbs";
 import ToastCmp from "components/elements/ToastComponent";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
-import FileUploadCmp from "components/elements/FileUploadComponent";
 import TableComponent from "components/elements/TableComponent";
 import { decryptAccessToken } from "utils/auth";
 import {
@@ -19,10 +39,25 @@ import {
     get_Supplier,
     restore_Supplier,
     update_Supplier,
-    add_Supplier
+    add_Supplier,
+    remove_Supplier,
+    download_Supplier_file,
 } from 'utils/services';
-import { DatePickerCmp } from "components/elements/FieldComponents";
-import { phNumRegex } from "utils/helper";
+import {
+    crumbsHelper,
+    downloadWithType,
+    fileNameSplit,
+    isoDateToCommon,
+    nullCheck,
+    phNumRegex,
+    setData,
+    setErrorHelper,
+    validate_file
+} from "utils/helper";
+import AddUpdateContent from "components/pages/Inventory/Supplier/Add_Update";
+import { ErrorColorIconBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import Remove from "components/pages/Inventory/Supplier/Remove";
+import DeletedContent from "components/pages/Inventory/Supplier/Deleted";
 
 function Supplier() {
     document.title = "InventoryIQ: Supplier Partners";
@@ -30,14 +65,30 @@ function Supplier() {
     const empty_field_warning = 'Please fill up required field!';
 
     const renderActionButtons = (params) => {
-        return <div>
-                <IconButton onClick={() => get_supplier(params.value)} color="primary">
-                    <Tooltip title="Update Supplier Partner" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
-                </IconButton>
-                <IconButton onClick={() => remove_supplier(params.value)} color="error" sx={{ ml: 1 }}>
-                    <Tooltip title="Remove Supplier Partner" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
-                </IconButton>
-        </div>
+        return (
+            <>
+                <PrimaryColorIconBtn
+                    title="Update Supplier Partner"
+                    icon={<EditRounded fontSize="small"/>}
+                    fn={() => get_supplier(params.value)}
+                />
+                <ErrorColorIconBtn
+                    title="Remove Supplier Partner"
+                    icon={<DeleteRounded fontSize="small"/>}
+                    fn={() => remove_supplier(params.value)}
+                />
+                <PrimaryColorIconBtn
+                    title="Download Terms and Conditions"
+                    icon={<DownloadRounded fontSize="small"/>}
+                    fn={() => downloadWithType(download_Supplier_file, params.value, 'terms')}
+                />
+                <PrimaryColorIconBtn
+                    title="Download Contract Agreement"
+                    icon={<DownloadRounded fontSize="small"/>}
+                    fn={() => downloadWithType(download_Supplier_file, params.id, 'agreement')}
+                />
+            </>
+        );
     }
 
     const renderRestoreBtns = (params) => {
@@ -91,6 +142,7 @@ function Supplier() {
         terms: '',
         terms_name: '',
         agreement: '',
+        agreement_name: ''
 
     };
     const initialError = {
@@ -129,24 +181,15 @@ function Supplier() {
         .then(response => {
             setLoadingTable(false);
             const transformedData = response.data.suppliers.map(item => {
-                const date = new Date(item["contract_expiry_date"]);
-                // Extract the date components
-                const year = date.getFullYear();
-                const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, so add 1
-                const day = date.getDate().toString().padStart(2, '0');
-
-                // Create the formatted date string in "yyyy-mm-dd HH:mm:ss" format
-                const formattedDate = `${month}/${day}/${year}`;
-                
                 return {
-                    id: item["id"],
-                    name: item["name"],
-                    location: item["location"],
-                    email: item["email"],
-                    hotline: item["hotline"],
-                    contact_person: item['contact_person'],
-                    contact_person_number: item['contact_person_number'],
-                    contract_expiry_date: formattedDate
+                    id: item?.id,
+                    name: item?.name,
+                    location: item?.location,
+                    email: item?.email,
+                    hotline: item?.hotline,
+                    contact_person: item?.contact_person,
+                    contact_person_number: item?.contact_person_number,
+                    contract_expiry_date: isoDateToCommon(item?.contract_expiry_date)
                 }
             });
             setRows(transformedData);
@@ -179,18 +222,18 @@ function Supplier() {
         await axios_get_header(get_Supplier + param, decrypted_access_token)
         .then(response => {
             const data = response.data.supplier_info;
-            const terms_file = data.terms_and_conditions.split("/").pop();
-            const agreement_file = data.agreement.split("/").pop();
+            const terms_file = fileNameSplit(data.terms_and_conditions);
+            const agreement_file = fileNameSplit(data.agreement);
             setFormData((prevState) => ({
                 ...prevState,
-                id: data.id,
-                name: data.name,
-                location: data.location,
-                email: data.email,
-                hotline: data.hotline,
-                contact_person: data.contact_person,
-                contact_person_number: data.contact_person_number,
-                contract_expiry_date: dayjs(data.contract_expiry_date),
+                id: data?.id,
+                name: data?.name,
+                location: data?.location,
+                email: data?.email,
+                hotline: data?.hotline,
+                contact_person: data?.contact_person,
+                contact_person_number: data?.contact_person_number,
+                contract_expiry_date: dayjs(data?.contract_expiry_date),
                 terms_name: terms_file,
                 agreement_name: agreement_file
             }));
@@ -227,98 +270,60 @@ function Supplier() {
     const handleChange = (e) => {
         const { name, value, files } = e.target;
         
-        // email validation
-        if(name === 'email') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (!EmailValidator.validate(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid email address.' }));
-            } else if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        // basic input validation
-        if (name === 'name' || name === 'location' || name === 'hotline' || name === 'contact_person') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        // ph mobile number validation
-        if (name === 'contact_person_number') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (!phNumRegex(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid Philippine mobile number. It should start with \'09\' or \'+639\' followed by 9 digits.' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'terms' || name === 'agreement') {
-            const file = files[0];
-
-            if (file) {
-                const filereader = new FileReader();
-                filereader.readAsDataURL(file);
-                if (file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword') {
-                    if (file.size <= parseInt((5 * 1024) * 1024)) {
-                        filereader.onloadend = function(e) {
-                            setFormData((prevState) => ({ ...prevState, [name]: file, [`${name}_name`]: file.name }));
-                            setFormDataError((prevError) => ({ ...prevError, [`${name}_name`]: false }));
-                            setFormDataHelperText((prevText) => ({ ...prevText, [`${name}_name`]: '' }));
-                        }
-                    } else {
-                        setFormData((prevState) => ({ ...prevState, [name]: '', [`${name}_name`]: '' }));
-                        setFormDataError((prevError) => ({ ...prevError, [`${name}_name`]: true }));
-                        setFormDataHelperText((prevText) => ({ ...prevText, [`${name}_name`]: 'File size limit is 5MB, please select another file.' }));
-                        toast.error('File size limit is 5MB');
-                    }
+        switch(name) {
+            case 'email':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (!EmailValidator.validate(value)) {
+                    setErrorHelper(name, true, 'Please enter a valid email address.', setFormDataError, setFormDataHelperText);
                 } else {
-                    setFormData((prevState) => ({ ...prevState, [name]: '', [`${name}_name`]: '' }));
-                    setFormDataError((prevError) => ({ ...prevError, [`${name}_name`]: true }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [`${name}_name`]: 'Please select a valid file (pdf, doc, docx)' }));
-                    toast.error('.pdf, .doc and .docx file are only allowed');
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
                 }
-            }
+                break;
+            case 'contact_person_number':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (!phNumRegex(value)) {
+                    setErrorHelper(name, true, 'Please enter a valid Philippine mobile number. It should start with \'09\' or \'+639\' followed by 9 digits.', setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'terms':
+            case 'agreement':
+                const file = files[0];
+                validate_file(file, 'file', name, setFormData, setFormDataError, setFormDataHelperText);
+                break;
+            default:
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText)
+                }
+                break;
         }
-    }
+    };
 
     const handleDateChange = (date) => {
         const formattedDate = date ? dayjs(date) : '';
-
-        setFormData((prevState) => ({ ...prevState, contract_expiry_date: formattedDate }));
+        setData(setFormData, 'contract_expiry_date', formattedDate);
 
         if (!formattedDate) {
-            setFormDataError((prevError) => ({ ...prevError, contract_expiry_date: true }));
-            setFormDataHelperText((prevText) => ({ ...prevText, contract_expiry_date: empty_field_warning }));
+            setErrorHelper('contract_expiry_date', true, empty_field_warning, setFormDataError, setFormDataHelperText);
         } else {
-            setFormDataError((prevError) => ({ ...prevError, contract_expiry_date: false }));
-            setFormDataHelperText((prevText) => ({ ...prevText, contract_expiry_date: '' }));
+            setErrorHelper('contract_expiry_date', false, '', setFormDataError, setFormDataHelperText);
         }
-    }
+    };
 
     // reset all fields on the form
     const formDataReset = () =>  {
-        setFormData((prevState) => (initialFormData));
-        setFormDataError((prevError) => (initialError));
-        setFormDataHelperText((prevText) => (initialTextHelper));
-        get_suppliers();
-    }
+        setFormData(initialFormData);
+        setFormDataError(initialError);
+        setFormDataHelperText(initialTextHelper);
+    };
 
     const handleDialog = (open) => {
         setDialog(open);
@@ -326,57 +331,49 @@ function Supplier() {
             formDataReset();
             setEditIndex(0);
         }
-    }
-
-    const createFormData = (data) => {
-        if (typeof data === 'object') {
-            const createdFormData = new FormData();
-            Object.entries(data).forEach(([key, value]) => {
-                createdFormData.append(key, value);
-            });
-            return createdFormData;
-        } else {
-            console.error('Data is not an object');
-            return null;
-        }
-    }
+    };
 
     // supplier creation or updates
     const handleSubmit = (e) => {
         e.preventDefault();
+        
         let hasError = false;
-
-        setLoading(true);
+        const excempted = ['terms_name', 'agreement_name'];
+        const update_optional = ['terms', 'agreement'];
 
         for (const field in formData) {
-            if (formDataError[field] === true || formData[field] === '') {
-                if (editIndex !== 1 && (field === 'terms' || field === 'agreement')) {
+            const isFieldEmpty = nullCheck(formData[field]);
+            const isFieldError = formDataError[field] === true;
+
+            if (editIndex === 1) {
+                if (!update_optional.includes(field) && isFieldError) {
                     hasError = true;
-                } else {
-                    hasError = false;
+                    setErrorHelper(field, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                }   
+            } else if (editIndex === 0) {
+                if (field !== 'id' && isFieldEmpty && isFieldError) {
+                    hasError = true;
+                    setErrorHelper(field, true, empty_field_warning, setFormDataError, setFormDataHelperText);
                 }
             }
         }
 
-        const formattedDate = dayjs(formData.contract_expiry_date).format('YYYY-MM-DD');
-        const transformData = {
-            name: formData.name,
-            location: formData.location,
-            email: formData.email,
-            hotline: formData.hotline,
-            contact_person: formData.contact_person,
-            contact_person_number: formData.contact_person_number,
-            contract_expiry_date: formattedDate,
-            terms: formData.terms,
-            agreement: formData.agreement
-        };
-
-        const formDataSubmit = createFormData(transformData);
+        const formDataSubmit = new FormData();
+        for (const field in formData) {
+            if (!excempted.includes(field)) {
+                if (field === 'contract_expiry_date') {
+                    const formattedDate = dayjs(formData.contract_expiry_date).format('YYYY-MM-DD');
+                    formDataSubmit.append(field, formattedDate);
+                } else {
+                    formDataSubmit.append(field, formData[field]);
+                }
+            }
+        }
 
         if (hasError) {
-            setLoading(false);
-            toast.error('Check for empty and error fields!');
+            toast.error('Oops, something went wrong. Please check for incorrect or empty fields.');
         } else {
+            setLoading(true);
             if (editIndex === 1) {
                 axios_post_header_file(update_Supplier + formData.id, formDataSubmit, decrypted_access_token)
                 .then(response => {
@@ -384,6 +381,7 @@ function Supplier() {
                     handleDialog(false);
                     toast.success(response.data.message);
                     formDataReset();
+                    get_suppliers();
                 })
                 .catch(error => {
                     setLoading(false);
@@ -395,22 +393,25 @@ function Supplier() {
                     setLoading(false);
                     handleDialog(false);
                     toast.success(response.data.message);
+                    formDataReset();
+                    get_suppliers();
                 })
                 .catch(error => { setLoading(false); console.log(error); });
             }
         }
-    }
+    };
 
     const handleRemove = (e) => {
         e.preventDefault();
         
         setLoading(true);
-        axios_delete_header('/supplier/remove_supplier/' + formData.id, {}, decrypted_access_token)
+        axios_delete_header(`${remove_Supplier}${formData?.id}`, {}, decrypted_access_token)
         .then(response => {
             setLoading(false);
             setRemoveDialog(false);
-            formDataReset();
             toast.success(response.data.message);
+            formDataReset();
+            get_suppliers();
         })
         .catch(error => {
             setLoading(false);
@@ -427,119 +428,66 @@ function Supplier() {
                 <DialogTitle>{editIndex === 1 ? "Update Supplier Information" : "Add Supplier Partner"}</DialogTitle>
                 <Divider />
                 <DialogContent>
-                    <Grid container direction="column" rowSpacing={2}>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Name of Supplier" label="Supplier Name" name="name" value={formData.name} error={formDataError.name} helperText={formDataHelperText.name} onChange={handleChange} fullWidth/>
-                        </Grid>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Location of Supplier" label="Supplier Location" name="location" value={formData.location} error={formDataError.location} helperText={formDataHelperText.location} onChange={handleChange} fullWidth/>
-                        </Grid>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Email of Supplier" label="Supplier Email" name="email" value={formData.email} error={formDataError.email} type="email" helperText={formDataHelperText.email} onChange={handleChange} fullWidth/>
-                        </Grid>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Hotline of Supplier" label="Supplier Hotline" name="hotline" value={formData.hotline} error={formDataError.hotline} type="number" helperText={formDataHelperText.hotline} onChange={handleChange} fullWidth/>
-                        </Grid>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Point of Contact" label="Contact Person" name="contact_person" value={formData.contact_person} onChange={handleChange} error={formDataError.contact_person} helperText={formDataHelperText.contact_person} fullWidth />
-                        </Grid>
-                        <Grid item>
-                            <TextField variant="outlined" placeholder="Mobile Number of Contact Person" label="Contact Person Mobile Number" value={formData.contact_person_number} onChange={handleChange} name="contact_person_number" error={formDataError.contact_person_number} helperText={formDataHelperText.contact_person_number} fullWidth />
-                        </Grid>
-                        <Grid item lg={12} xl={12}>
-                            <DatePickerCmp
-                                onChange={handleDateChange}
-                                label="Contract Expiry Date"
-                                name="contract_expiry_date"
-                                value={formData.contract_expiry_date}
-                                helperText={formDataHelperText.contract_expiry_date}
-                                error={formDataError.contract_expiry_date}
-                            />
-                        </Grid>
-                        <Grid container mt={3} columnSpacing={{ lg: 2, xl: 2 }}>
-                            <Grid item xl={6} lg={6}>
-                                <FileUploadCmp
-                                    name="terms"
-                                    fileName="terms_name"
-                                    fileNameError={formDataError.terms_name}
-                                    fileNameHelperText={formDataHelperText.terms_name}
-                                    placeholder="Terms and Conditions"
-                                    fileNameValue={formData.terms_name}
-                                    accept=".pdf, .docx, .doc"
-                                    endIcon={<InsertDriveFileOutlined />}
-                                    disabled={editIndex === 2}
-                                    handleChange={handleChange}
-                                />
-                            </Grid>
-                            <Grid item xl={6} lg={6} sm={6}>
-                                <FileUploadCmp
-                                    name="agreement"
-                                    fileName="agreement_name"
-                                    fileNameError={formDataError.agreement_name}
-                                    fileNameHelperText={formDataHelperText.agreement_name}
-                                    placeholder="Contract Agreement"
-                                    fileNameValue={formData.agreement_name}
-                                    accept=".pdf, .docx, .doc"
-                                    endIcon={<InsertDriveFileOutlined />}
-                                    disabled={editIndex === 2}
-                                    handleChange={handleChange}
-                                />
-                            </Grid>
-                        </Grid>
-                        
-                    </Grid>
+                    <AddUpdateContent
+                        formData={formData}
+                        formDataError={formDataError}
+                        formDataHelperText={formDataHelperText}
+                        handleChange={handleChange}
+                        handleDateChange={handleDateChange}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Grid container justifyContent="flex-end" sx={{ mr: 2, mb: 1 }} columnSpacing={{ lg: 1, xl: 1 }}>
                         <Grid item>
-                            <Button variant="contained" color="error" endIcon={<CancelOutlined fontSize="small"/>} onClick={() => handleDialog(false)}>Cancel</Button>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                endIcon={<CancelOutlined fontSize="small"/>}
+                                onClick={() => handleDialog(false)}
+                            >
+                                Cancel
+                            </Button>
                         </Grid>
                         <Grid item>
-                            {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>{ editIndex === 1 ? 'Updating Supplier' : 'Adding Supplier' }</LoadingButton> : <Button variant="contained" endIcon={editIndex === 1 ? <EditRounded fontSize="small"/> : <AddBoxOutlined fontSize="small"/>} onClick={handleSubmit}>{ editIndex === 1 ? 'Update Supplier' : 'Add Supplier' }</Button>}
+                            <PrimaryColorLoadingBtn
+                                displayText={loading && editIndex === 1
+                                ? 'Updating Supplier'
+                                : (!loading && editIndex === 1
+                                ? 'Update Supplier'
+                                : (loading && editIndex === 0
+                                ? 'Adding Supplier'
+                                : (!loading && editIndex === 0
+                                ? 'Add Supplier'
+                                : '')))}
+                                endIcon={<AddBoxOutlined fontSize="small" />}
+                                onClick={handleSubmit}
+                                loading={loading}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
             </Dialog>
 
             {/* remove dialog */}
-            <Dialog open={removeDialog} onClose={() => setRemoveDialog(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Remove Supplier Partner</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Typography variant="body1">The supplier partner will be removed, are you sure about this?</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container justifyContent="flex-end" sx={{ mr: 2, mb: 1 }} columnSpacing={{ lg: 1, xl: 1 }}>
-                        <Grid item>
-                            <Button variant="contained" color="primary" endIcon={<CancelOutlined />} onClick={() => setRemoveDialog(false)}>Cancel</Button>
-                        </Grid>
-                        <Grid item>
-                            {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Removing Supplier Partner</LoadingButton> : <Button variant="contained" color="error" endIcon={<DeleteOutlineRounded />} onClick={handleRemove}>Remove Supplier Partner</Button>}
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+            <Remove
+                removeDialog={removeDialog}
+                setRemoveDialog={setRemoveDialog}
+                loading={loading}
+                handleRemove={handleRemove}
+            />
 
             {/* dialog list for deleted suppliers */}
-            <Dialog open={removeSupplierDialog} onClose={() => setRemoveSupplierDialog(false)} fullWidth maxWidth="md">
-                <DialogTitle>List of Deleted Suppliers</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <DataGrid rows={removerows} columns={remove_columns} autoHeight />
-                </DialogContent>
-                <DialogActions>
-                    <Grid container justifyContent="flex-end" sx={{ mr: 2, mb: 1 }}>
-                        <Grid item>
-                            <Button variant="contained" endIcon={<CancelOutlined fontSize="small" />} color="error" onClick={() => setRemoveSupplierDialog(false)}>Close</Button>
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+            <DeletedContent
+                removerows={removerows}
+                remove_columns={remove_columns}
+                removeSupplierDialog={removeSupplierDialog}
+                setRemoveSupplierDialog={setRemoveSupplierDialog}
+            />
 
             {/* table buttons */}
             <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
                 <Grid item lg={3} xl={3} sm={3} xs={12}>
-                    <BreadCrumbsCmp data={ inventoryCrumbs('Suppliers') } />
+                    <BreadCrumbsCmp data={ crumbsHelper('Suppliers', 'Inventory', '../inventory') } />
                 </Grid>
                 <Grid item lg={9} xl={9} sm={9} xs={12}>
                     <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>

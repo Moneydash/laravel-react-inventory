@@ -1,4 +1,11 @@
-import { CancelOutlined, DeleteRounded, DomainAddOutlined, DownloadRounded, EditRounded, RefreshOutlined } from "@mui/icons-material";
+import {
+    CancelOutlined,
+    DeleteRounded,
+    DomainAddOutlined,
+    DownloadRounded,
+    EditRounded,
+    RefreshOutlined
+} from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid } from "@mui/material";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
@@ -10,8 +17,11 @@ import { validate } from "email-validator";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { decryptAccessToken } from "utils/auth";
-import { inventoryCrumbs } from "utils/breadCrumbs";
-import { axios_delete_header, axios_get_header, axios_post_header_file } from "utils/requests";
+import {
+    axios_delete_header,
+    axios_get_header,
+    axios_post_header_file
+} from "utils/requests";
 import {
     get_Warehouse_types,
     get_Categories,
@@ -25,6 +35,8 @@ import {
 } from 'utils/services';
 import {
     apiGetHelper,
+    crumbsHelper,
+    downloadWithType,
     fileNameSplit,
     setErrorHelper
 } from "utils/helper";
@@ -53,19 +65,19 @@ function Warehouse() {
             <GridActionsCellItem
                 icon={<DownloadRounded fontSize="small" color="info" />}
                 label="Download Insurance Info"
-                onClick={() => download(params.id, 'insurance')}
+                onClick={() => downloadWithType(download_File, params.id, 'insurance')}
                 showInMenu
             />,
             <GridActionsCellItem
                 icon={<DownloadRounded fontSize="small" color="info" />}
                 label="Download Certifications"
-                onClick={() => download(params.id, 'certifications')}
+                onClick={() => downloadWithType(download_File, params.id, 'certifications')}
                 showInMenu
             />,
             <GridActionsCellItem
                 icon={<DownloadRounded fontSize="small" color="info" />}
                 label="Download Vendor Contracts"
-                onClick={() => download(params.id, 'contract')}
+                onClick={() => downloadWithType(download_File, params.id, 'contract')}
                 showInMenu
             />
         ];
@@ -519,14 +531,6 @@ function Warehouse() {
             toast.error(try_again);
             setLoading(false);
         });
-    }
-
-    const download = async (id, type) => {
-        try {
-            window.open(`${download_File}${type}/${id}`);
-        } catch (error) {
-            toast.error(try_again);
-        }   
     };
 
     return(
@@ -588,7 +592,7 @@ function Warehouse() {
 
             <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
                 <Grid item lg={3} xl={3} sm={3} xs={12}>
-                    <BreadCrumbsCmp data={ inventoryCrumbs('Warehouse') } />
+                    <BreadCrumbsCmp data={ crumbsHelper('Warehouse', 'Inventory', '../inventory') } />
                 </Grid>
                 <Grid item lg={9} xl={9} sm={9} xs={12}>
                     <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
