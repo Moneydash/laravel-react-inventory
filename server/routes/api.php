@@ -30,14 +30,16 @@ use App\Http\Controllers\WarehouseController;
 |
 */
 
-// routes for users (unauthenticated routes)
+# routes for users (unauthenticated routes)
 Route::post('register', [UserController::class, 'register_user'])->name('user.register');
 Route::post('login', [UserController::class, 'login'])->name('user.login');
 
+# unauthenticated routes for downloading files
 Route::get('warehouse-file/download/{type}/{warehouse_id}', [WarehouseController::class, 'download_file'])->name('warehouse.downloadFile');
 Route::get('product-image/download/{product_id}', [ProductController::class, 'download_image'])->name('product.downloadImage');
+Route::get('supplier-file/download/{type}/{supplier_id}', [SupplierController::class, 'download_file'])->name('supplier.downloadFile');
 
-// Routes for users
+# Routes for users
 Route::middleware(['auth:sanctum'])->prefix('user')->group(function() {
     Route::middleware('auth:sanctum')->post('logout', [UserController::class, 'logout'])->name('user.logout');
     Route::middleware('auth:sanctum')->get('get_users', [UserController::class, 'get_users_list'])->name('user.getAll');
@@ -50,14 +52,14 @@ Route::middleware(['auth:sanctum'])->prefix('user')->group(function() {
     Route::middleware('auth:sanctum')->patch('change_password/{user_id}', [UserController::class, 'change_password'])->name('user.changePass');
 });
 
-// check if the access token is valid and not modified on the client side...
+# check if the access token is valid and not modified on the client side...
 Route::middleware('auth:sanctum')->get('checkAuth', function () {
     return response()->json([ 'message' => 'Authenticated' ]);
 })->name('checkAuth');
 
-// Routes for the inventory
+# Routes for the inventory
 Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
-    // Routes for products
+    # Routes for products
     Route::prefix('product')->middleware('auth:sanctum')->group(function() {
         Route::post('add_product', [ProductController::class, 'add_product'])->name('product.add');
         Route::get('get_products_infos', [ProductController::class, 'get_products_infos'])->name('product.getAll');
@@ -70,7 +72,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::get('get_parent_products_exclude_self/{product_id}', [ProductController::class, 'get_parent_products_exclude_self'])->name('product.getParentExcludeSelf');
     });
 
-    // Routes for categories
+    # Routes for categories
     Route::prefix('category')->middleware('auth:sanctum')->group(function() {
         Route::get('get_categories', [CategoryController::class, 'get_categories'])->name('category.getAll');
         Route::get('get_category/{category_id}', [CategoryController::class, 'get_category'])->name('category.getInfo');
@@ -78,7 +80,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::put('update/{category_id}', [CategoryController::class, 'update_category'])->name('category.update');
     });
 
-    // Routes for suppliers
+    # Routes for suppliers
     Route::prefix('supplier')->middleware('auth:sanctum')->group(function() {
         Route::post('add_supplier', [SupplierController::class, 'add_supplier'])->name('supplier.add');
         Route::get('get_suppliers', [SupplierController::class, 'get_suppliers'])->name('supplier.getAll');
@@ -90,7 +92,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::put('restore/{supplier_id}', [SupplierController::class, 'restore_supplier'])->name('supplier.restore');
     });
 
-    // Routes for purchase orders
+    # Routes for purchase orders
     Route::prefix('purchase_order')->middleware('auth:sanctum')->group(function() {
         Route::get('generate_po_number', [PurchaseOrderController::class, 'generate_po_number'])->name('purchase_order.generatePoNumber');
         Route::get('generate_track_number', [PurchaseOrderController::class, 'generate_tracking_number'])->name('purchase_order.generateTrackingNumber');
@@ -102,6 +104,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::patch('close_order/{po_number}', [PurchaseOrderController::class, 'closeOrder'])->name('purchase_order.close');
     });
 
+    # Routes for warehouse
     Route::prefix('warehouse')->middleware('auth:sanctum')->group(function() {
         Route::get('get_types', [WarehouseTypeController::class, 'get_types'])->name('warehouse.getTypes');
         Route::get('get_warehouses', [WarehouseController::class, 'get_warehouses'])->name('warehouse.getAll');
@@ -117,9 +120,9 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     });
 });
 
-// Routes for delivery hub
+# Routes for delivery hub
 Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
-    // Routes for customers under delivery hub module
+    # Routes for customers under delivery hub module
     Route::prefix('customer')->middleware('auth:sanctum')->group(function() {
         Route::get('get_customers', [CustomerController::class, 'get_customers'])->name('customer.getAll');
         Route::get('get_customer/{customer_id}', [CustomerController::class, 'get_customer'])->name('customer.getInfo');
@@ -130,7 +133,7 @@ Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
         Route::patch('remove_customer/{customer_id}', [CustomerController::class, 'deactivate_customer'])->name('customer.remove');
     });
 
-    // Routes for delivery persons under delivery hub module
+    # Routes for delivery persons under delivery hub module
     Route::prefix('delivery_person')->middleware('auth:sanctum')->group(function() {
         Route::get('get_primary', [DeliveryPersonController::class, 'get_primary_ids'])->name('delivery_person.get_primaryId');
         Route::get('get_secondary', [DeliveryPersonController::class, 'get_secondary_ids'])->name('delivery_person.get_secondaryId');
@@ -141,7 +144,7 @@ Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
         Route::patch('remove_delivery_person/{delivery_person_id}', [DeliveryPersonController::class, 'remove_delivery_person'])->name('delivery_person.remove');
     });
 
-    // Routes for item delivery under delivery hub module
+    # Routes for item delivery under delivery hub module
     Route::prefix('item_delivery')->middleware('auth:sanctum')->group(function() {
         Route::get('generate_batch_number', [ProductDeliveryController::class, 'generate_batch_number'])->name('item_delivery.generateBatch');
         Route::get('generate_po_number', [ProductDeliveryController::class, 'generate_delivery_poNumber'])->name('item_delivery.generatePoNumber');
@@ -151,12 +154,12 @@ Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
     });
 });
 
-// Route for user navigations based on assigned role
+# Route for user navigations based on assigned role
 Route::middleware(['auth:sanctum'])->prefix('user_nav')->group(function() {
     Route::middleware('auth:sanctum')->get('get_navigations/{role_id}/{user_id}', [NavigationController::class, 'get_navigations'])->name('navigations.getRoleNav'); // navigations
 });
 
-// Routes for sub navigations based on assigned role
+# Routes for sub navigations based on assigned role
 Route::middleware(['auth:sanctum'])->prefix('user_sub_nav')->group(function() {
     Route::middleware('auth:sanctum')->get('get_profile_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_profile_sub_navigations'])->name('subnavigations.getProfileSubNavRole');
     Route::middleware('auth:sanctum')->get('get_prodDelivery_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_productDelivery_sub_navigations'])->name('subnavigations.getProductDelivery');

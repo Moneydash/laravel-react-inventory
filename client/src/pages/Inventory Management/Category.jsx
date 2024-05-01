@@ -1,20 +1,34 @@
-import { CancelOutlined, EditRounded, LayersTwoTone, RefreshOutlined } from "@mui/icons-material";
-import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, IconButton, TextField, Tooltip } from "@mui/material";
+import {
+    CancelOutlined,
+    EditRounded,
+    LayersTwoTone,
+    RefreshOutlined
+} from "@mui/icons-material";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
-import { inventoryCrumbs } from "utils/breadCrumbs";
-import { DataGrid } from "@mui/x-data-grid";
 import { axios_get_header, axios_post_header, axios_put_header } from "utils/requests";
 import { decryptAccessToken } from "utils/auth";
 import ToastCmp from "components/elements/ToastComponent";
 import { toast } from "react-toastify";
-import { LoadingButton } from "@mui/lab";
 import {
     get_Categories,
     get_Category,
     update_Category,
     add_Category
 } from 'utils/services';
+import { ErrorColorBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import { crumbsHelper, nullCheck, setErrorHelper } from "utils/helper";
+import AddUpdateContent from "components/pages/Inventory/Category/Add_Update";
+import TableComponent from "components/elements/TableComponent";
 
 function Category() {
     document.title = 'Inventory IQ: Categories';
@@ -26,11 +40,13 @@ function Category() {
         { field: 'slug', headerName: 'Slug', flex: 1 },
         { field: 'description', headerName: 'Description', flex: 1 },
         { field: 'id', headerName: 'Action', width: 100, renderCell: (params) => (
-            <div>
-                <IconButton onClick={() => get_category(params.value)} color="primary">
-                    <Tooltip arrow title="Update Category"><EditRounded fontSize="small" /></Tooltip>
-                </IconButton>
-            </div>
+            <>
+                <PrimaryColorIconBtn
+                    fn={() => get_category(params.value)}
+                    title="Update Category"
+                    icon={<EditRounded fontSize="small"/>}
+                />
+            </>
         )}
     ];
 
@@ -81,7 +97,7 @@ function Category() {
 
     const toggleDialog = (open) => {
         setDialog(open);
-        if (open === false) {
+        if (!open) {
             setForm(initialForm);
             setFormError(initialFormError);
             setFormHelper(initialFormHelper);
@@ -131,20 +147,18 @@ function Category() {
         let hasError = false;
         for (const field in form) {
             if (field !== 'id' && field !== 'description') {
-                if (formError[field] === true || form[field] === '') {
+                if (formError[field] === true || nullCheck(form[field])) {
                     hasError = true;
-                    setFormError((prevError) => ({ ...prevError, [field]: true }));
-                    setFormHelper((prevText) => ({ ...prevText, [field]: 'Please fill up required field!' }));
+                    setErrorHelper(field, true, 'Please fill up required field!', setFormError, setFormHelper);
                 } else {
                     hasError = false;
-                    setFormError((prevError) => ({ ...prevError, [field]: false }));
-                    setFormHelper((prevText) => ({ ...prevText, [field]: '' }));
+                    setErrorHelper(field, false, '', setFormError, setFormHelper);
                 }
             }
         }
 
         if (hasError) {
-            toast.error('Please check for errors or empty fields!');
+            toast.error('Oops, something went wrong. Please check any incorrect or empty fields.');
         } else {
             setLoading(true);
             if (editIndex === 1) {
@@ -185,69 +199,43 @@ function Category() {
                 <DialogTitle>{ editIndex === 1 ? 'Update' : 'Add' } New Category</DialogTitle>
                 <Divider />
                 <DialogContent>
-                    <Grid container rowSpacing={2}>
-                        <Grid item lg={12} xl={12} sm={12} xs={12}>
-                            <TextField
-                                label="Name"
-                                placeholder="Category Name (Required)"
-                                name="name"
-                                value={form.name}
-                                error={formError.name}
-                                helperText={formHelper.name}
-                                fullWidth
-                                onChange={handleChange}
-                            />
-                        </Grid>
-                        <Grid item lg={12} xl={12} sm={12} xs={12}>
-                            <TextField
-                                label="Slug"
-                                placeholder="Slug (Required)"
-                                name="slug"
-                                value={form.slug}
-                                error={formError.slug}
-                                helperText={formHelper.slug}
-                                fullWidth
-                                onChange={handleChange}
-                            />
-                        </Grid>
-                        <Grid item lg={12} xl={12} sm={12} xs={12}>
-                            <TextField
-                                label="Description"
-                                placeholder="Category Description (Optional)"
-                                name="description"
-                                value={form.description}
-                                fullWidth
-                                multiline
-                                minRows={3}
-                                maxRows={8}
-                                onChange={handleChange}
-                            />
-                        </Grid>
-                    </Grid>
+                    <AddUpdateContent
+                        form={form}
+                        formError={formError}
+                        formHelper={formHelper}
+                        handleChange={handleChange}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Grid container justifyContent="flex-end" columnSpacing={{ lg: 1, xl: 1 }} sx={{ mr: 2, mb: 1 }}>
                         <Grid item>
-                            <LoadingButton loading={loading} variant="contained" loadingPosition="end" color="primary" endIcon={<LayersTwoTone fontSize="small" />} onClick={handleSubmit}>
-                                { loading && editIndex === 1 ? 'Updating'
-                                : (editIndex === 0 && loading ? 'Adding'
-                                : (editIndex === 1 && !loading ? 'Update'
-                                : 'Add'))
-                                } Category
-                            </LoadingButton>
+                            <PrimaryColorLoadingBtn
+                                displayText={
+                                    loading && editIndex === 1 ? 'Updating Category'
+                                    : (editIndex === 0 && loading ? 'Adding Category'
+                                    : (editIndex === 1 && !loading ? 'Update Category'
+                                    : 'Add Category'))
+                                }
+                                endIcon={<LayersTwoTone fontSize="small"/>}
+                                onClick={handleSubmit}
+                                loading={loading}
+                            />
                         </Grid>
                         <Grid item>
-                            <Button variant="contained" color="error" endIcon={<CancelOutlined fontSize="small" />} onClick={() => toggleDialog(false)}>
-                                Cancel
-                            </Button>
+                            <ErrorColorBtn
+                                displayText="Cancel"
+                                endIcon={<CancelOutlined fontSize="small"/>}
+                                onClick={() => toggleDialog(false)}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
             </Dialog>
+
             {/* table buttons */}
             <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
                 <Grid item lg={3} xl={3} sm={3} xs={12}>
-                    <BreadCrumbsCmp data={inventoryCrumbs('Categories')} />
+                    <BreadCrumbsCmp data={crumbsHelper('Category', 'Inventory', '../inventory')} />
                 </Grid>
                 <Grid item lg={9} xl={9} sm={9} xs={12}>
                     <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
@@ -262,15 +250,12 @@ function Category() {
             </Grid>
 
             {/* table definitions */}
-            <Grid container direction="row" justifyContent="flex-start" alignItems="center" sx={{ mt: 2 }}>
-                <Grid item lg={12} xl={12} sm={12} xs={12}>
-                    <Card raised sx={{ width: '100%', mr: 2 }}>
-                        <CardContent>
-                            <DataGrid rows={rows} columns={columns} loading={loadingTable} autoHeight/>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+            <TableComponent
+                columns={columns}
+                rows={rows}
+                loadingTable={loadingTable}
+                sx={{ mb: 5 }}
+            />
         </Grid>
     );
 }
