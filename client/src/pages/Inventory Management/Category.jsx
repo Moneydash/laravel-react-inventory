@@ -161,7 +161,7 @@ function Category() {
         }
 
         if (hasError) {
-            toast.error('Please check for errors or empty fields!');
+            toast.error('Oops, something went wrong. Please check any incorrect or empty fields.');
         } else {
             setLoading(true);
             if (editIndex === 1) {
