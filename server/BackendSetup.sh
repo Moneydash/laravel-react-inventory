@@ -22,4 +22,4 @@ php artisan config:cache
 php artisan route:cache
 
 # access uploaded file storage
-php artisan storage:link
+# php artisan storage:link

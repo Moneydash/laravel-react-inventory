@@ -29,7 +29,6 @@ import {
     axios_post_header_file
 } from 'utils/requests';
 import { decryptAccessToken } from "utils/auth";
-import ToastCmp from "components/elements/ToastComponent";
 import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { inventoryCrumbs } from "utils/breadCrumbs";
@@ -503,8 +502,6 @@ function Products() {
 
     return (
         <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 3 }} display="flex">
-            <ToastCmp />
-
             {/* create, view and update dialog */}
             <Dialog open={dialog} fullWidth maxWidth="md">
                 <DialogTitle>{editIndex === 1 ? 'Update' : 'Add New'} Product</DialogTitle>

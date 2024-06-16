@@ -13,7 +13,7 @@ import './App.css';
 
 // components
 import Footer from './components/elements/Footer';
-import store from './redux/store';
+import store from 'store/store';
 
 function AppTheme({ children }) {
 	// use redux to prevent app from reloading after change theme

@@ -1,18 +1,57 @@
-import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography } from "@mui/material";
-import { AttachmentOutlined, CancelOutlined, CloseRounded, DeleteRounded, EditOutlined, EditRounded, GroupAddOutlined, InfoOutlined, PaymentRounded, PersonAddAltOutlined, PersonRemoveAlt1Outlined, RefreshOutlined } from '@mui/icons-material';
-import { DataGrid } from "@mui/x-data-grid";
-import { LoadingButton } from "@mui/lab";
-import React, { Fragment, useEffect, useState } from "react";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid,
+    Typography
+} from "@mui/material";
+import {
+    CancelOutlined,
+    DeleteRounded,
+    EditOutlined,
+    EditRounded,
+    GroupAddOutlined,
+    PersonAddAltOutlined,
+    PersonRemoveAlt1Outlined,
+    RefreshOutlined
+} from '@mui/icons-material';
+import React, { useEffect, useState } from "react";
 import { validate } from "email-validator";
-import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
+import { axios_delete_header, axios_get_header, axios_post_header_file } from "utils/requests";
 import { decryptAccessToken } from 'utils/auth';
 import {
     get_Customers,
     get_Customer,
-    get_Customer_payment,
     update_Customer,
-    add_Customer
+    add_Customer,
+    get_Customer_types,
+    get_Industry_types,
+    remove_Customer
 } from 'utils/services';
+import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
+import {
+    apiGetHelper,
+    crumbsHelper,
+    nullCheck,
+    phNumRegex,
+    setData,
+    setErrorHelper,
+    validateTin } from "utils/helper";
+import AddUpdateContent from "components/pages/Delivery Management/Customer/Add_Update";
+import { toast } from "react-toastify";
+import {
+    ErrorColorBtn,
+    ErrorColorIconBtn,
+    ErrorColorLoadingBtn,
+    PrimaryColorBtn,
+    PrimaryColorIconBtn,
+    PrimaryColorLoadingBtn
+} from "components/elements/ButtonsComponent";
+import TableComponentV2 from "components/elements/TableComponentV2";
+import useDebounce from "hooks/useDebounce";
 
 function Customers() {
     document.title = 'InventoryIQ: Delivery Hub - Customers';
@@ -20,177 +59,222 @@ function Customers() {
     const empty_field_warning = 'Please fill up required field!';
 
     const renderActionButtons = (params) => {
-        return <div>
-            <IconButton onClick={() => get_customer(2, params.value)} color="primary">
-                <Tooltip title="View Customer Information" placement="bottom" arrow><InfoOutlined fontSize="small"/></Tooltip>
-            </IconButton>
-            <IconButton onClick={() => get_customer(1, params.value)} color="primary" sx={{ ml: 1 }}>
-                <Tooltip title="Update Customer Information" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
-            </IconButton>
-            <IconButton onClick={() => get_customer_payment(params.value)} color="primary" sx={{ ml: 1 }}>
-                <Tooltip title="Make A Payment" placement="bottom" arrow><PaymentRounded fontSize="small"/></Tooltip>
-            </IconButton>
-            <IconButton onClick={() => get_customer(3, params.value)} color="error" sx={{ ml: 1 }}>
-                <Tooltip title="Remove Customer" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
-            </IconButton>
-        </div>
+        return <>
+            <PrimaryColorIconBtn
+                fn={() => get_customer(1, params.value)}
+                title="Update Customer Information"
+                icon={<EditRounded fontSize="small"/> }
+            />
+            <ErrorColorIconBtn
+                fn={() => get_customer(2, params.value)}
+                title="Remove Customer"
+                icon={<DeleteRounded fontSize="small"/>}
+                sx={{ ml: 1 }}
+            />
+        </>
     };
 
     const columns = [
+        { field: 'account_number', headerName: 'Account Number', flex: 1 },
         { field: 'firstname', headerName: 'First Name', flex: 1 },
         { field: 'lastname', headerName: 'Last Name', flex: 1 },
         { field: 'contact_number', headerName: 'Contact Number', flex: 1 },
         { field: 'email', headerName: 'E-mail Address', flex: 1 },
-        { field: 'location', headerName: 'Customer Location', flex: 1 },
+        {
+            field: 'name',
+            headerName: 'Customer Type',
+            flex: 1,
+            valueGetter: (params) => params.row.customer_type?.name || ''
+        },
+        { field: 'customer_location', headerName: 'Customer Location', flex: 1 },
+        { field: 'billing_address', headerName: 'Billing Address', flex: 1 },
+        { field: 'shipping_address', 'headerName': 'Shipping Address', flex: 1 },
         { field: 'id', headerName: 'Actions', flex: 1, renderCell: renderActionButtons }
     ];
 
     const [rows, setRows] = useState([]);
     const [dialog, setDialog] = useState(false);
-    const [paymentDialog, setPaymentDialog] = useState(false);
     const [removeDialog, setRemoveDialog] = useState(false);
     const [loading, setLoading] = useState(false);
     const [tableLoading, setTableLoading] = useState(false);
-    const [imgSrc, setImgSrc] = useState('');
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: ''
-    });
-    const [editIndex, setEditIndex] = useState(0); // 0 = create, 1 = update, 2 = view, 3 = remove or disable
+    const [editIndex, setEditIndex] = useState(0); // 0 = create, 1 = update
+    const [customerTypes, setCustomerTypes] = useState([]);
+    const [industryTypes, setIndustryTypes] = useState([]);
     const initialFormData = {
         id: '',
-        customer_img: '',
         firstname: '',
         middlename: '',
         lastname: '',
         contact_number: '',
         email: '',
-        customer_payment_status: 0,
-        customer_latest_payment_amnt: '',
-        customer_credit_amnt: '',
-        customer_location: ''
+        billing_address: '',
+        shipping_address: '',
+        customer_location: '',
+        customer_type_id: '',
+        tin: '',
+        website: '',
+        social_link: '',
+        has_company: 0,
+        industry_type_id: '',
+        company_size: '',
+        years: '',
+        customer_notes: ''
     };
-    const initialFormDataError = {
-        customer_img: false,
+    const initialFormDataError = {  
         firstname: false,
         lastname: false,
         contact_number: false,
         email: false,
-        customer_payment_status: false,
-        customer_payment_amnt: false,
-        customer_location: false
+        customer_location: false,
+        customer_type_id: false,
+        billing_address: false,
+        shipping_address: false,
+        tin: false,
+        years: false,
+        industry_type_id: false,
+        company_size: false
     };
     const initialFormDataHelperText = {
-        customer_img: '',
         firstname: '',
         lastname: '',
         contact_number: '',
         email: '',
-        customer_payment_status: 0,
-        customer_payment_amnt: '',
-        customer_location: ''
+        customer_location: '',
+        billing_address: '',
+        shipping_address: '',
+        tin: '',
+        years: ''
     };
     const [formData, setFormData] = useState(initialFormData);
     const [formDataError, setFormDataError] = useState(initialFormDataError);
     const [formDataHelperText, setFormDataHelperText] = useState(initialFormDataHelperText);
 
+    // table data tracking
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [maxPage, setMaxPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const debounceSearch = useDebounce(search, 300);
+
     const get_customers = () => {
+        setRows([]);
         setTableLoading(true);
-        axios_get_header(get_Customers, decrypted_access_token)
+
+        axios_get_header(
+            `${get_Customers}?page=1&per_page=10&search=`,
+            decrypted_access_token
+        )
         .then(response => {
-            const transformedData = response.data.customers.map(customer => {
-                return {
-                    id: customer['id'],
-                    firstname: customer['firstname'],
-                    lastname: customer['lastname'],
-                    contact_number: customer['contact_number'],
-                    email: customer['email'],
-                    location: customer['customer_location']
-                };
-            });
+            const data = response?.data;
+            const customer = data?.data;
             setTableLoading(false);
-            setRows(transformedData);
+            setRows(customer);
+            setMaxPage(data?.last_page);
         })
         .catch(error => {
             setTableLoading(false);
-            handleSnackbar(true, 'Oops, something went wrong. Please try again later.');
+            toast.error('Oops, something went wrong. Please try again later.');
             console.log(error);
         });
+
     };
 
-    /* eslint-disable */
     useEffect(() => {
-        get_customers();
-    }, []);
-    /* eslint-disable */
-
-    const refresh_table = () => {
-        setRows([]);
-        get_customers();
-    };
-    
-    const get_customer = (editIndexValue, customer_id) => {
-        setEditIndex(editIndexValue);
-        axios_get_header(get_Customer + customer_id, decrypted_access_token)
+        axios_get_header(
+            `${get_Customers}?page=${currentPage}&per_page=${rowsPerPage}&search=${debounceSearch}`,
+            decrypted_access_token
+        )
         .then(response => {
-            const data = response.data.customer_data;
-            const cleanedPath = data.customer_img.substring(data.customer_img.indexOf('/') + 1);
-            setImgSrc(process.env.REACT_APP_API_BASE_IMG_URL + cleanedPath);
-            setFormData((prevState) => ({
-                ...prevState,
-                id: data.id,
-                firstname: data.firstname,
-                middlename: data.middlename === null ? '' : data.middlename,
-                lastname: data.lastname,
-                contact_number: data.contact_number,
-                email: data.email,
-                customer_location: data.customer_location
-            }));
-            if (editIndexValue === 3) {
-                handleRemoveDialog(true);
-            } else {
-                handleDialog(true);
-            }
+            const data = response?.data;
+            const customer = data?.data;
+            setTableLoading(false);
+            setRows(customer);
+            setMaxPage(data?.last_page ?? null);
         })
-    };
+        .catch(error => {
+            setTableLoading(false);
+            toast.error('Oops, something went wrong. Please try again later.');
+            console.log(error);
+        });
+    }, [currentPage, rowsPerPage, debounceSearch, decrypted_access_token]);
 
-    const get_customer_payment = (customer_id) => {
-        axios_get_header(get_Customer_payment + customer_id, decrypted_access_token)
-        .then(response => {
-            const data = response.data;
-            console.log(data);
-            if (data.credit_standing !== null) {
-                setFormData((prevState) => ({
-                    ...prevState,
-                    customer_payment_status: data.customer_payment_status,
-                    customer_credit_amnt: data.customer_credit_amnt
-                }));
-                handlePaymentDialog(true);
-            } else {
-                handleSnackbar(true, 'No outstanding payments for this customer.');
-            }
-        })
+    /* table actions --- start */
+    const handleSearch = (e) => {
+        const { value } = e.target;
+        setSearch(value);
+        setCurrentPage(1);
     }
+
+    const handlePageChange = (e, newPage) => {
+        setCurrentPage(Number(newPage));
+    };
+
+    const handleSizeChange = (e) => {
+        const { value } = e.target;
+        setRowsPerPage(value);
+        setCurrentPage(1);
+    }
+    /* table actions --- end */
+    
+    const get_types = () => {
+        apiGetHelper(get_Customer_types, setCustomerTypes, 'customer_types');
+    };
+
+    const get_industries = () => {
+        apiGetHelper(get_Industry_types, setIndustryTypes, 'industry_types');
+    };
 
     const formDataReset = () => {
         setFormData(initialFormData);
         setFormDataError(initialFormDataError);
         setFormDataHelperText(initialFormDataHelperText);
-        setImgSrc('');
+        setCustomerTypes([]);
+        setIndustryTypes([]);
     };
 
     const handleDialog = (open) => {
         setDialog(open);
-        if (open === false) {
+        if (!open) {
             setEditIndex(0);
             formDataReset();
+        } else {
+            get_types();
+            get_industries();
         }
     };
+    
+    const get_customer = async (editIndexValue, customer_id) => {
+        const response = await axios_get_header(`${get_Customer}${customer_id}`, decrypted_access_token);
+        const data = response.data;
+        const customer = data.customer_data;
+        setEditIndex(editIndexValue);
 
-    const handlePaymentDialog = (open) => {
-        setPaymentDialog(open);
-        if (open === false) {
-            formDataReset();
+        if (editIndexValue === 1) {
+            setFormData((prevState) => ({
+                ...prevState,
+                id: customer?.id,
+                firstname: customer?.firstname,
+                middlename: customer?.middlename ?? '',
+                lastname: customer?.lastname,
+                contact_number: customer?.contact_number,
+                email: customer?.email,
+                customer_location: customer?.customer_location,
+                customer_type_id: customer?.customer_type_id,
+                billing_address: customer?.billing_address,
+                shipping_address: customer?.shipping_address,
+                tin: customer?.tin,
+                customer_notes: customer?.customer_notes,
+                website: customer?.website ?? '',
+                social_link: customer?.social_link ?? '',
+                has_company: customer?.has_company === true ? 1 : 0,
+                industry_type_id: nullCheck(customer?.company_info) ? '' : customer?.company_info?.industry_type_id,
+                company_size: nullCheck(customer?.company_info) ? '' : customer?.company_info?.company_size,
+                years: nullCheck(customer?.company_info) ? '' : customer?.company_info?.years_of_operation,
+            }));
+            handleDialog(true);
+        } else if (editIndexValue === 2) {
+            setData(setFormData, 'id', customer?.id);
+            handleRemoveDialog(true);
         }
     };
 
@@ -201,208 +285,153 @@ function Customers() {
         }
     }
 
-    const handleSnackbar = (open, message) => { setSnackbar((prevSnack) => ({ ...prevSnack, open: open, message: message })) }
-    const action = (
-        <Fragment>
-            <IconButton
-                size="small"
-                aria-label="cancel"
-                color="inherit"
-                onClick={() => handleSnackbar(false, '')}
-            >
-                <CloseRounded fontSize="small" />
-            </IconButton>
-        </Fragment>
-    );
-
     const handleChange = (e) => {
-        const { name, value, files } = e.target;
-
-        /* form validation starts here */
-
-        // customer profile image
-        if (name === 'customer_img') {
-            const file = files[0];
-
-            var filereader = new FileReader();
-            filereader.readAsDataURL(file);
-            if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/gif') {
-                if (file.size <= parseInt((5 * 1024) * 1024)) {
-                    filereader.onloadend = function(e) {
-                        setImgSrc(filereader.result);
-                        setFormData((prevState) => ({ ...prevState, [name]: file }));
-                        setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                        setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-                    }
+        const { name, value } = e.target;
+        switch (name) {
+            case 'email':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (!validate(value)) {
+                    setErrorHelper(name, true, 'Please enter a valid email address.', setFormDataError, setFormDataHelperText);
                 } else {
-                    setImgSrc('');
-                    setFormData((prevState) => ({ ...prevState, [name]: '' }));
-                    setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'File size limit is 5MB, please select another file.' }));
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
                 }
-            } else {
-                setImgSrc('');
-                setFormData((prevState) => ({ ...prevState, [name]: '' }));
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please select a valid image file (png, jpeg, jpg or gif)' }));
-            }
-        }
-
-        // customer first name
-        if (name === 'firstname') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (value.length < 2) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid first name with at least 2 characters.' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-        
-        // customer middlename
-        if (name === 'middlename') { setFormData((prevState) => ({ ...prevState, [name]: value })); }
-
-        // customer lastname
-        if (name === 'lastname') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (value.length < 2) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid last name with at least 2 characters.' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        // customer contact number / mobile number
-        if (name === 'contact_number') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            const ph_mobile_regex = /^(09|\+639)\d{9}$/;
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (!ph_mobile_regex.test(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid Philippine mobile number. It should start with \'09\' or \'+639\' followed by 9 digits.' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        // customer email address
-        if (name === 'email') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (!validate(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid email address.' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        // customer payment status
-        if (name === 'customer_payment_status') { setFormData((prevState) => ({ ...prevState, [name]: value })); }
-
-        // customer payment amount
-        if (name === 'customer_payment_amnt') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            
-            // Use a regular expression to check for a valid real number
-            const isValidNumber = /^[1-9]\d*(\.\d+)?$/.test(value);
-
-            
-            if (isValidNumber) {
-                const numericValue = parseFloat(value);
-                if (numericValue === '') {
-                    setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
+                break;
+            case 'firstname':
+            case 'lastname':
+            case 'customer_location':
+            case 'billing_address':
+            case 'shipping_address':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (value.length < 2) {
+                    setErrorHelper(
+                        name,
+                        true,
+                        'Please enter a valid value with atleast 2 characters',
+                        setFormDataError,
+                        setFormDataHelperText
+                    );
                 } else {
-                    setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
                 }
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Please enter a valid number.' }));
-            }
+                break;
+            case 'industry_type_id':
+            case 'company_size':
+            case 'years':
+            case 'customer_type_id':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'tin':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (!validateTin(value)) {
+                    setErrorHelper(name, true, 'Not a valid TIN', setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'contact_number':
+                setData(setFormData, name, value);
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (!phNumRegex(value)) {
+                    setErrorHelper(
+                        name,
+                        true,
+                        'Please enter a valid Philippine mobile number. It should start with \'09\' or \'+639\' followed by 9 digits.',
+                        setFormDataError,
+                        setFormDataHelperText
+                    );
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            default:
+                setData(setFormData, name, value);
+                break;
         }
-
-        // customer location
-        if (name === 'customer_location') {
-            setFormData((prevState) => ({ ...prevState, [name]: value }));
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        /* form validation end here... */
-    }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const formDataSubmit = new FormData();
-        formDataSubmit.append('customer_img', formData.customer_img);
-        formDataSubmit.append('firstname', formData.firstname);
-        formDataSubmit.append('middlename', formData.middlename);
-        formDataSubmit.append('lastname', formData.lastname);
-        formDataSubmit.append('contact_number', formData.contact_number);
-        formDataSubmit.append('email', formData.email);
-        formDataSubmit.append('customer_location', formData.customer_location);
+        let hasErrorGeneral = false;
+        let hasErrorCompany = false;
+        let hasCompanyError = formData?.has_company === 1
+        && (
+            nullCheck(formData?.industry_type_id)
+            || nullCheck(formData?.company_size)
+            || nullCheck(formData?.years)
+        );
+        const optional = ["middlename", "customer_notes", "website", "social_link", "id"];
+        const companyFields = ["industry_type_id", "company_size", "years"];
+        const isCompany = formData?.has_company === 1;
 
-        let hasError = false;
         for (const field in formDataError) {
-            if (formDataError[field] === true) {
-                hasError = true;
+            const isEmptyField = nullCheck(formData[field]);
+            const isFieldError = formDataError[field] === true;
+            const isOptional = optional.includes(field);
+            const isCompanyField = companyFields.includes(field);
+
+            if (editIndex === 1) {
+                if (isFieldError && !isOptional && isCompanyField) {
+                    setErrorHelper(field, true, 'Field Error!', setFormDataError, setFormDataHelperText);
+                    hasErrorGeneral = true;
+                    if (isCompany && isCompanyField && (isEmptyField || isFieldError)) {
+                        setErrorHelper(field, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                        hasErrorCompany = true;
+                    }
+                }
+            } else if (editIndex === 0) {
+                if ((isEmptyField || isFieldError) && !isOptional && !isCompanyField) {
+                    setErrorHelper(field, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                    hasErrorGeneral = true;
+                    if (isCompany && isCompanyField && (isEmptyField || isFieldError)) {
+                        setErrorHelper(field, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                        hasErrorCompany = true;
+                    }
+                }
             }
         }
 
-        if (formData.customer_img === "" && editIndex === 0) {
-            setFormDataError((prevError) => ({ ...prevError, customer_img: true }));
-            setFormDataHelperText((prevText) => ({ ...prevText, customer_img: 'Please provide customer image.' }));
-            handleSnackbar(true, 'Oops, something went wrong. Please provide customer image.');
-        } else if (hasError) {
-            handleSnackbar(true, 'Oops, something went wrong. Please check for any errors.');
+        if (hasErrorGeneral || hasErrorCompany) {
+            toast.error('Oops, something went wrong. Please check for incorrect or empty fields!');
+        } else if (hasCompanyError) {
+            toast.error("Empty fields on company information must be filled up.");
         } else {
             setLoading(true);
             if (editIndex === 1) {
-                axios_post_header_file(update_Customer + formData.id, formDataSubmit, decrypted_access_token)
+                axios_post_header_file(`${update_Customer}${formData?.id}`, formData, decrypted_access_token)
                 .then(response => {
                     setLoading(false);
                     handleDialog(false);
-                    refresh_table();
-                    handleSnackbar(true, response.data.message);
+                    get_customers();
+                    toast.success(response?.data?.message ?? 'Success');
                 })
                 .catch(error => {
                     setLoading(false);
                     console.log(error);
                 });
-            } else {
-                axios_post_header_file(add_Customer, formDataSubmit, decrypted_access_token)
+            } else if (editIndex === 0) {
+                axios_post_header_file(add_Customer, formData, decrypted_access_token)
                 .then(response => {
                     setLoading(false);
                     handleDialog(false);
-                    refresh_table();
-                    handleSnackbar(true, response.data.message);
-                })
-                .catch(error => {
+                    get_customers();
+                    toast.success(response?.data?.message ?? 'Success');
+                }).catch(error => {
                     setLoading(false);
                     console.log(error);
+                    toast.error("Oops, something went wrong. Please try again later.");
                 });
             }
         }
@@ -410,206 +439,74 @@ function Customers() {
 
     const handleRemoveSubmit = (e) => {
         e.preventDefault();
-
         setLoading(true);
-        axios_patch_header('/delivery_hub/customer/remove_customer/' + formData.id, {}, decrypted_access_token)
+
+        axios_delete_header(`${remove_Customer}${formData?.id}`, {}, decrypted_access_token)
         .then(response => {
             setLoading(false);
             handleRemoveDialog(false);
-            refresh_table();
-            handleSnackbar(true, response.data.message);
+            get_customers();
+            toast.success(response?.data?.message ?? 'Success');
         })
         .catch(error => {
             setLoading(false);
-            console.log(error);
+            console.error('Remove error: ', error);
+            toast.error("Oops, something went wrong. Please try again later.");
         })
     };
 
-    // previewing of uploaded image
-    const imgPreview = () => {
-        if (imgSrc !== '' && editIndex === 0) {
-            return (
-                <img src={imgSrc} alt="Upload Preview" style={{ width: '80px', height: '80px', marginTop: '5px', marginLeft: '5px' }} />
-            );
-        } else if ((editIndex === 1 || editIndex === 2) && formData.id !== '') {
-            return (
-                <img src={imgSrc} alt="Preview Customer Image" style={{ width: '80px', height: '80px', marginTop: '5px', marginLeft: '5px' }} />
-            );
-        } else {
-            return '';
-        }
-    };
-
     return (
-        <Grid container direction="row" justifyContent="flex-start" sx={{ px: 2, mt: 5 }}>
-            {/* snackbar or alert dialog */}
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => handleSnackbar(false, '')} message={snackbar.message} action={action} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
+        <Grid container justifyContent="flex-start" alignItems="flex-start" sx={{ px: 2, mt: 3 }} display="flex">
 
             {/* create and update dialog */}
-            <Dialog open={dialog} fullWidth maxWidth="md">
-                <DialogTitle>{editIndex === 0 ? 'Add New' : (editIndex === 1 ? 'Update' : 'View')} Customer {editIndex === 2 || editIndex === 1 ? 'Details' : ''}</DialogTitle>
-                <Divider />
+            <Dialog open={dialog} fullWidth maxWidth="lg">
+                <DialogTitle>{editIndex === 1 ? 'Update' : 'Add New'} Customer</DialogTitle>
+                <Divider sx={{ mt: -1.5 }}>
+                    <Typography variant="body1">Primary Information</Typography>
+                </Divider>
                 <DialogContent>
-                    <Grid container direction="column" rowSpacing={2}>
-                        <Grid item>
-                            { editIndex !== 2 ?
-                                <TextField
-                                label={editIndex === 2 ? '' : 'Customer Picture'}
-                                type="file"
-                                name="customer_img"
-                                error={formDataError.customer_img}
-                                helperText={formDataHelperText.customer_img}
-                                onChange={handleChange}
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end"><AttachmentOutlined /></InputAdornment>,
-                                }}
-                                disabled={editIndex === 2}
-                                inputProps={{ accept: 'image/png, image/jpeg, image/jpg, image/gif' }}
-                                fullWidth
-                            /> : ''
-                            }
-                            {imgPreview && (
-                                <div>{imgPreview()}</div>
-                            )}
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="First Name"
-                                name="firstname"
-                                value={formData.firstname}
-                                error={formDataError.firstname}
-                                helperText={formDataHelperText.firstname}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Middle Initial/Name"
-                                placeholder="Optional"
-                                name="middlename"
-                                value={formData.middlename}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Last Name"
-                                name="lastname"
-                                value={formData.lastname}
-                                error={formDataError.lastname}
-                                helperText={formDataHelperText.lastname}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Contact Number"
-                                name="contact_number"
-                                value={formData.contact_number}
-                                error={formDataError.contact_number}
-                                helperText={formDataHelperText.contact_number}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="E-mail Address"
-                                name="email"
-                                value={formData.email}
-                                error={formDataError.email}
-                                helperText={formDataHelperText.email}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Customer Location"
-                                name="customer_location"
-                                value={formData.customer_location}
-                                error={formDataError.customer_location}
-                                helperText={formDataHelperText.customer_location}
-                                onChange={handleChange}
-                                disabled={editIndex === 2}
-                                multiline
-                                rows={3}
-                                fullWidth
-                            />
-                        </Grid>
-                    </Grid>
+                    <AddUpdateContent
+                        formData={formData}
+                        formDataError={formDataError}
+                        formDataHelperText={formDataHelperText}
+                        handleChange={handleChange}
+                        customerTypes={customerTypes}
+                        industryTypes={industryTypes}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1.5, xl: 1.5 }} sx={{ mr: 2, mb: 1.5 }}>
                         <Grid item>
-                            <Button variant="contained" color="error" endIcon={<CancelOutlined fontSize="small" />} onClick={() => handleDialog(false)}>{editIndex === 2 ? 'Close' : 'Cancel'}</Button>
+                            <ErrorColorBtn
+                                displayText="Cancel"
+                                endIcon={<CancelOutlined fontSize="small"/>}
+                                onClick={() => handleDialog(false)}
+                            />
                         </Grid>
                         {editIndex !== 2 && (
                             <Grid item>
-                                {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>{editIndex === 1 ? 'Updating' : 'Adding New'} Customer</LoadingButton> : <Button variant="contained" color="primary" endIcon={editIndex === 1 ? <EditOutlined fontSize="small" /> : <PersonAddAltOutlined fontSize="small" />} onClick={handleSubmit}>{editIndex === 1 ? 'Update' : 'Add New'} Customer</Button>}
+                                <PrimaryColorLoadingBtn
+                                    displayText={loading && editIndex === 1
+                                        ? 'Updating Customer'
+                                        : (loading && editIndex === 0
+                                        ? 'Adding New Customer'
+                                        : (!loading && editIndex === 1
+                                        ? 'Update Customer'
+                                        : (!loading && editIndex === 0
+                                        ? 'Add New Customer'
+                                        : '')))
+                                    }
+                                    endIcon={editIndex === 1
+                                        ? <EditOutlined fontSize="small"/>
+                                        : <PersonAddAltOutlined fontSize="small"/>
+                                    }
+                                    loading={loading}
+                                    onClick={handleSubmit}
+                                />
                             </Grid>
                         )}
                     </Grid>
                 </DialogActions>
-            </Dialog>
-
-            {/* customer payment dialog */}
-            <Dialog open={paymentDialog} onClose={() => handlePaymentDialog(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Customer Payment Details</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Grid container direction="column" rowSpacing={2}>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <InputLabel id="customer_payment_status">Customer Payment Status</InputLabel>
-                                <Select
-                                    labelId="customer_payment_status"
-                                    id="customer_payment_status"
-                                    label="Customer Payment Status"
-                                    name="customer_payment_status"
-                                    value={formData.customer_payment_status}
-                                    error={formDataError.customer_payment_status}
-                                    onChange={handleChange}
-                                    fullWidth
-                                >
-                                    <MenuItem value={0}>None</MenuItem>
-                                    <MenuItem value={1}>Fully Paid</MenuItem>
-                                    <MenuItem value={2}>Partially Paid</MenuItem>
-                                    <MenuItem value={3}>Unpaid</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Amount Paid"
-                                name="customer_payment_amnt"
-                                value={formData.customer_payment_amnt}
-                                error={formDataError.customer_payment_amnt}
-                                helperText={formDataHelperText.customer_payment_amnt}
-                                onChange={handleChange}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
-                                label="Credit Amount"
-                                name="customer_payment_amnt"
-                                value={formData.customer_credit_amnt}
-                                disabled
-                                onChange={handleChange}
-                                fullWidth
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
             </Dialog>
 
             {/* remove dialog */}
@@ -620,39 +517,62 @@ function Customers() {
                     <Typography variant="body1">
                         Are you sure you want to remove this customer?
                     </Typography>
+                    <br />
+                    <Typography variant="body1">
+                        <span style={{ color: 'red' }}>NOTE:</span> CONTACT YOUR ADMINISTRATOR IF YOU WANT TO RESTORE THIS CUSTOMER.
+                    </Typography>
                 </DialogContent>
                 <DialogActions>
                     <Grid container direction="row" justifyContent="flex-end" columnSpacing={{ lg: 1.5, xl: 1.5 }} sx={{ mb: 1, mr: 1.5 }}>
                         <Grid item>
-                            <Button variant="contained" color="primary" endIcon={<CancelOutlined fontSize="small" />} onClick={() => handleRemoveDialog(false)}>Cancel</Button>
+                            <PrimaryColorBtn
+                                displayText="Cancel"
+                                endIcon={<CancelOutlined fontSize="small"/>}
+                                onClick={() => handleRemoveDialog(false)}
+                            />
                         </Grid>
                         <Grid item>
-                            {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Removing Customer</LoadingButton> : <Button variant="contained" color="error" endIcon={<PersonRemoveAlt1Outlined fontSize="small" />} onClick={handleRemoveSubmit}>Remove Customer</Button>}
+                            <ErrorColorLoadingBtn
+                                displayText={loading ? 'Removing Customer' : 'Remove Customer'}
+                                endIcon={<PersonRemoveAlt1Outlined fontSize="small"/>}
+                                onClick={handleRemoveSubmit}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
             </Dialog>
 
             {/* buttons */}
-            <Grid container direction="row" justifyContent="flex-end" columnSpacing={{ lg: 2, xl: 1. }}>
-                <Grid item>
-                    <Button variant="contained" color="primary" endIcon={<RefreshOutlined />} onClick={refresh_table}>Refresh Table</Button>
+            <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
+                <Grid item lg={3} xl={3} sm={3} xs={12}>
+                    <BreadCrumbsCmp data={crumbsHelper('Customers', 'Delivery', '../delivery')}/>
                 </Grid>
-                <Grid item>
-                    <Button variant="contained" color="primary" endIcon={<GroupAddOutlined />} onClick={() => handleDialog(true)}>Add New Customer</Button>
+                <Grid item lg={9} xl={9} sm={9} xs={12}>
+                    <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
+                        <Grid item justifyContent="flex-end" alignItems="center">
+                            <Button variant="contained" color="primary" endIcon={<RefreshOutlined />} onClick={get_customers}>Refresh Table</Button>
+                        </Grid>
+                        <Grid item justifyContent="flex-end" alignItems="center">
+                            <Button variant="contained" color="primary" endIcon={<GroupAddOutlined />} onClick={() => handleDialog(true)}>Add New Customer</Button>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
 
             {/* table definitions */}
-            <Grid container direction="row" justifyContent="center" sx={{ mt: 2 }}>
-                <Grid item lg={12} xl={12}>
-                    <Card raised sx={{ width: '100%' }}>
-                        <CardContent>
-                            <DataGrid columns={columns} rows={rows} autoHeight loading={tableLoading} />
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+            <TableComponentV2
+                columns={columns}
+                rows={rows}
+                loadingTable={tableLoading}
+                sx={{ mb: 5 }}
+                size={rowsPerPage}
+                handleSizeChange={handleSizeChange}
+                search={search}
+                handleSearch={handleSearch}
+                page={currentPage}
+                handlePageChange={handlePageChange}
+                total={maxPage}
+            />
         </Grid>
     );
 }

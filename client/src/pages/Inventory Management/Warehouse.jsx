@@ -11,7 +11,6 @@ import { GridActionsCellItem } from "@mui/x-data-grid";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { ErrorColorBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import TableComponent from "components/elements/TableComponent";
-import ToastCmp from "components/elements/ToastComponent";
 import dayjs from "dayjs";
 import { validate } from "email-validator";
 import React, { useEffect, useState } from "react";
@@ -535,9 +534,6 @@ function Warehouse() {
 
     return(
         <Grid container justifyContent="flex-start" alignItems="flex-start" sx={{ px: 2, mt: 3 }} display="flex">
-            {/* toast or alert or snackbar component */}
-            <ToastCmp />
-
             {/* dialog for adding and updating of warehouses */}
             <Dialog open={dialog} fullWidth maxWidth="lg">
                 <DialogTitle>

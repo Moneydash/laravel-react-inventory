@@ -29,7 +29,6 @@ import {
 } from "utils/requests";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import ToastCmp from "components/elements/ToastComponent";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import TableComponent from "components/elements/TableComponent";
 import { decryptAccessToken } from "utils/auth";
@@ -421,8 +420,6 @@ function Supplier() {
 
     return (
         <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 3 }} display="flex">
-            <ToastCmp />
-            
             {/* edit and add dialog */}
             <Dialog open={dialog} fullWidth maxWidth="sm">
                 <DialogTitle>{editIndex === 1 ? "Update Supplier Information" : "Add Supplier Partner"}</DialogTitle>

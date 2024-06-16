@@ -24,7 +24,7 @@ import { AES, enc } from 'crypto-js';
 import { axios_get_header } from 'utils/requests';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeDrawer, openDrawer } from '../../redux/components/drawer/drawerActions';
+import { closeDrawer, openDrawer } from 'store/components/drawer/actions';
 import Cookies from 'js-cookie';
 import { get_Navs, logOut } from 'utils/services';
 
