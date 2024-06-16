@@ -1,4 +1,4 @@
-import { OPEN_DRAWER, CLOSE_DRAWER } from "./drawerActions";
+import { OPEN_DRAWER, CLOSE_DRAWER } from "./actions";
 
 const initialState = {
     drawer: true

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CustomerType;
+use App\Models\IndustryType;
+use App\Models\CompanyInformation;
 use App\Models\CreditHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,55 +13,124 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CustomerController extends Controller
 {
+    private function generate_acctNumber() {
+        $lastCustomer = Customer::withTrashed()->orderBy('account_number', 'desc')->first();
+        if ($lastCustomer && !empty($lastCustomer->account_number)) {
+            $lastAccountNumber = intval($lastCustomer->account_number);
+        } else {
+            $lastAccountNumber = 0;
+        }
+
+        $nextAccountNumber = $lastAccountNumber + 1;
+        $formattedNumber = sprintf("%06d", $nextAccountNumber);
+
+        return $formattedNumber;
+    }
+    
+    # get the different types of customer
+    public function get_types() {
+        $type = CustomerType::get();
+        return response()->json([ 'customer_types' => $type ], 200);
+    }
+
+    # get the different types of industry
+    public function get_industries() {
+        $industry = IndustryType::get();
+        return response()->json([ 'industry_types' => $industry ], 200);
+    }
+    
     public function create_customer(Request $request) {
         $request->validate([
-            'customer_img' => 'required|mimes:jpeg,jpg,png,gif|max:5120',
             'firstname' => 'required',
             'lastname' => 'required',
             'contact_number' => 'required',
             'email' => 'required|email|unique:customers',
-            'customer_location' => 'required'
+            'customer_location' => 'required',
+            'billing_address' => 'required',
+            'shipping_address' => 'required',
+            'tin' => 'required',
+            'customer_type_id' => 'required',
+            'has_company' => 'required|boolean',
+            'industry_type_id' => 'required_if:has_company,1',
+            'company_size' => 'required_if:has_company,1',
+            'years' => 'required_if:has_company,1'
         ]);
-
-        if ($request->hasFile('customer_img')) {
-            $uploadedFile = $request->file('customer_img');
-            $filepath = $uploadedFile->store('public/customers'); // store the file in the "public" directory
-        }
-
-        $customer_data = [
-            'customer_img' => $filepath,
-            'firstname' => $request->firstname,
-            'middlename' => $request->middlename === '' ? '' : $request->middlename,
-            'lastname' => $request->lastname,
-            'contact_number' => $request->contact_number,
-            'email' => strtolower($request->email),
-            'customer_location' => $request->customer_location
-        ];
 
         DB::beginTransaction();
         try {
-            Customer::create($customer_data);
+            // insert the company information first to the company id
+            $company = null;
+            if ($request->has_company) {
+                $company_info_data = [
+                    'industry_type_id' => $request->industry_type_id,
+                    'company_size' => $request->company_size,
+                    'years_of_operation' => $request->years
+                ];
+
+                $company = CompanyInformation::create($company_info_data);
+            }
+
+            $customer_data = [
+                'account_number' => $this->generate_acctNumber(),
+                'firstname' => $request->firstname,
+                'middlename' => $request->middlename ?? '',
+                'lastname' => $request->lastname,
+                'contact_number' => $request->contact_number,
+                'email' => strtolower($request->email),
+                'customer_location' => $request->customer_location,
+                'billing_address' => $request->billing_address,
+                'shipping_address' => $request->shipping_address,
+                'tin' => $request->tin,
+                'website' => $request->website ?? '',
+                'social_link' => $request->social_link ?? '',
+                'customer_notes' => $request->customer_notes ?? '',
+                'has_company' => $request->has_company,
+                'customer_type_id' => $request->customer_type_id,
+                'company_info_id' => $company ? $company->id : null
+            ];
+            $customer = Customer::create($customer_data);
             
             DB::commit();
-            return response()->json([ 'message' => 'Customer Data has been saved successfully.' ]);
+            return response()->json([ 'message' => 'Customer Data has been saved successfully.' ], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([ 'error' => $e->getMessage() ]);
+            return response()->json([ 'error' => $e->getMessage() ], 500);
         }
     }
 
-    public function get_customers() {
-        $customers = Customer::where('customer_status', 1)->get();
+    public function get_customers(Request $request) {
+        // Retrieve query parameters with default values
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search', '');
 
-        return response()->json([ 'customers' => $customers ]);
+        // Query the customers table with optional search and eager load relationships
+        $query = Customer::with('company_info', 'customer_type');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('firstname', 'like', "%{$search}%")
+                ->orWhere('lastname', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('account_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Paginate the results
+        $customers = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Return the paginated customers in JSON format
+        return response()->json($customers, 200);
     }
 
     public function get_customer($customer_id) {
-        $customer_data = Customer::findOrFail($customer_id)
-        ->where('customer_status', 1)
-        ->first();
+        try {
+            $customer_data = Customer::with('company_info', 'customer_type')->findOrFail($customer_id);
 
-        return response()->json([ 'customer_data' => $customer_data ]);
+            return response()->json([ 'customer_data' => $customer_data ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([ 'error' => $e->getMessage(), 'message' => 'Oops, something went wrong. Please try again later.' ]);
+        }
     }
 
     public function update_customer($customer_id, Request $request) {
@@ -66,53 +138,95 @@ class CustomerController extends Controller
             'firstname' => 'required',
             'lastname' => 'required',
             'contact_number' => 'required',
-            'email' => 'required|email',
-            'customer_location' => 'required'
+            'email' => 'required|email|unique:customers,email,'.$customer_id,
+            'customer_location' => 'required',
+            'billing_address' => 'required',
+            'shipping_address' => 'required',
+            'tin' => 'required',
+            'customer_type_id' => 'required',
+            'has_company' => 'required|boolean',
+            'industry_type_id' => 'required_if:has_company,1',
+            'company_size' => 'required_if:has_company,1',
+            'years' => 'required_if:has_company,1'
         ]);
 
         DB::beginTransaction();
         try {
-            $customer = Customer::findOrFail($customer_id)
-            ->where('customer_status', 1)
-            ->first();
-
-            if ($request->hasFile('customer_img')) {
-                $request->validate([
-                    'customer_img' => 'mimes:jpeg,jpg,png,gif|max:5120', // max of 5MB
-                ]);
-                $filepath = $request->file('customer_img')->store('public/customers');
-                $customer->customer_img = $filepath;
+            # company
+            $company = null;
+            $customer = Customer::where('id', $customer_id)->first();
+            if (!$customer) {
+                return response()->json([ 'error' => 'Customer not found.' ], 404);
             }
 
-            if ($request->firstname != $customer->firstname) {
-                $customer->firstname = $request->firstname;
+            # check if customer has company
+            # if customer has company, update it
+            if ($customer->company_info_id != null) {
+                $company = CompanyInformation::where('id', $customer->company_info_id)->first();
+
+                if (!$company) {
+                    return response()->json([ 'error' => 'Company Information not found.' ], 404);
+                }
+
+                if ($request->has_company) {
+                    foreach ($request->only([
+                        'industry_type_id',
+                        'company_size',
+                        'years',
+                    ]) as $key => $value) {
+                        # sanitized value before updating
+                        $sanitized = strip_tags(trim($value));
+                        if ($key == 'years') {
+                            if ($value != $company->years_of_operation) {
+                                $company->years_of_operation = $sanitized;
+                            }
+                        } else {
+                            if ($value != $company->key) {
+                                $company->$key = $sanitized;
+                            }
+                        }
+                    }
+                    $company->save();
+                } else {
+                    # remove the company information and remove the company information
+                    $customer->company_info_id = null;
+                    $company->delete();
+                }
+            } else {
+                # else create a new company if the customer has a new company
+                if ($request->has_company) {
+                    $company = [
+                        'industry_type_id' => $request->industry_type_id,
+                        'company_size' => $request->company_size,
+                        'years_of_operation' => $request->years
+                    ];
+                    $company = CompanyInformation::create($company);
+                }
+                $customer->company_info_id = $company ? $company->id : null;
             }
 
-            if ($request->middlename != $customer->middlename) {
-                $customer->middlename = $request->middlename;
-            }
+                # customer
+                foreach($request->except([
+                    'industry_type_id',
+                    'company_size',
+                    'years',
+                    'company_info_id'
+                ]) as $key => $value) {
+                    $sanitized = ($value == null || $value == '') ? null : strip_tags(trim($value));
 
-            if ($request->lastname != $customer->lastname) {
-                $customer->lastname = $request->lastname;
-            }
+                    if ($key == 'email') {
+                        $sanitized = strtolower($sanitized);
+                    }
 
-            if ($request->contact_number != $customer->contact_number) {
-                $customer->contact_number = $request->contact_number;
-            }
+                    if ($sanitized !== $customer->$key) {
+                        $customer->$key = $sanitized;
+                    }
+                }
 
-            if (strtolower($request->email) != strtolower($customer->email)) {
-                $request->validate([ 'email' => 'unique:customers' ]);
-                $customer->email = strtolower($request->email);
-            }
+                $customer->save();
+                DB::commit();
 
-            if ($request->customer_location != $customer->customer_location) {
-                $customer->customer_location = $request->customer_location;
-            }
-
-            $customer->save();
-
-            DB::commit();
-            return response()->json([ 'message' => 'Customer data has been updated successfully.' ]);
+            return response()->json([ 'message' => 'Customer data has been updated successfully.', 'customer' => $customer ]);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);
@@ -155,19 +269,14 @@ class CustomerController extends Controller
         }
     }
 
-    public function deactivate_customer($customer_id) {
+    public function remove_customer($customer_id) {
         DB::beginTransaction();
-
         try {
-            $customer = Customer::findOrFail($customer_id)
-            ->where('customer_status', 1)
-            ->first();
-
-            $customer->customer_status = 0;
-            $customer->save();
+            $customer = Customer::findOrFail($customer_id);
+            $customer->delete();
 
             DB::commit();
-            return response()->json([ 'message' => 'Customer has been deactivated successfully.' ]);
+            return response()->json([ 'message' => 'Customer has been removed successfully.' ]);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);

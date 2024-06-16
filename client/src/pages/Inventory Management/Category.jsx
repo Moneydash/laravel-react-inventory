@@ -17,7 +17,6 @@ import React, { useEffect, useState } from "react";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { axios_get_header, axios_post_header, axios_put_header } from "utils/requests";
 import { decryptAccessToken } from "utils/auth";
-import ToastCmp from "components/elements/ToastComponent";
 import { toast } from "react-toastify";
 import {
     get_Categories,
@@ -194,7 +193,6 @@ function Category() {
 
     return (
         <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 3 }} display="flex">
-            <ToastCmp />
             <Dialog open={dialog} fullWidth maxWidth="sm">
                 <DialogTitle>{ editIndex === 1 ? 'Update' : 'Add' } New Category</DialogTitle>
                 <Divider />

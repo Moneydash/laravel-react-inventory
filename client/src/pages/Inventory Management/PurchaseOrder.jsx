@@ -50,7 +50,6 @@ import {
     wholeNumRegex
 } from "utils/helper";
 import TableComponent from "components/elements/TableComponent";
-import ToastCmp from "components/elements/ToastComponent";
 import { toast } from "react-toastify";
 import { SelectCmp } from "components/elements/FieldComponents";
 import AddUpdateContent from "components/pages/Inventory/PurchaseOrder/Add_Update";
@@ -574,7 +573,6 @@ function PurchaseOrder() {
 
     return (
         <Grid container justifyContent="flex-start" alignItems="flex-start" sx={{ px: 2, mt: 3 }} display="flex">
-            <ToastCmp />
             {/* add and edit dialog */}
             <Dialog open={dialog} fullWidth maxWidth="lg">
                 <DialogTitle>{ editIndex === 1 ? 'Update' : (editIndex === 2 ? 'View' : 'New')} Purchase Order</DialogTitle>
