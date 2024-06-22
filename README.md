@@ -27,7 +27,7 @@ Some more features will be added, stay tuned...
 ## Deployment of the Project on the Local
 This project is not fully dockerize yet, but you can install this manually on your local.
 
-● Make sure you've installed you've installed the following
+● Make sure you've installed the following
 
 ```
 ● PHP version 8.2 or later
