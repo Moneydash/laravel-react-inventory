@@ -9,7 +9,13 @@ const TableComponent = ({ columns, rows, loadingTable, sx }) => {
             <Grid item lg={12} xl={12}>
                 <Card raised sx={{ width: '100%' }}>
                     <CardContent>
-                        <DataGrid rows={rows} columns={columns} loading={loadingTable} autoHeight />
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            loading={loadingTable}
+                            autoHeight
+                            disableRowSelectionOnClick
+                        />
                     </CardContent>
                 </Card>
             </Grid>

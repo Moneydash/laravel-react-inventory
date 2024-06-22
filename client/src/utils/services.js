@@ -76,12 +76,15 @@ const api = {
 
     // delivery
     // delivery - customers submodules
-    get_Customers: '/delivery_hub/customer/get_customers',
-    get_Customer: '/delivery_hub/customer/get_customer/',
-    get_Customer_payment: '/delivery_hub/customer/get_customer_payment/',
-    update_Customer: '/delivery_hub/customer/update_customer/',
-    add_Customer: '/delivery_hub/customer/create_customer',
-    get_Paid_customers: '/delivery_hub/customer/get_paid_customers',
+    get_Customers: '/delivery/customer/get_customers',
+    get_Customer_types: '/delivery/customer/get_types',
+    get_Industry_types: '/delivery/customer/get_industries',
+    get_Customer: '/delivery/customer/get_customer/',
+    get_Customer_payment: '/delivery/customer/get_customer_payment/',
+    update_Customer: '/delivery/customer/update_customer/',
+    add_Customer: '/delivery/customer/create_customer',
+    get_Paid_customers: '/delivery/customer/get_paid_customers',
+    remove_Customer: '/delivery/customer/remove_customer/',
 
     // delivery - delivery personnel submodules
     get_Delivery_persons: '/delivery_hub/delivery_person/get_delivery_persons_infos',

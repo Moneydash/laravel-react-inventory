@@ -121,16 +121,18 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
 });
 
 # Routes for delivery hub
-Route::middleware(['auth:sanctum'])->prefix('delivery_hub')->group(function() {
+Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
     # Routes for customers under delivery hub module
     Route::prefix('customer')->middleware('auth:sanctum')->group(function() {
+        Route::get('get_types', [CustomerController::class, 'get_types'])->name('customer.getCustomerTypes');
+        Route::get('get_industries', [CustomerController::class, 'get_industries'])->name('customer.getIndustries');
         Route::get('get_customers', [CustomerController::class, 'get_customers'])->name('customer.getAll');
         Route::get('get_customer/{customer_id}', [CustomerController::class, 'get_customer'])->name('customer.getInfo');
         Route::get('get_customer_payment/{customer_id}', [CustomerController::class, 'get_customer_payment'])->name('customer.getPayment');
         Route::get('get_paid_customers', [CustomerController::class, 'get_clear_customers'])->name('customer.getPaid');
         Route::post('update_customer/{customer_id}', [CustomerController::class, 'update_customer'])->name('customer.update');
         Route::post('create_customer', [CustomerController::class, 'create_customer'])->name('customer.create');
-        Route::patch('remove_customer/{customer_id}', [CustomerController::class, 'deactivate_customer'])->name('customer.remove');
+        Route::delete('remove_customer/{customer_id}', [CustomerController::class, 'remove_customer'])->name('customer.remove');
     });
 
     # Routes for delivery persons under delivery hub module

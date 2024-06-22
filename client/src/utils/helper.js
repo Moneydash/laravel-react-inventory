@@ -166,6 +166,14 @@ export const crumbsHelper = ( submodule, module, module_link ) => {
     ];
 };
 
+export const validateTin = (tin) => {
+    // Remove any hyphens from the TIN
+    const cleanedTIN = tin.replace(/-/g, '');
+    const isValidTin = /^[0-9]{9}$/.test(cleanedTIN) || /^[0-9]{12}$/.test(cleanedTIN);
+
+    return isValidTin;
+}
+
 export const validate_file = (file, type, fieldName, setter, setError, setHelper) => {
     const filereader = new FileReader();
     const valid_img = file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/gif';

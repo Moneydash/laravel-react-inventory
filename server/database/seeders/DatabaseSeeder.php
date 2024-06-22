@@ -21,7 +21,9 @@ class DatabaseSeeder extends Seeder
             NavigationSeeder::class,
             SubNavigationSeeder::class,
             EquipmentSeeder::class,
-            WarehouseTypeSeeder::class
+            WarehouseTypeSeeder::class,
+            CustomerTypeSeeder::class,
+            IndustryTypeSeeder::class
         ]);
     }
 }

@@ -254,7 +254,8 @@ SelectCmp.propTypes = {
     id: PropTypes.string,
     value: PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.number
+        PropTypes.number,
+        PropTypes.bool
     ]),
     label: PropTypes.string,
     items: PropTypes.array,
