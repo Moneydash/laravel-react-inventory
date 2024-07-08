@@ -185,7 +185,7 @@ export const validate_file = (file, type, fieldName, setter, setError, setHelper
     } else if (type === 'file') {
         validation = valid_doc;
     } else {
-        toast.error('Not a valid type');
+        toast.error('Not a valid type of format.');
     }
 
     if (file) {
@@ -206,6 +206,42 @@ export const validate_file = (file, type, fieldName, setter, setError, setHelper
         } else {
             const helper_msg = type === 'image' ? 'Please select a valid image file (png, jpg, jpeg or gif)' : '.pdf, .doc or .docx file are only allowed';
             const toast_msg = type === 'image' ? '.png, .jpg, .jpeg or .gif are only allowed' : '.pdf, .doc or .docx file are only allowed';
+            setData(setter, fieldName, '');
+            setData(setter, `${fieldName}_name`, '');
+            setErrorHelper(`${fieldName}_name`, true, helper_msg, setError, setHelper);
+            toast.error(toast_msg);
+        }
+    } else {
+        console.log('No file detected.');
+    }
+};
+
+// validate file upload while previewing its uploaded file.
+export const validate_image_preview = (file, fieldName, displaySetter, setter, setError, setHelper) => {
+    const filereader = new FileReader();
+    const valid_img = file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/gif';
+
+    if (file) {
+        filereader.readAsDataURL(file);
+        if (valid_img) {
+            if (file.size <= parseInt((5 * 1024) * 1024)) { // minimum of 5MB
+                filereader.onloadend = function(e) {
+                    // preview the uploaded image
+                    displaySetter(filereader.result);
+
+                    setData(setter, fieldName, file);
+                    setData(setter, `${fieldName}_name`, file.name);
+                    setErrorHelper(`${fieldName}_name`, false, '', setError, setHelper);
+                }
+            } else {
+                setData(setter, fieldName, '');
+                setData(setter, `${fieldName}_name`, '');
+                setErrorHelper(`${fieldName}_name`, true, 'File size limit is 5MB, please select another file.', setError, setHelper);
+                toast.error('File size limit is only 5MB');
+            }
+        } else {
+            const helper_msg = 'Please select a valid image file (png, jpg, jpeg or gif)';
+            const toast_msg = '.png, .jpg, .jpeg or .gif are only allowed';
             setData(setter, fieldName, '');
             setData(setter, `${fieldName}_name`, '');
             setErrorHelper(`${fieldName}_name`, true, helper_msg, setError, setHelper);

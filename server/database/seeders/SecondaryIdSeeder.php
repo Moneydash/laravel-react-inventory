@@ -17,99 +17,121 @@ class SecondaryIdSeeder extends Seeder
         $secondary_ids = [
             [
                 'id' => Str::uuid(),
-                'id_name' => 'TIN ID',
-                'id_name_abbr' => 'TIN ID',
+                'description' => 'Not Applicable',
+                'name' => 'N/A',
+                'order' => 1,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Postal ID (issued 2015 onwards)',
-                'id_name_abbr' => 'Postal ID',
+                'description' => 'TIN ID',
+                'name' => 'TIN ID',
+                'order' => 2,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Barangay Certification',
-                'id_name_abbr' => 'Barangay Certificate',
+                'description' => 'Postal ID (issued 2015 onwards)',
+                'name' => 'Postal ID',
+                'order' => 3,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Government Service Insurance System (GSIS) e-Card',
-                'id_name_abbr' => 'GSIS e-Card',
+                'description' => 'Barangay Certification',
+                'name' => 'Barangay Certificate',
+                'order' => 4,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Seaman\'s Book',
-                'id_name_abbr' => 'Seaman\'s Book',
+                'description' => 'Government Service Insurance System (GSIS) e-Card',
+                'name' => 'GSIS e-Card',
+                'order' => 5,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Certification from the National Council for the Welfare of Disabled Persons (NCWDP)',
-                'id_name_abbr' => 'PWD Certification',
+                'description' => 'Seaman\'s Book',
+                'name' => 'Seaman\'s Book',
+                'order' => 6,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Department of Social Welfare and Development (DSWD) Certification',
-                'id_name_abbr' => 'DSWD Certification',
+                'description' => 'Certification from the National Council for the Welfare of Disabled Persons (NCWDP)',
+                'name' => 'PWD Certification',
+                'order' => 7,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Company IDs issued by Private Entities or Institutions registered with or supervised or regulated either by the BSP, SEC or IC',
-                'id_name_abbr' => 'Company ID',
+                'description' => 'Department of Social Welfare and Development (DSWD) Certification',
+                'name' => 'DSWD Certification',
+                'order' => 8,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Police Clearance',
-                'id_name_abbr' => 'Police Clearance',
+                'description' => 'Company IDs issued by Private Entities or Institutions registered with or supervised or regulated either by the BSP, SEC or IC',
+                'name' => 'Company ID',
+                'order' => 9,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Barangay Clearance',
-                'id_name_abbr' => 'Barangay Clearance',
+                'description' => 'Police Clearance',
+                'name' => 'Police Clearance',
+                'order' => 10,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Cedula or Community Tax Certificate',
-                'id_name_abbr' => 'Cedula',
+                'description' => 'Barangay Clearance',
+                'name' => 'Barangay Clearance',
+                'order' => 11,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Government Service Record',
-                'id_name_abbr' => 'Government Service Record',
+                'description' => 'Cedula or Community Tax Certificate',
+                'name' => 'Cedula',
+                'order' => 12,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'PSA Marriage Contract',
-                'id_name_abbr' => 'Marriage Contract',
+                'description' => 'Government Service Record',
+                'name' => 'Government Service Record',
+                'order' => 13,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'PSA Birth Certificate',
-                'id_name_abbr' => 'Birth Certificate',
+                'description' => 'PSA Marriage Contract',
+                'name' => 'Marriage Contract',
+                'order' => 14,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => Str::uuid(),
+                'description' => 'PSA Birth Certificate',
+                'name' => 'Birth Certificate',
+                'order' => 15,
                 'created_at' => now(),
                 'updated_at' => now()
             ]
