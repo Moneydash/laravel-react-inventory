@@ -26,7 +26,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $inventory->id,
-                'sub_navigation_name' => 'Product Management',
+                'sub_navigation_name' => 'Products',
                 'sub_navigation_url' => 'products-list',
                 'sub_navigation_desc' => 'Manages Products Listing Information',
                 'status' => 1,
@@ -36,7 +36,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $inventory->id,
-                'sub_navigation_name' => 'Product Category Management',
+                'sub_navigation_name' => 'Categories',
                 'sub_navigation_url' => 'categories',
                 'sub_navigation_desc' => 'Manages Product Categories',
                 'status' => 1,
@@ -46,7 +46,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $inventory->id,
-                'sub_navigation_name' => 'Warehouse Management',
+                'sub_navigation_name' => 'Warehouse',
                 'sub_navigation_url' => 'warehouse-management',
                 'sub_navigation_desc' => 'Manages Warehouse and Inventory Storage',
                 'status' => 1,
@@ -56,7 +56,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $inventory->id,
-                'sub_navigation_name' => 'Suppliers Relationship Management',
+                'sub_navigation_name' => 'Suppliers',
                 'sub_navigation_url' => 'suppliers',
                 'sub_navigation_desc' => 'Manages Suppliers Listing Information',
                 'status' => 1,
@@ -66,7 +66,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $inventory->id,
-                'sub_navigation_name' => 'Purchase Management',
+                'sub_navigation_name' => 'Purchase Orders',
                 'sub_navigation_url' => 'purchase-orders',
                 'sub_navigation_desc' => 'Manages Inventory Purchase',
                 'status' => 1,
@@ -106,7 +106,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $product_delivery->id,
-                'sub_navigation_name' => 'Batch Management',
+                'sub_navigation_name' => 'Batches',
                 'sub_navigation_url' => 'batches-delivery',
                 'sub_navigation_desc' => 'Manage Product Batch Delivery',
                 'status' => 1,
@@ -116,7 +116,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $product_delivery->id,
-                'sub_navigation_name' => 'Delivery Personnel Management',
+                'sub_navigation_name' => 'Delivery Personnel',
                 'sub_navigation_url' => 'delivery-persons',
                 'sub_navigation_desc' => 'Manage Personnels for Product Deliveries',
                 'status' => 1,
@@ -126,7 +126,7 @@ class SubNavigationSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'parent_navigation_id' => $product_delivery->id,
-                'sub_navigation_name' => 'Customer Relationship Management',
+                'sub_navigation_name' => 'Customers',
                 'sub_navigation_url' => 'customers',
                 'sub_navigation_desc' => 'Manage Customers and their informations',
                 'status' => 1,

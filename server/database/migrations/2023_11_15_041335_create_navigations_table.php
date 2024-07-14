@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('navigation_name')->nullable(false)->unique();
             $table->string('navigation_url')->nullable(false)->unique();
             $table->string('navigation_icon')->nullable(false);
+            $table->tinyInteger('order')->nullable(false);
             $table->boolean('status')->default(1);
             $table->timestamps();
         });
