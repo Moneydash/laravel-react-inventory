@@ -18,55 +18,37 @@ This project is currently on development and enhancements but some of the featur
 ● Warehouse Management 🏨
 ● CRM 🧑‍🤝‍🧑
 ● HR Management 🧑‍🤝‍🧑
-● Leads Management 🧑‍🤝‍🧑
 ```
 
 Some more features will be added, stay tuned...
 
 
 ## Deployment of the Project on the Local
-This project is not fully dockerize yet, but you can install this manually on your local.
-
-● Make sure you've installed the following
+To deploy this project, make sure you've installed:
 
 ```
-● PHP version 8.2 or later
-● Node JS version 20 or later
-● MySQL or MariaDB
-● Composer (any version but later version is recommended)
+● Docker
+● docker compose
 ```
 
 ---
 
 #### Steps to install
-If you are using a Linux OS, you can use the make command from the Makefile file. Just run the following:
+Run the following in the terminal inside the root folder of the project.
 
-● Backend
 ```
-● make backend_setup
-● make backend_run
+docker compose up -d --build
 ```
 
-● Frontend
-```
-● make frontend_install
-● make frontend_run
-```
----
+This will build the folder and run your application. To setup the database of your application in the docker, run the command:
 
-If you are using a windows OS, you can do the following:
-
-● Backend
 ```
-● cd server
-● Run `composer install`
-● Run `composer dump-autoload`
-● Run .\BackendSetup.cmd
+● docker exec -it [[**container_id_here**]] bash
+● ./BackendSetup.sh
 ```
 
-●  Frontend
+to stop the running application, just run:
+
 ```
-● cd client
-● Run `npm install`
-● Run `npm start`
+docker compose down
 ```

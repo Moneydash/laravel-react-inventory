@@ -18,120 +18,137 @@ class PrimaryIdSeeder extends Seeder
         $primary_ids = [
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Philippine Passport from Department of Foreign Affairs',
-                'id_name_abbr' => 'Philippine Passport',
+                'description' => 'Philippine Passport from Department of Foreign Affairs',
+                'name' => 'Philippine Passport',
+                'order' => 1,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'SSS UMID Card from Social Security System',
-                'id_name_abbr' => 'SSS/UMID Card',
+                'description' => 'SSS UMID Card from Social Security System',
+                'name' => 'SSS/UMID Card',
+                'order' => 2,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'GSIS UMID Card Government Service Insurance System',
-                'id_name_abbr' => 'GSIS/UMID Card',
+                'description' => 'GSIS UMID Card Government Service Insurance System',
+                'name' => 'GSIS/UMID Card',
+                'order' => 3,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Driver\'s License from Land Transportation Office',
-                'id_name_abbr' => 'Driver\'s License',
+                'description' => 'Driver\'s License from Land Transportation Office',
+                'name' => 'Driver\'s License',
+                'order' => 4,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'OWWA ID Overseas Workers Welfare Administration',
-                'id_name_abbr' => 'OWWA ID',
+                'description' => 'OWWA ID Overseas Workers Welfare Administration',
+                'name' => 'OWWA ID',
+                'order' => 5,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'iDOLE Card from Department of Labor and Employment',
-                'id_name_abbr' => 'iDOLE Card',
+                'description' => 'iDOLE Card from Department of Labor and Employment',
+                'name' => 'iDOLE Card',
+                'order' => 6,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Voter\'s ID from Commission on Elections',
-                'id_name_abbr' => 'Voter\'s ID',
+                'description' => 'Voter\'s ID from Commission on Elections',
+                'name' => 'Voter\'s ID',
+                'order' => 7,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Voter\'s Certification from the Officer of Election with Dry Seal',
-                'id_name_abbr' => 'Voter\'s Certificate',
+                'description' => 'Voter\'s Certification from the Officer of Election with Dry Seal',
+                'name' => 'Voter\'s Certificate',
+                'order' => 8,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Firearms License from Philippine National Police',
-                'id_name_abbr' => 'Firearms License',
+                'description' => 'Firearms License from Philippine National Police',
+                'name' => 'Firearms License',
+                'order' => 9,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Senior Citizen ID from Local Government Unit',
-                'id_name_abbr' => 'Senior Citizen ID',
+                'description' => 'Senior Citizen ID from Local Government Unit',
+                'name' => 'Senior Citizen ID',
+                'order' => 10,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Persons with Disabilities (PWD) ID from Local Government Unit',
-                'id_name_abbr' => 'PWD ID',
+                'description' => 'Persons with Disabilities (PWD) ID from Local Government Unit',
+                'name' => 'PWD ID',
+                'order' => 11,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'NBI Clearance from National Bureau of Investigation',
-                'id_name_abbr' => 'NBI Clearance',
+                'description' => 'NBI Clearance from National Bureau of Investigation',
+                'name' => 'NBI Clearance',
+                'order' => 12,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Alien Certification of Registration or Immigrant Certificate of Registration',
-                'id_name_abbr' => 'Immigrant Certificate',
+                'description' => 'Alien Certification of Registration or Immigrant Certificate of Registration',
+                'name' => 'Immigrant Certificate',
+                'order' => 13,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'PhilHealth ID (digitized PVC)',
-                'id_name_abbr' => 'PhilHealth ID (digitized PVC)',
+                'description' => 'PhilHealth ID (digitized PVC)',
+                'name' => 'PhilHealth ID (digitized PVC)',
+                'order' => 14,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Government Office and GOCC ID',
-                'id_name_abbr' => 'GOCC ID',
+                'description' => 'Government Office and GOCC ID',
+                'name' => 'GOCC ID',
+                'order' => 15,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Integrated Bar of the Philippines ID',
-                'id_name_abbr' => 'Integrated Bar of the Philippines ID',
+                'description' => 'Integrated Bar of the Philippines ID',
+                'name' => 'Integrated Bar of the Philippines ID',
+                'order' => 16,
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
                 'id' => Str::uuid(),
-                'id_name' => 'Current Valid ePassport (For Renewal of ePassport)',
-                'id_name_abbr' => 'Valid e-Passport',
+                'description' => 'Current Valid ePassport (For Renewal of ePassport)',
+                'name' => 'Valid e-Passport',
+                'order' => 17,
                 'created_at' => now(),
                 'updated_at' => now()
             ]

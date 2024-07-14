@@ -87,12 +87,12 @@ const api = {
     remove_Customer: '/delivery/customer/remove_customer/',
 
     // delivery - delivery personnel submodules
-    get_Delivery_persons: '/delivery_hub/delivery_person/get_delivery_persons_infos',
-    get_Delivery_person: '/delivery_hub/delivery_person/get_info/',
-    get_Primary_ids: '/delivery_hub/delivery_person/get_primary',
-    get_Secondary_ids: '/delivery_hub/delivery_person/get_secondary',
-    add_Delivery_person: '/delivery_hub/delivery_person/add_delivery_person',
-    remove_Delivery_person: '/delivery_hub/delivery_person/remove_delivery_person/',
+    get_Delivery_persons: '/delivery/delivery_person/get_delivery_persons_table',
+    get_Delivery_person: '/delivery/delivery_person/get_info/',
+    get_Primary_ids: '/delivery/delivery_person/get_primary',
+    get_Secondary_ids: '/delivery/delivery_person/get_secondary',
+    add_Delivery_person: '/delivery/delivery_person/add_delivery_person',
+    remove_Delivery_person: '/delivery/delivery_person/remove_delivery_person/',
 
     // delivery - product delivery submodules
     get_Item_deliveries: '/delivery_hub/item_delivery/get_items',

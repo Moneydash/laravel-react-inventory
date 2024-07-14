@@ -6,18 +6,28 @@ use Illuminate\Http\Request;
 use App\Models\PrimaryId;
 use App\Models\SecondaryId;
 use App\Models\DeliveryPerson;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
 class DeliveryPersonController extends Controller
 {
     public function get_primary_ids() {
-        $primary_ids = PrimaryId::get();
+        $primary_ids = PrimaryId::select(
+            'id', 'name', 'description'
+        )
+        ->orderBy('order')
+        ->get();
         
         return response()->json([ 'primary_ids' => $primary_ids ]);
     }
 
     public function get_secondary_ids() {
-        $secondary_ids = SecondaryId::get();
+        $secondary_ids = SecondaryId::select(
+            'id', 'name', 'description'
+        )
+        ->where('name', '!=', 'N/A')
+        ->orderBy('order')
+        ->get();
 
         return response()->json([ 'secondary_ids' => $secondary_ids ]);
     }
@@ -28,54 +38,84 @@ class DeliveryPersonController extends Controller
             'lastname' => 'required',
             'primaryID_id' => 'required',
             'primary_id_img' => 'required|mimes:jpeg,jpg,png,gif|max:5120',
-            'secondary_id_img' => 'required_if:secondaryID_id,!=,null',
+            'secondaryID_id' => 'nullable',
+            'secondary_id_img' => [
+                'nullable',
+                Rule::requiredIf(function () use ($request) {
+                    return $request->secondaryID_id != null;
+                }),
+            ],
             'contact_number' => 'required',
-            'email_address' => 'email|unique:delivery_persons',
-            'home_address' => 'required'
+            'email_address' => 'nullable|email|unique:delivery_persons',
+            'home_address' => 'required',
         ]);
-
+    
+        $filepath_primary = null;
         if ($request->hasFile('primary_id_img')) {
             $uploadedFile_primary = $request->file('primary_id_img');
-            $filepath_primary = $uploadedFile_primary->store('public/delivery_persons/primary'); // store the file in the "public" directory
+            $filepath_primary = $uploadedFile_primary->store('public/delivery_persons/primary');
         }
-
+    
+        $filepath_secondary = null;
         if ($request->hasFile('secondary_id_img')) {
+            $request->validate([
+                'secondary_id_img' => 'mimes:jpeg,jpg,png,gif|max:5120',
+            ]);
             $uploadedFile_secondary = $request->file('secondary_id_img');
-            $filepath_secondary = $uploadedFile_secondary->store('public/delivery_persons/secondary'); // store the file in the "public" directory
+            $filepath_secondary = $uploadedFile_secondary->store('public/delivery_persons/secondary');
         }
-
+        
+        if ($request->secondaryID_id == null) {
+            $nullId = SecondaryId::where('name', 'N/A')->first();
+            # apply the n/a if secondary is null or if the user doesn't choose from the frontend
+            $request->secondaryID_id = $nullId->id;
+        }
+    
         $delivery_person_data = [
             'firstname' => $request->firstname,
             'middlename' => $request->middlename,
             'lastname' => $request->lastname,
             'primaryID_id' => $request->primaryID_id,
             'primary_id_img' => $filepath_primary,
+            'contact_number' => $request->contact_number,
             'secondaryID_id' => $request->secondaryID_id,
             'secondary_id_img' => $filepath_secondary,
-            'contact_number' => $request->contact_number,
             'email_address' => $request->email_address,
             'home_address' => $request->home_address,
-            'status' => 1
         ];
-
+    
         DB::beginTransaction();
         try {
             DeliveryPerson::create($delivery_person_data);
-
+    
             DB::commit();
-            return response()->json([ 'message' => 'Delivery Personnel data has been saved successfully.' ]);
+            return response()->json(['message' => 'Delivery Personnel data has been saved successfully.'], 201);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([ 'error' => $e->getMessage() ]);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    public function get_delivery_persons_infos() {
-        $delivery_persons = DeliveryPerson::where('status', 1)
-        ->with('primaryId', 'secondaryId')
-        ->get();
+    public function get_delivery_persons_table(Request $request) {
+        // Retrieve query parameters with default values
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search', '');
 
-        return response()->json([ 'delivery_persons' => $delivery_persons ]);
+        $query = DeliveryPerson::with('primaryId', 'secondaryId');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('firstname', 'like', "%{$search}%")
+                ->orWhere('lastname', 'like', "%{$search}%")
+                ->orWhere('contact_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Paginate the results
+        $delivery_persons = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($delivery_persons, 200);
     }
     
     public function get_delivery_persons_list() {
@@ -87,29 +127,26 @@ class DeliveryPersonController extends Controller
     }
 
     public function get_delivery_person($delivery_person_id) {
-        $delivery_person_data = DeliveryPerson::findOrFail($delivery_person_id)
-        ->where('status', 1)
-        ->first();
+        try {
+            $delivery_person_data = DeliveryPerson::findOrFail($delivery_person_id);
 
-        return response()->json([ 'delivery_personnel_info' => $delivery_person_data ]);
+            return response()->json([ 'delivery_personnel_info' => $delivery_person_data ]);
+        } catch (ModelNotFoundException $ex) {
+            return response()->json([ 'error' => $ex->getMessage() ], 404);
+        }
     }
 
     public function remove_delivery_person($delivery_person_id) {
         DB::beginTransaction();
-
         try {
-            $delivery_person = DeliveryPerson::findOrFail($delivery_person_id)
-            ->where('status', 1)
-            ->first();
-
-            $delivery_person->status = 0;
-            $delivery_person->save();
+            $delivery_person = DeliveryPerson::findOrFail($delivery_person_id);
+            $delivery_person->delete();
 
             DB::commit();
-            return response()->json([ 'message' => 'Delivery Personnel has been removed.' ]);
+            return response()->json([ 'message' => 'Delivery Personnel has been removed.' ], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            return response()->json([ 'error' => $e->getMessage() ]);
+            return response()->json([ 'error' => $e->getMessage() ], 500);
         }
     }
 }

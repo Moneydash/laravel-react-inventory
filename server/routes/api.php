@@ -140,8 +140,8 @@ Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
         Route::get('get_primary', [DeliveryPersonController::class, 'get_primary_ids'])->name('delivery_person.get_primaryId');
         Route::get('get_secondary', [DeliveryPersonController::class, 'get_secondary_ids'])->name('delivery_person.get_secondaryId');
         Route::post('add_delivery_person', [DeliveryPersonController::class, 'create_delivery_person'])->name('delivery_person.create');
-        Route::get('get_delivery_persons_infos', [DeliveryPersonController::class, 'get_delivery_persons_infos'])->name('delivery_person.getAll');
-        Route::get('get_delivery_persons', [DeliveryPersonController::class, 'get_delivery_persons_list'])->name('delivery_person.getList');
+        Route::get('get_delivery_persons_table', [DeliveryPersonController::class, 'get_delivery_persons_table'])->name('delivery_person.getAll'); # table with their infos
+        Route::get('get_delivery_persons', [DeliveryPersonController::class, 'get_delivery_persons_list'])->name('delivery_person.getList'); # list only without infos
         Route::get('get_info/{delivery_person_id}', [DeliveryPersonController::class, 'get_delivery_person'])->name('delivery_person.getInfo');
         Route::patch('remove_delivery_person/{delivery_person_id}', [DeliveryPersonController::class, 'remove_delivery_person'])->name('delivery_person.remove');
     });

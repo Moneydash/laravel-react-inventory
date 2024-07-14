@@ -28,7 +28,7 @@ import { closeDrawer, openDrawer } from 'store/components/drawer/actions';
 import Cookies from 'js-cookie';
 import { get_Navs, logOut } from 'utils/services';
 
-const drawerWidth = 330;
+const drawerWidth = 280;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,

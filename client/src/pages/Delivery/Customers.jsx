@@ -40,7 +40,7 @@ import {
     setData,
     setErrorHelper,
     validateTin } from "utils/helper";
-import AddUpdateContent from "components/pages/Delivery Management/Customer/Add_Update";
+import AddUpdateContent from "components/pages/Delivery/Customer/Add_Update";
 import { toast } from "react-toastify";
 import {
     ErrorColorBtn,

@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('secondary_ids_list', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('id_name')->nullable(false)->unique();
-            $table->string('id_name_abbr')->nullable();
+            $table->string('description')->nullable(false)->unique(); # ID Description
+            $table->string('name')->nullable(false)->unique(); # ID Name
+            $table->tinyInteger('order')->nullable(false); # order positioning of the ID's
             $table->timestamps();
         });
     }
