@@ -65,7 +65,7 @@ class DeliveryPersonController extends Controller
             $filepath_secondary = $uploadedFile_secondary->store('public/delivery_persons/secondary');
         }
         
-        if ($request->secondaryID_id) {
+        if ($request->secondaryID_id == null) {
             $nullId = SecondaryId::where('name', 'N/A')->first();
             # apply the n/a if secondary is null or if the user doesn't choose from the frontend
             $request->secondaryID_id = $nullId->id;
@@ -96,11 +96,26 @@ class DeliveryPersonController extends Controller
         }
     }
 
-    public function get_delivery_persons_table() {
-        $delivery_persons = DeliveryPerson::with('primaryId', 'secondaryId')
-        ->get();
+    public function get_delivery_persons_table(Request $request) {
+        // Retrieve query parameters with default values
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search', '');
 
-        return response()->json([ 'delivery_persons' => $delivery_persons ]);
+        $query = DeliveryPerson::with('primaryId', 'secondaryId');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('firstname', 'like', "%{$search}%")
+                ->orWhere('lastname', 'like', "%{$search}%")
+                ->orWhere('contact_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Paginate the results
+        $delivery_persons = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($delivery_persons, 200);
     }
     
     public function get_delivery_persons_list() {

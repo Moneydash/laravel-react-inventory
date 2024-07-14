@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, IconButton, Tooltip, Typography } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { LoadingButton } from "@mui/lab";
-import { CancelOutlined, DeleteRounded, GroupAddOutlined, InfoOutlined, PersonRemoveAlt1Outlined, RefreshOutlined } from '@mui/icons-material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid } from '@mui/material';
+import { CancelOutlined, DeleteRounded, GroupAddOutlined, InfoOutlined, RefreshOutlined } from '@mui/icons-material';
 import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
 import { decryptAccessToken } from "utils/auth";
 import { validate } from "email-validator";
@@ -14,11 +12,14 @@ import {
     add_Delivery_person,
     remove_Delivery_person
 } from 'utils/services';
-import AddUpdateContent from "components/pages/Delivery Management/DeliveryPersons/Add_Update";
+import AddUpdateContent from "components/pages/Delivery/DeliveryPersons/Add_Update";
 import { apiGetHelper, crumbsHelper, fileNameSplit, nullCheck, pathCleaner, phNumRegex, setData, setErrorHelper, validate_image_preview } from "utils/helper";
 import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { ErrorColorBtn, ErrorColorIconBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import useDebounce from "hooks/useDebounce";
+import TableComponentV2 from "components/elements/TableComponentV2";
+import Remove from "components/pages/Delivery/DeliveryPersons/Remove";
 
 function DeliveryPersons() {
     document.title = 'InventoryIQ: Delivery Hub - Delivery Personnel';
@@ -75,7 +76,6 @@ function DeliveryPersons() {
     const [secondaryIds, setSecondaryIds] = useState([]);
     const [primaryIdImgSrc, setPrimaryIdImgSrc] = useState('');
     const [secondaryIdImgSrc, setSecondaryIdImgSrc] = useState('');
-    const [forceRender, setForceRender] = useState(false);
     const initialFormData = {
         id: '',
         firstname: '',
@@ -117,28 +117,72 @@ function DeliveryPersons() {
     const [formDataError, setFormDataError] = useState(initialFormDataError);
     const [formDataHelperText, setFormDataHelperText] = useState(initialFormDataHelperText);
 
+    // table data tracking
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [maxPage, setMaxPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const debounceSearch = useDebounce(search, 300);
+
     const get_delivery_persons = async () => {
         setRows([]);
         setTableLoading(true);
-        axios_get_header(get_Delivery_persons, decrypted_access_token)
+        axios_get_header(
+            `${get_Delivery_persons}?page=1&per_page=10&search=`,
+            decrypted_access_token
+        )
         .then(response => {
             const data = response.data;
-            const personnels = data?.delivery_persons;
+            const personnels = data?.data;
             setRows(personnels);
             setTableLoading(false);
+            setMaxPage(data?.last_page);
         })
         .catch(error => {
             setTableLoading(false);
             toast.error('Oops, something went wrong. Please try again later.');
             console.log(error);
-        })
+        });
     }
 
     /* eslint-disable */
     useEffect(() => {
-        get_delivery_persons();
-    }, []);
+        axios_get_header(
+            `${get_Delivery_persons}?page=${currentPage}&per_page=${rowsPerPage}&search=${debounceSearch}`,
+            decrypted_access_token
+        )
+        .then(response => {
+            const data = response?.data;
+            const personnels = data?.data;
+            setRows(personnels);
+            setTableLoading(false);
+            setMaxPage(data?.last_page);
+        })
+        .catch(error => {
+            setTableLoading(false);
+            toast.error('Oops, something went wrong. Please try again later.');
+            console.log(error);
+        });
+    }, [currentPage, rowsPerPage, debounceSearch, decrypted_access_token]);
     /* eslint-disable */
+
+    /* table actions --- start */
+    const handleSearch = (e) => {
+        const { value } = e.target;
+        setSearch(value);
+        setCurrentPage(1);
+    }
+
+    const handlePageChange = (e, newPage) => {
+        setCurrentPage(Number(newPage));
+    };
+
+    const handleSizeChange = (e) => {
+        const { value } = e.target;
+        setRowsPerPage(value);
+        setCurrentPage(1);
+    }
+    /* table actions --- end */
 
     const refresh_table = () => {
         get_delivery_persons();
@@ -209,7 +253,7 @@ function DeliveryPersons() {
         }
     };
 
-    const handRemoveDialog = (open) => {
+    const handleRemoveDialog = (open) => {
         setRemoveDialog(open);
         if (!open) {
             setFormData(initialFormData);
@@ -378,7 +422,7 @@ function DeliveryPersons() {
         setLoading(true);
         axios_patch_header(remove_Delivery_person + formData.id, {}, decrypted_access_token)
         .then(response => {
-            handRemoveDialog(false);
+            handleRemoveDialog(false);
             setLoading(false);
             refresh_table();
             toast.success(response.data.message);
@@ -459,23 +503,12 @@ function DeliveryPersons() {
             </Dialog>
 
             {/* remove dialog */}
-            <Dialog open={removeDialog} onClose={() => handRemoveDialog(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Remove Delivery Personnel Details</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Typography variant="body1">Are you sure you want to remove this Delivery Personnel?</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container direction="row" justifyContent="flex-end" columnSpacing={{ lg: 1.5, xl: 1.5 }} sx={{ mr: 1.5, mb: 1 }}>
-                        <Grid item>
-                            <Button color="primary" endIcon={<CancelOutlined />} variant="contained" onClick={() => handRemoveDialog(false)}>Cancel</Button>
-                        </Grid>
-                        <Grid item>
-                            {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Removing Delivery Personnel</LoadingButton> : <Button color="error" endIcon={<PersonRemoveAlt1Outlined />} onClick={handleRemoveSubmit} variant="contained">Remove Delivery Personnel</Button>}
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+            <Remove
+                removeDialog={removeDialog}
+                handleRemoveDialog={handleRemoveDialog}
+                handleRemoveSubmit={handleRemoveSubmit}
+                loading={loading}
+            />
 
             {/* buttons */}
             <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
@@ -494,16 +527,20 @@ function DeliveryPersons() {
                 </Grid>
             </Grid>
 
-            {/* table rendering */}
-            <Grid container justifyContent="center" direction="row" sx={{ mt: 2 }}>
-                <Grid item lg={12} xl={12}>
-                    <Card raised sx={{ width: '100%' }}>
-                        <CardContent>
-                            <DataGrid columns={columns} rows={rows} autoHeight loading={tableLoading} />
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+            {/* table definitions */}
+            <TableComponentV2
+                columns={columns}
+                rows={rows}
+                loadingTable={tableLoading}
+                sx={{ mb: 5 }}
+                size={rowsPerPage}
+                handleSizeChange={handleSizeChange}
+                search={search}
+                handleSearch={handleSearch}
+                page={currentPage}
+                handlePageChange={handlePageChange}
+                total={maxPage}
+            />
         </Grid>
     );
 }

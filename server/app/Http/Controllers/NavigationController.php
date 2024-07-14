@@ -18,7 +18,9 @@ class NavigationController extends Controller
             // If the data is not in the cache, retrieve it from the database
             return Navigation::whereHas('roles', function ($query) use ($role_id) {
                 $query->where('role_id', $role_id);
-            })->get();
+            })
+            ->orderBy('order')
+            ->get();
         });
     
         return response()->json(['navigations' => $navigations]);

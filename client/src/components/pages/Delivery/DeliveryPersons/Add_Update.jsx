@@ -70,7 +70,7 @@ const AddUpdateContent = ({
                         <Grid item>
                             <SelectCmp
                                 id="primaryID_id"
-                                value={formData.primaryID_id}
+                                value={primaryIds?.length > 0 ? formData.primaryID_id || '' : ''}
                                 label="Primary ID (Required)"
                                 onChange={handleChange}
                                 items={primaryIds}
