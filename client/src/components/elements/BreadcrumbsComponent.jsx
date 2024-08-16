@@ -3,7 +3,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import { Link as RouterLink, MemoryRouter } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
-import { Breadcrumbs, Link } from '@mui/material';
+import { Breadcrumbs, Link, Typography } from '@mui/material';
 import { NavigateNextOutlined } from '@mui/icons-material';
 
 
@@ -33,7 +33,7 @@ const BreadCrumbsCmp = ({ data }) => {
                         to={item.link}
                         disabled={item.link ? true : false}
                     >
-                        {item.text}
+                        <Typography variant="body1" sx={{ fontWeight: '600' }}>{item.text}</Typography>
                     </Link>
                 ))}
             </Breadcrumbs>

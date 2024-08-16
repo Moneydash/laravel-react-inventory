@@ -119,7 +119,7 @@ class DeliveryPersonController extends Controller
     }
     
     public function get_delivery_persons_list() {
-        $delivery_persons = DeliveryPerson::where('status', 1)
+        $delivery_persons = DeliveryPerson::where('delivery_status', 1) # check for delivery personnel availability
         ->orderBy('lastname')
         ->get();
 

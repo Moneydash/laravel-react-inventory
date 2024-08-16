@@ -1,5 +1,5 @@
 // import fonts
-import './fonts/Fonts';
+import './fonts/js/Fonts';
 
 // react related
 import React, { useEffect } from 'react';
@@ -22,20 +22,28 @@ function AppTheme({ children }) {
 	// pallete mode --> light mode or dark mode
 	const theme = createTheme({
 	  palette: {
-		mode: 'light'
+		mode: 'light',
+		background: {
+			'default': 'rgba(240, 248, 255, 0.6)' // Alice Blue for light mode background
+		}
 	  },
 	  // over ride typography of material-ui
 	  typography: {
 		fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
+		color: '#352f36'
 	  },
 	  overrides: {
 		MuiCssBaseline: {
 		  '@global': {
 			html: {
 			  fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
+			  background: 'rgba(240, 248, 255, 0.6)',
+			  color: '#352f36'
 			},
 			body: {
 			  fontFamily: 'Source Sans Pro, Quicksand, Lato, Grandstander, sans-serif',
+			  background: 'rgba(240, 248, 255, 0.6)',
+			  color: '#352f36'
 			},
 		  },
 		},
@@ -45,7 +53,8 @@ function AppTheme({ children }) {
 		MuiDrawer: {
 		  styleOverrides: {
 			paper: {
-			  backgroundColor: localStorage.getItem('theme') === 'dark' ? '#232323' : '#fefefe', // replace with your desired dark mode color
+			  backgroundColor: localStorage.getItem('theme') === 'dark' ? '#232323' : 'rgba(240, 248, 255, 1)', // replace with your desired dark mode color,
+			  color: localStorage.getItem('theme') === 'dark' ? '#fff' : '#352f36'
 			},
 		  },
 		},
@@ -55,9 +64,9 @@ function AppTheme({ children }) {
 	// add css class name on body when dark mode is enabled
 	const body = document.querySelector('body');
 	if (theme.palette.mode === 'dark') {
-	  body.classList.add('darkmode');
+		body.classList.add('darkmode');
 	} else {
-	  body.classList.remove('darkmode');
+		body.classList.remove('darkmode');
 	}
   
 	return (

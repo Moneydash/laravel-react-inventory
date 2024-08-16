@@ -64,6 +64,12 @@ function DeliveryPersons() {
             flex: 1,
             valueGetter: (params) => params.row?.secondary_id?.name || 'N/A'
         },
+        {
+            field: 'delivery_status',
+            headerName: 'Availability',
+            flex: 1,
+            valueGetter: (params) => params.row?.delivery_status === false ? 'Not Available' : 'Available'
+        },
         { field: 'id', headerName: 'Actions', flex: 1, renderCell: renderActionButtons }
     ];
     const [editIndex, setEditIndex] = useState(0);
@@ -125,7 +131,6 @@ function DeliveryPersons() {
     const debounceSearch = useDebounce(search, 300);
 
     const get_delivery_persons = async () => {
-        setRows([]);
         setTableLoading(true);
         axios_get_header(
             `${get_Delivery_persons}?page=1&per_page=10&search=`,
@@ -147,6 +152,7 @@ function DeliveryPersons() {
 
     /* eslint-disable */
     useEffect(() => {
+        setTableLoading(true);
         axios_get_header(
             `${get_Delivery_persons}?page=${currentPage}&per_page=${rowsPerPage}&search=${debounceSearch}`,
             decrypted_access_token
@@ -495,7 +501,6 @@ function DeliveryPersons() {
                                     onClick={handleSubmit}
                                     loading={loading}
                                 />
-                                {/* { loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Adding Delivery Personnel</LoadingButton> : <Button color="primary" variant="contained" endIcon={<GroupAddOutlined />} onClick={handleSubmit}>Add Delivery Personnel</Button> } */}
                             </Grid>
                         ) : ''}
                     </Grid>
@@ -532,14 +537,14 @@ function DeliveryPersons() {
                 columns={columns}
                 rows={rows}
                 loadingTable={tableLoading}
-                sx={{ mb: 5 }}
                 size={rowsPerPage}
-                handleSizeChange={handleSizeChange}
+                setSize={setRowsPerPage}
                 search={search}
-                handleSearch={handleSearch}
+                setSearch={setSearch}
                 page={currentPage}
-                handlePageChange={handlePageChange}
+                setPage={setCurrentPage}
                 total={maxPage}
+                sx={{ mb: 5 }}
             />
         </Grid>
     );

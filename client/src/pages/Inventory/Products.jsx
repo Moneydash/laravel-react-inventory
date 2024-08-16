@@ -267,6 +267,7 @@ function Products() {
         } else {
             get_categories();
             get_suppliers();
+            get_warehouses();
         }
     }
 
@@ -519,7 +520,6 @@ function Products() {
                         parentProducts={parentProducts}
                         handleChange={handleChange}
                         imgSrc={imgSrc}
-                        editIndex={editIndex}
                     />
                 </DialogContent>
                 <DialogActions>

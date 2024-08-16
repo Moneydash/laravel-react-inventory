@@ -80,6 +80,8 @@ function Home() {
         sx={{
           flexGrow: 1,
           width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`, // Subtract the drawer width from the total width
+          background: 'rgba(240, 248, 255, 0.6)',
+          color: '#352f36'
         }}
       >
         <DrawerHeader />
