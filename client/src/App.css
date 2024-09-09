@@ -20,16 +20,16 @@ body.darkmode,
 
 /* For Webkit based browsers */
 ::-webkit-scrollbar {
-  width: 10px; /* Width of the scrollbar */
+  width: 7px; /* Width of the scrollbar */
 }
 
 /* Handle (thumb) */
 ::-webkit-scrollbar-thumb {
   background: #aaa; /* Color of the thumb */
-  border-radius: 8px; /* Roundness of the thumb */
+  /* border-radius: 3px; Roundness of the thumb */
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #79a9f7; /* Color of the thumb on hover */
+  background: rgba(25, 118, 219, 0.89); /* Color of the thumb on hover */
 }

@@ -197,24 +197,6 @@ function Customers() {
             console.log(error);
         });
     }, [currentPage, rowsPerPage, debounceSearch, decrypted_access_token]);
-
-    /* table actions --- start */
-    const handleSearch = (e) => {
-        const { value } = e.target;
-        setSearch(value);
-        setCurrentPage(1);
-    }
-
-    const handlePageChange = (e, newPage) => {
-        setCurrentPage(Number(newPage));
-    };
-
-    const handleSizeChange = (e) => {
-        const { value } = e.target;
-        setRowsPerPage(value);
-        setCurrentPage(1);
-    }
-    /* table actions --- end */
     
     const get_types = () => {
         apiGetHelper(get_Customer_types, setCustomerTypes, 'customer_types');
@@ -564,14 +546,14 @@ function Customers() {
                 columns={columns}
                 rows={rows}
                 loadingTable={tableLoading}
-                sx={{ mb: 5 }}
                 size={rowsPerPage}
-                handleSizeChange={handleSizeChange}
+                setSize={setRowsPerPage}
                 search={search}
-                handleSearch={handleSearch}
+                setSearch={setSearch}
                 page={currentPage}
-                handlePageChange={handlePageChange}
+                setPage={setCurrentPage}
                 total={maxPage}
+                sx={{ mb: 5 }}
             />
         </Grid>
     );

@@ -85,6 +85,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     flexShrink: 0,
     whiteSpace: 'nowrap',
     boxSizing: 'border-box',
+    backgroundColor: 'rgba(240, 248, 255, 0.6)',
     ...(open && {
       ...openedMixin(theme),
       '& .MuiDrawer-paper': openedMixin(theme),
@@ -219,7 +220,7 @@ export default function Navigation() {
             <MenuIcon fontSize="small" />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            InventoryIQ
+            <b>InventoryIQ</b>
           </Typography>
           <Tooltip title="Logout User" placement="bottom" arrow>
             <IconButton
@@ -237,8 +238,25 @@ export default function Navigation() {
         </Toolbar>
       </AppBar>
       { is_mobile ? (
-        <MuiDrawer open={open} onClose={handleDrawerClose} variant="temporary" sx={{ overflow: 'hidden' }}>
-          <Box sx={{ width: 300, overflow: 'hidden' }} role="presentation">
+        <MuiDrawer
+          open={open}
+          onClose={handleDrawerClose}
+          variant="temporary"
+          sx={{ overflow: 'hidden'}}
+          PaperProps={{
+            sx: {
+              position: 'absolute', // Position it absolutely
+              top: 16, // Margin from top
+              bottom: 16, // Margin from bottom
+              left: 16, // Margin from left
+              width: 260, // Adjust width to account for left and right margins
+              height: 'calc(100% - 32px)', // Adjust height to account for top and bottom margins
+              overflow: 'hidden',
+              borderRadius: 2,
+            }
+          }}
+        >
+          <Box sx={{ width: 240, overflow: 'hidden', ml: 1 }} role="presentation">
             <List sx={{ overflow: 'hidden' }}>
               {navigation.map(function(navlist, index) {
                 const IconComponent = Muii[navlist.navigation_icon];
@@ -246,7 +264,7 @@ export default function Navigation() {
                   <ListItem
                     key={navlist.navigation_name}
                     disablePadding
-                    sx={{ display: 'block', color: 'inherit', my: .5, overflow: 'hidden' }}
+                    sx={{ color: 'inherit', my: .5, borderRadius: 3 }}
                     to={navlist.navigation_url}
                     component={Link}
                     selected={selectedIndex === index}
@@ -258,6 +276,7 @@ export default function Navigation() {
                         minHeight: 48,
                         justifyContent: open ? 'initial' : 'center',
                         pl: is_mobile ? 2.5 : 3,
+                        borderRadius: 3
                       }}
                     >
                       {open ? (
@@ -273,12 +292,12 @@ export default function Navigation() {
                         </ListItemIcon>
                       ) : (
                         <Tooltip title={navlist.navigation_name} arrow placement="right">
-                          <ListItemIcon sx={{ minWidth: 0 }}>
-                            {IconComponent && <IconComponent fontSize="inherit" />}
+                          <ListItemIcon sx={{ minWidth: 0, mr: open ? 0 : 1.2 }}>
+                            {IconComponent && <IconComponent fontSize="14" fontWeight="400" />}
                           </ListItemIcon>
                         </Tooltip>
                       )}
-                      <ListItemText primaryTypographyProps={{ fontSize: 15, fontWeight: 'medium', lineHeight: '20px' }} primary={navlist.navigation_name} sx={{ opacity: open ? 1 : 0 }} />
+                      <ListItemText primaryTypographyProps={{ fontSize: 14.5, fontWeight: '600', lineHeight: '20px' }} primary={navlist.navigation_name} sx={{ opacity: open ? 1 : 0 }} />
                     </ListItemButton>
                   </ListItem>
                 );
@@ -286,7 +305,11 @@ export default function Navigation() {
             </List>
           </Box>
         </MuiDrawer>
-      ) : (<Drawer variant="permanent" open={open}>
+      ) : (
+        <Drawer
+          variant="permanent"
+          open={open}
+        >
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose} size="small" style={{ marginBottom: '15px' }}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon fontSize="small"/>}
@@ -332,11 +355,11 @@ export default function Navigation() {
                   ) : (
                     <Tooltip title={navlist.navigation_name} arrow placement="right">
                       <ListItemIcon sx={{ minWidth: 0, mr: open ? 0 : 1.2 }}>
-                        {IconComponent && <IconComponent fontSize="inherit" />}
+                        {IconComponent && <IconComponent fontSize="14" fontWeight="400" />}
                       </ListItemIcon>
                     </Tooltip>
                   )}
-                  <ListItemText primaryTypographyProps={{ fontSize: 15, fontWeight: 'medium', lineHeight: '20px' }} primary={navlist.navigation_name} sx={{ opacity: open ? 1 : 0 }} />
+                  <ListItemText primaryTypographyProps={{ fontSize: 14.5, fontWeight: '600', lineHeight: '20px' }} primary={navlist.navigation_name} sx={{ opacity: open ? 1 : 0 }} />
                 </ListItemButton>
               </ListItem>
             );

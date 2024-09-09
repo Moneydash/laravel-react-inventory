@@ -88,6 +88,7 @@ const api = {
 
     // delivery - delivery personnel submodules
     get_Delivery_persons: '/delivery/delivery_person/get_delivery_persons_table',
+    get_Delivery_persons_list: '/delivery/delivery_person/get_delivery_persons',
     get_Delivery_person: '/delivery/delivery_person/get_info/',
     get_Primary_ids: '/delivery/delivery_person/get_primary',
     get_Secondary_ids: '/delivery/delivery_person/get_secondary',
@@ -95,11 +96,11 @@ const api = {
     remove_Delivery_person: '/delivery/delivery_person/remove_delivery_person/',
 
     // delivery - product delivery submodules
-    get_Item_deliveries: '/delivery_hub/item_delivery/get_items',
-    update_Delivery_status: '/delivery_hub/item_delivery/update_status/',
-    generate_Batch_num: '/delivery_hub/item_delivery/generate_batch_number',
-    generate_Delivery_po: '/delivery_hub/item_delivery/generate_po_number',
-    deliver_Items: '/delivery_hub/item_delivery/deliver_items'
+    get_Item_deliveries: '/delivery/item_delivery/get_items',
+    update_Delivery_status: '/delivery/item_delivery/update_status/',
+    generate_Batch_num: '/delivery/item_delivery/generate_batch_number',
+    generate_Delivery_po: '/delivery/item_delivery/generate_po_number',
+    deliver_Items: '/delivery/item_delivery/deliver_items'
 
 };
 

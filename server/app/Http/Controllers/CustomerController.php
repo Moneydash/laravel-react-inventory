@@ -245,28 +245,25 @@ class CustomerController extends Controller
     }
     
     public function get_clear_customers() {
-        $check_credit = CreditHistory::where('credit_status', 1)
-        ->get()->count();
-        
-        if ($check_credit > 0) {
-            $query = CreditHistory::select('customer_id', DB::raw('MAX(id) as id'))
+        # Fetch customers with paid credits (credit_status = 1) from CreditHistory
+        $paidCustomersQuery = CreditHistory::select('customer_id', DB::raw('MAX(id) as id'))
             ->where('credit_status', 1)
-            ->with('customers')
             ->groupBy('customer_id');
-            
-            $customers = $query->get();
-            return response()->json([ 'customers' => $customers ], 200);
-        } else {
-            $query = Customer::whereNotIn('id', function ($query) {
-                $query->select('customer_id')
-                    ->from('credit_history')
-                    ->where('credit_status', 0)
-                    ->groupBy('customer_id');
-            });
-            $customers['customers'] = $query->get();
-
-            return response()->json([ 'customers' => $customers ], 200);
-        }
+        
+        $paidCustomerIds = $paidCustomersQuery->pluck('customer_id');
+    
+        # Fetch customers from CreditHistory that are already paid
+        $paidCustomers = Customer::whereIn('id', $paidCustomerIds)->get();
+    
+        # Fetch customers who have no credit history (newly created customers)
+        $newCustomers = Customer::whereNotIn('id', function ($query) {
+            $query->select('customer_id')->from('credit_history');
+        })->get();
+    
+        # Merge both collections
+        $customers = $paidCustomers->merge($newCustomers);
+    
+        return response()->json(['customers' => $customers], 200);
     }
 
     public function remove_customer($customer_id) {
@@ -283,7 +280,7 @@ class CustomerController extends Controller
         }
     }
 
-    public function get_invoice($customer_id) {
-        // $invoice 
-    }
+    // public function get_invoice($customer_id) {
+    //     // $invoice 
+    // }
 }
