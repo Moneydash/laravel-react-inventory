@@ -21,7 +21,6 @@ class UserSeeder extends Seeder
             'username' => 'admin', // Change this to the desired username
             'email' => 'test@test.com', // Change this to the desired email
             'password' => Hash::make('Test1234!'), // Change this to the desired password
-            'status' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ];

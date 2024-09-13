@@ -40,27 +40,27 @@ Route::get('product-image/download/{product_id}', [ProductController::class, 'do
 Route::get('supplier-file/download/{type}/{supplier_id}', [SupplierController::class, 'download_file'])->name('supplier.downloadFile');
 
 # Routes for users
-Route::middleware(['auth:sanctum'])->prefix('user')->group(function() {
-    Route::middleware('auth:sanctum')->post('logout', [UserController::class, 'logout'])->name('user.logout');
-    Route::middleware('auth:sanctum')->get('get_users', [UserController::class, 'get_users_list'])->name('user.getAll');
-    Route::middleware('auth:sanctum')->get('get_roles', [UserController::class, 'get_roles'])->name('user.getRoles');
-    Route::middleware('auth:sanctum')->post('create_user', [UserController::class, 'create_user'])->name('user.create');
-    Route::middleware('auth:sanctum')->get('get_user/{user_id}', [UserController::class, 'get_user'])->name('user.get');
-    Route::middleware('auth:sanctum')->put('update_user/{user_id}', [UserController::class, 'update_user_role'])->name('user.updateRole');
-    Route::middleware('auth:sanctum')->patch('disable_user/{user_id}', [UserController::class, 'disable_user'])->name('user.disable');
-    Route::middleware('auth:sanctum')->put('update_account/{user_id}', [UserController::class, 'update_account'])->name('user.update');
-    Route::middleware('auth:sanctum')->patch('change_password/{user_id}', [UserController::class, 'change_password'])->name('user.changePass');
+Route::middleware(['auth:api'])->prefix('user')->group(function() {
+    Route::middleware('auth:api')->post('logout', [UserController::class, 'logout'])->name('user.logout');
+    Route::middleware('auth:api')->get('get_users', [UserController::class, 'get_users_list'])->name('user.getAll');
+    Route::middleware('auth:api')->get('get_roles', [UserController::class, 'get_roles'])->name('user.getRoles');
+    Route::middleware('auth:api')->post('create_user', [UserController::class, 'create_user'])->name('user.create');
+    Route::middleware('auth:api')->get('get_user/{user_id}', [UserController::class, 'get_user'])->name('user.get');
+    Route::middleware('auth:api')->put('update_user/{user_id}', [UserController::class, 'update_user_role'])->name('user.updateRole');
+    Route::middleware('auth:api')->delete('remove_user/{user_id}', [UserController::class, 'disable_user'])->name('user.disable');
+    Route::middleware('auth:api')->put('update_account/{user_id}', [UserController::class, 'update_account'])->name('user.update');
+    Route::middleware('auth:api')->patch('change_password/{user_id}', [UserController::class, 'change_password'])->name('user.changePass');
 });
 
 # check if the access token is valid and not modified on the client side...
-Route::middleware('auth:sanctum')->get('checkAuth', function () {
+Route::middleware('auth:api')->get('checkAuth', function () {
     return response()->json([ 'message' => 'Authenticated' ]);
 })->name('checkAuth');
 
 # Routes for the inventory
-Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
+Route::middleware(['auth:api'])->prefix('inventory')->group(function() {
     # Routes for products
-    Route::prefix('product')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('product')->middleware('auth:api')->group(function() {
         Route::post('add_product', [ProductController::class, 'add_product'])->name('product.add');
         Route::get('get_products_infos', [ProductController::class, 'get_products_infos'])->name('product.getAll');
         Route::get('get_products', [ProductController::class, 'get_products'])->name('product.getProductsOnly');
@@ -73,7 +73,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     });
 
     # Routes for categories
-    Route::prefix('category')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('category')->middleware('auth:api')->group(function() {
         Route::get('get_categories', [CategoryController::class, 'get_categories'])->name('category.getAll');
         Route::get('get_category/{category_id}', [CategoryController::class, 'get_category'])->name('category.getInfo');
         Route::post('create', [CategoryController::class, 'store'])->name('category.add');
@@ -81,7 +81,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     });
 
     # Routes for suppliers
-    Route::prefix('supplier')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('supplier')->middleware('auth:api')->group(function() {
         Route::post('add_supplier', [SupplierController::class, 'add_supplier'])->name('supplier.add');
         Route::get('get_suppliers', [SupplierController::class, 'get_suppliers'])->name('supplier.getAll');
         Route::get('get_supplier/{supplier_id}', [SupplierController::class, 'get_supplier'])->name('supplier.getInfo');
@@ -93,7 +93,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     });
 
     # Routes for purchase orders
-    Route::prefix('purchase_order')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('purchase_order')->middleware('auth:api')->group(function() {
         Route::get('generate_po_number', [PurchaseOrderController::class, 'generate_po_number'])->name('purchase_order.generatePoNumber');
         Route::get('generate_track_number', [PurchaseOrderController::class, 'generate_tracking_number'])->name('purchase_order.generateTrackingNumber');
         Route::post('add_purchase_order', [PurchaseOrderController::class, 'add_purchase_order'])->name('purchase_order.add');
@@ -105,7 +105,7 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
     });
 
     # Routes for warehouse
-    Route::prefix('warehouse')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('warehouse')->middleware('auth:api')->group(function() {
         Route::get('get_types', [WarehouseTypeController::class, 'get_types'])->name('warehouse.getTypes');
         Route::get('get_warehouses', [WarehouseController::class, 'get_warehouses'])->name('warehouse.getAll');
         Route::get('get_warehouse/{warehouse_id}', [WarehouseController::class, 'get_warehouse'])->name('warehouse.getInfos');
@@ -115,15 +115,15 @@ Route::middleware(['auth:sanctum'])->prefix('inventory')->group(function() {
         Route::delete('remove/{warehouse_id}', [WarehouseController::class, 'remove_warehouse'])->name('warehouse.remove');
     });
 
-    Route::prefix('equipment')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('equipment')->middleware('auth:api')->group(function() {
         Route::get('get_equipments', [EquipmentController::class, 'get_equipments'])->name('equipment.getAll');
     });
 });
 
 # Routes for delivery hub
-Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
+Route::middleware(['auth:api'])->prefix('delivery')->group(function() {
     # Routes for customers under delivery hub module
-    Route::prefix('customer')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('customer')->middleware('auth:api')->group(function() {
         Route::get('get_types', [CustomerController::class, 'get_types'])->name('customer.getCustomerTypes');
         Route::get('get_industries', [CustomerController::class, 'get_industries'])->name('customer.getIndustries');
         Route::get('get_customers', [CustomerController::class, 'get_customers'])->name('customer.getAll');
@@ -136,7 +136,7 @@ Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
     });
 
     # Routes for delivery persons under delivery hub module
-    Route::prefix('delivery_person')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('delivery_person')->middleware('auth:api')->group(function() {
         Route::get('get_primary', [DeliveryPersonController::class, 'get_primary_ids'])->name('delivery_person.get_primaryId');
         Route::get('get_secondary', [DeliveryPersonController::class, 'get_secondary_ids'])->name('delivery_person.get_secondaryId');
         Route::post('add_delivery_person', [DeliveryPersonController::class, 'create_delivery_person'])->name('delivery_person.create');
@@ -147,7 +147,7 @@ Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
     });
 
     # Routes for item delivery under delivery hub module
-    Route::prefix('item_delivery')->middleware('auth:sanctum')->group(function() {
+    Route::prefix('item_delivery')->middleware('auth:api')->group(function() {
         Route::get('generate_batch_number', [ProductDeliveryController::class, 'generate_batch_number'])->name('item_delivery.generateBatch');
         Route::get('generate_po_number', [ProductDeliveryController::class, 'generate_delivery_poNumber'])->name('item_delivery.generatePoNumber');
         Route::get('get_items', [ProductDeliveryController::class, 'get_delivery_items'])->name('item_delivery.getItemsInfos');
@@ -157,13 +157,13 @@ Route::middleware(['auth:sanctum'])->prefix('delivery')->group(function() {
 });
 
 # Route for user navigations based on assigned role
-Route::middleware(['auth:sanctum'])->prefix('user_nav')->group(function() {
-    Route::middleware('auth:sanctum')->get('get_navigations/{role_id}/{user_id}', [NavigationController::class, 'get_navigations'])->name('navigations.getRoleNav'); // navigations
+Route::middleware(['auth:api'])->prefix('user_nav')->group(function() {
+    Route::middleware('auth:api')->get('get_navigations/{role_id}/{user_id}', [NavigationController::class, 'get_navigations'])->name('navigations.getRoleNav'); // navigations
 });
 
 # Routes for sub navigations based on assigned role
-Route::middleware(['auth:sanctum'])->prefix('user_sub_nav')->group(function() {
-    Route::middleware('auth:sanctum')->get('get_profile_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_profile_sub_navigations'])->name('subnavigations.getProfileSubNavRole');
-    Route::middleware('auth:sanctum')->get('get_prodDelivery_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_productDelivery_sub_navigations'])->name('subnavigations.getProductDelivery');
-    Route::middleware('auth:sanctum')->get('get_inventoryControl_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_inventoryControl_sub_navigations'])->name('subnavigations.getInventoryControl');
+Route::middleware(['auth:api'])->prefix('user_sub_nav')->group(function() {
+    Route::middleware('auth:api')->get('get_profile_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_profile_sub_navigations'])->name('subnavigations.getProfileSubNavRole');
+    Route::middleware('auth:api')->get('get_prodDelivery_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_productDelivery_sub_navigations'])->name('subnavigations.getProductDelivery');
+    Route::middleware('auth:api')->get('get_inventoryControl_sub_navigations/{role_id}/{user_id}', [SubNavigationController::class, 'get_inventoryControl_sub_navigations'])->name('subnavigations.getInventoryControl');
 });

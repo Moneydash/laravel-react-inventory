@@ -40,6 +40,7 @@ import useDebounce from "hooks/useDebounce";
 import TableComponentV2 from "components/elements/TableComponentV2";
 
 function ItemDelivery() {
+    document.title = 'InventoryIQ: Delivery Hub - Product Delivery';
     const decrypt_access_token = decryptAccessToken();
     const try_again = 'Oops, something went wrong. Please try again later.';
 
@@ -645,7 +646,7 @@ function ItemDelivery() {
                                 </Grid>
                             </Grid>
                             <Grid container item direction="row" columnSpacing={{ lg: 2, xl: 2, sm: 2, xs: 2 }}>
-                                <Grid item lg={3} xl={3} sm={3} xs={12}>
+                                <Grid iteBreadCrumbsCmpm lg={3} xl={3} sm={3} xs={12}>
                                     <TextField
                                         label="SubTotal"
                                         name="subtotal"

@@ -20,9 +20,12 @@ return new class extends Migration
             $table->string('email')->unique()->nullable(false);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable(false);
-            $table->boolean('status')->default(1);
             $table->rememberToken();
+            $table->softDeletes($column = 'deleted_at');
             $table->timestamps();
+
+            $table->index('username');
+            $table->index('email');
         });
     }
 

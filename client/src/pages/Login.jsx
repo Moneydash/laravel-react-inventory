@@ -65,7 +65,8 @@ function Login() {
 
         axios_post(login, formData)
         .then(response => {
-            toast.success(response.data.message);
+            const data = response.data;
+            toast.success(data.message);
 
             /* for localStorage */
             const expirationMinutes = response.data.expire_at;
@@ -83,11 +84,11 @@ function Login() {
 
             /* for cookie */
             Cookies.set('isLoggedIn', 1, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('access_token', AES.encrypt(response.data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
-            Cookies.set('email_token', AES.encrypt(response.data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('auth_id', AES.encrypt(response.data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_id', AES.encrypt(response.data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_name', AES.encrypt(response.data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('access_token', AES.encrypt(data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
+            Cookies.set('email_token', AES.encrypt(data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('auth_id', AES.encrypt(data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_id', AES.encrypt(data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_name', AES.encrypt(data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
             
             setTimeout(() => {
                 setLoading(false);
@@ -101,7 +102,9 @@ function Login() {
             } else if (!nullCheck(error?.response?.data?.password)) {
                 toast.error(error?.response?.data?.password[0]);
             } else {
-                toast.info(error.response.data.message);
+                if (!nullCheck(error?.response?.data?.message)) {
+                    toast.info(error.response.data.message);
+                }
             }
         });
     }

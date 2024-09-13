@@ -1,10 +1,14 @@
-import { Button, Card, CardActions, CardContent, Divider, Grid, IconButton, Snackbar, TextField, Typography } from "@mui/material";
-import React, { Fragment, useEffect, useState } from "react";
+import { Button, Card, CardActions, CardContent, Divider, Grid, TextField, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import { axios_get_header, axios_put_header } from 'utils/requests';
 import { LoadingButton } from "@mui/lab";
-import { CloseRounded, ManageAccountsOutlined, RefreshOutlined } from "@mui/icons-material";
+import { ManageAccountsOutlined, RefreshOutlined } from "@mui/icons-material";
 import * as EmailValidator from 'email-validator';
 import { decryptAccessToken, decryptAuthId } from "utils/auth";
+import { get_Account_info, update_Account } from "utils/services";
+import { nullCheck, setData, setErrorHelper } from "utils/helper";
+import { toast } from "react-toastify";
+import { PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 
 function UpdateProfile() {
     document.title = 'InventoryIQ: User Preferences - Update Profile';
@@ -12,10 +16,6 @@ function UpdateProfile() {
     const decrypted_auth_id = decryptAuthId();
     const empty_field_warning = "Please fill up required field!";
     const [loading, setLoading] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: ''
-    });
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -31,7 +31,7 @@ function UpdateProfile() {
     });
 
     const get_account_info = () => {
-        axios_get_header('/user/get_user/' + decrypted_auth_id, decrypted_access_token)
+        axios_get_header(`${get_Account_info}${decrypted_auth_id}`, decrypted_access_token)
         .then(response => {
             const user = response.data.user_info;
             setFormData((prevState) => ({
@@ -50,48 +50,29 @@ function UpdateProfile() {
     }, []);
     /* eslint-disable */
 
-    const handleSnackbar = (open, message) => {
-        setSnackbar((prevSnack) => ({ ...prevSnack, open: open, message: message }));
-    };
-    
-    const action = (
-        <Fragment>
-            <IconButton
-                size="small"
-                aria-label="cancel"
-                color="inherit"
-                onClick={() => handleSnackbar(false, '')}
-            >
-                <CloseRounded fontSize="small" />
-            </IconButton>
-        </Fragment>
-    );
-
     const handleChange = (e) => {
         const { name, value} = e.target;
-        setFormData((prevState) => ({ ...prevState, [name]: value }));
+        setData(setFormData,name, value);
         
-        if (name === 'username') {
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'email') {
-            if (!EmailValidator.validate(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Invalid email format' }));
-            } else if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
+        switch (name) {
+            case 'username':
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'email':
+                if (!EmailValidator.validate(value)) {
+                    setErrorHelper(name, true, 'Invalid email format', setFormDataError, setFormDataHelperText);
+                } else if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -103,17 +84,21 @@ function UpdateProfile() {
         };
 
         setLoading(true);
-        axios_put_header('/user/update_account/' + decrypted_auth_id, payload, decrypted_access_token)
+        axios_put_header(`${update_Account}${decrypted_auth_id}`, payload, decrypted_access_token)
         .then(response => {
             setLoading(false);
-            handleSnackbar(true, response.data.message);
+            toast.success(response.data.message);
         })
-        .catch(error => { console.log(error); });
+        .catch(error => {
+            setLoading(false);
+            toast.error(error?.response?.data?.message);
+            console.error('Submit Error: ', error);
+        });
     }
 
     return(
         <Grid container direction="row" justifyContent="center" alignItems="center">
-            <Snackbar open={snackbar.open} onClose={() => handleSnackbar(false, '')} message={snackbar.message} action={action} autoHideDuration={3000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
+            
             <Grid item lg={5} xl={5} alignItems="center" sx={{ mt: 10 }}>
                 <Card raised sx={{ width: '100%' }}>
                     <CardContent>
@@ -147,7 +132,14 @@ function UpdateProfile() {
                         </Grid>
                     </CardContent>
                     <CardActions>
-                        {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Updating Account Information...</LoadingButton> : <Button variant="contained" color="primary" endIcon={<ManageAccountsOutlined />} sx={{ ml: 1, mb: 2 }} onClick={handleSubmit}>Update Account Information</Button>}
+                        <PrimaryColorLoadingBtn
+                            loading={loading}
+                            loadingPosition="end"
+                            endIcon={<ManageAccountsOutlined />}
+                            onClick={handleSubmit}
+                            displayText={loading ? 'Updating Account Information...' : 'Update Account Information'}
+                            sx={{ ml: 1, mb: 2 }}
+                        />
                     </CardActions>
                 </Card>
             </Grid>
