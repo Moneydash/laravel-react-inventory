@@ -5,6 +5,7 @@ import { Link as RouterLink, MemoryRouter } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import { Breadcrumbs, Link, Typography } from '@mui/material';
 import { NavigateNextOutlined } from '@mui/icons-material';
+import { nullCheck } from 'utils/helper';
 
 
 function Router(props) {
@@ -25,16 +26,25 @@ const BreadCrumbsCmp = ({ data }) => {
         <div style={{ marginLeft: '3px' }}>
             <Breadcrumbs separator={<NavigateNextOutlined fontSize="small" />} aria-label="breadcrumbs">
                 {data.map((item, index) => (
-                    <Link
-                        component={RouterLink}
-                        key={index}
-                        underline={item.link === '' ? 'hover' : 'none'}
-                        color="inherit"
-                        to={item.link}
-                        disabled={item.link ? true : false}
-                    >
-                        <Typography variant="body1" sx={{ fontWeight: '600' }}>{item.text}</Typography>
-                    </Link>
+                    nullCheck(item.link) ? (
+                        <Typography
+                            key={index}
+                            variant="body1"
+                            sx={{ fontWeight: '600', color: 'textSecondary' }}
+                        >
+                            {item.text}
+                        </Typography>
+                    ) : (
+                        <Link
+                            component={RouterLink}
+                            key={index}
+                            underline='none'
+                            color="inherit"
+                            to={item.link}
+                        >
+                            <Typography variant="body1" sx={{ fontWeight: '600' }}>{item.text}</Typography>
+                        </Link>
+                    )
                 ))}
             </Breadcrumbs>
         </div>

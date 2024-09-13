@@ -9,6 +9,9 @@ REM composer dump-autoload
 REM Migrate all the tables
 php artisan migrate
 
+REM install passport
+php artisan passport:install
+
 REM Migrate the seeder in order
 php artisan db:seed
 
