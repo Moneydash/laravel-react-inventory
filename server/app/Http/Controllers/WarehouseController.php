@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Warehouse;
+use App\Models\AuditTrail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
@@ -97,6 +98,15 @@ class WarehouseController extends Controller
                 $warehouse->category()->attach($key);
             }
 
+            if ($warehouse) {
+                # track warehouse creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Created warehouse. ID: ' . $warehouse->id
+                ]);
+            }
+
             DB::commit();
             return response()->json([ 'message' => 'Warehouse is added successfully!' ], 201);
         } catch (\Exception $e) {
@@ -112,6 +122,13 @@ class WarehouseController extends Controller
             'category')
         ->get();
 
+        # track warehouse retrieval
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'retrieve',
+            'description' => 'Viewed all warehouses.'
+        ]);
+
         return response()->json([ 'warehouses' => $warehouse ]);
     }
 
@@ -124,6 +141,14 @@ class WarehouseController extends Controller
                 'category'
             );
             $warehouse = $query->first();
+
+            # track warehouse retrieval
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'retrieve',
+                'description' => 'Viewed warehouse. ID: ' . $warehouse->id
+            ]);
+
             return response()->json([ 'warehouse' => $warehouse ], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json([ 'error' => $e->getMessage(), 'message' => $this->_try_again ], 404);
@@ -155,6 +180,10 @@ class WarehouseController extends Controller
         try {
             $warehouse = Warehouse::where('id', $warehouse_id)
             ->first();
+
+            if (!$warehouse) {
+                return response()->json([ 'error' => 'Warehouse not found.', 'message' => $this->_try_again ], 404);
+            }
 
             // attach and detaching of updated and previous categories
             $original_categories = $warehouse->category->pluck('id')->all();
@@ -226,13 +255,21 @@ class WarehouseController extends Controller
 
             if (!empty($equipments_to_attach)) {
                 $warehouse->equipment()->attach($equipments_to_attach);
-            }
+            }   
 
             $warehouse->save();
+
+            # track warehouse update
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Update a warehouse. ID: ' . $warehouse->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'Warehouse successfully updated!' ], 200);
 
-        } catch (ModelNotFoundException | \Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage(), 'message' => $this->_try_again ]);
         }
@@ -243,12 +280,22 @@ class WarehouseController extends Controller
         try {
             $warehouse = Warehouse::findOrFail($warehouse_id);
 
+            # track warehouse removal
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed warehouse. ID: ' . $warehouse->id
+            ]);
+
             $warehouse->delete();
             DB::commit();
             return response()->json([ 'message' => 'Warehouse successfully removed!' ], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage(), 'message' => $this->_try_again ], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([ 'error' => $e->getMessage(), 'message' => $this->_try_again ], 500);
         }
     }
 
@@ -270,7 +317,14 @@ class WarehouseController extends Controller
         // get extension and sanitized file path to prevent directory traversal attacks
         $sanitized_path = trim($path);
         $ext = pathinfo($sanitized_path, PATHINFO_EXTENSION);
-        
+
+        # track file download
+        AuditTrail::create([
+            'user_id' => auth()->user()->id ?? null,
+            'action' => 'download',
+            'description' => 'Downloaded file. Type: ' . $type . '. Warehouse ID: ' . $warehouse->id
+        ]);
+
         // get the file path and set the file name for download
         $file_path = storage_path("app/".$sanitized_path);
         $file_name = $type == 'insurance' ? '_Insurance Info.' : ($type == 'certifications' ? '_Certifications and Compliance.' : ($type == 'contract' ? '_Vendor Contract.' : ''));

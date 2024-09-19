@@ -8,6 +8,7 @@ use App\Models\ProductDelivery;
 use App\Models\CreditHistory;
 use App\Models\DeliveryPerson;
 use App\Models\Product;
+use App\Models\AuditTrail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -16,11 +17,11 @@ class ProductDeliveryController extends Controller
 {
     public function generate_batch_number() {
         do {
-            // Generate a random number portion for batch number
+            # Generate a random number portion for batch number
             $randomNumber = mt_rand(1000000, 9999999);
             $batch_num = 'BATCH ' . $randomNumber;
     
-            // check if the batch number already exists
+            # check if the batch number already exists
             $exists = DB::table('batches')->where('batch_num', $batch_num)->exists();
 
         } while ($exists);
@@ -34,11 +35,11 @@ class ProductDeliveryController extends Controller
 
     public function generate_delivery_poNumber() {
         do {
-            // Generate a random number portion for batch number
+            # Generate a random number portion for batch number
             $randomNumber = mt_rand(10000000, 99999999);
             $delivery_poNumber = 'DELIVERY-PO' . $randomNumber;
     
-            // check if the batch number already exists
+            # check if the batch number already exists
             $exists = DB::table('product_delivery')->where('po_number', $delivery_poNumber)->exists();
         } while ($exists);
 
@@ -60,7 +61,7 @@ class ProductDeliveryController extends Controller
             '*.subtotal' => 'required|regex:/^\d+(\.\d{1,2})?$/|min:1',
         ];
 
-        // simple validation on batch_number
+        # simple validation on batch_number
         $request->validate([
             'batch_number' => 'required|string|unique:batches,batch_num',
             'delivery_person' => 'required|exists:delivery_persons,id'
@@ -72,7 +73,7 @@ class ProductDeliveryController extends Controller
         ]);
 
         $validator = Validator::make($items, $rules);
-        if ($validator->fails()) { // check if validation fails
+        if ($validator->fails()) { # check if validation fails
             return response()->json([ 'errors' => $validator->errors() ], 422);
         }
 
@@ -150,6 +151,13 @@ class ProductDeliveryController extends Controller
                     'credit_dateTime' => now()
                 ];
                 $save_credit = CreditHistory::create($credit_data);
+
+                # track credit history
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'add',
+                    'description' => 'Added customer credit. Credit ID: ' . $save_credit->id
+                ]);
             }
 
             $delivery_person = DeliveryPerson::where('id', $request->delivery_person)->first();
@@ -162,6 +170,13 @@ class ProductDeliveryController extends Controller
             $delivery_person->delivery_status = 0;
             $delivery_person->save();
 
+            # track product delivery
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'delivery',
+                'description' => 'Delivered item(s) to customer.'
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'Item(s) are ready for delivery.' ], 200);
             
@@ -172,7 +187,7 @@ class ProductDeliveryController extends Controller
     }
 
     public function get_delivery_items(Request $request) {
-        // Retrieve query parameters with default values
+        # Retrieve query parameters with default values
         $page = $request->query('page', 1);
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
@@ -191,6 +206,13 @@ class ProductDeliveryController extends Controller
                 });
             });
         }
+
+        # track product delivery
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all product delivery items.'
+        ]);
 
         $items = $query->paginate($perPage, ['*'], 'page', $page);
         return response()->json($items, 200);
@@ -221,6 +243,13 @@ class ProductDeliveryController extends Controller
                     $deliveryPerson->save();
                 }
             }
+
+            # track product delivery update
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated product delivery status.'
+            ]);
     
             DB::commit();
             return response()->json([ 'message' => $message ], 200);

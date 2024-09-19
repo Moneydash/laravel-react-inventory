@@ -4,13 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\AuditTrail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoryController extends Controller
 {
     private $_try_again = 'Oops, something went wrong. Please try again later.';
     public function get_categories() {
         $category = Category::get();
+
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all categories.'
+        ]);
 
         return response()->json([ 'categories' => $category ]);
     }
@@ -29,7 +37,17 @@ class CategoryController extends Controller
 
         DB::beginTransaction();
         try {
-            Category::create($category_data);
+            $category = Category::create($category_data);
+
+            # Ensure the category is created before logging the audit trail
+            if ($category) {
+                # track category creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Category ' . $category->name . ' has been created.'
+                ]);
+            }
 
             DB::commit();
             return response()->json([ 'message' => 'Successfully created!' ], 200);
@@ -43,6 +61,13 @@ class CategoryController extends Controller
         try {
             $category = Category::where('id', $category_id)
             ->firstOrFail();
+
+            # track category view
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'view',
+                'description' => 'Viewed category ' . $category->name . '.'
+            ]);
 
             return response()->json([ 'category' => $category ], 200);
         } catch (ModelNotFoundException $ex) {
@@ -68,6 +93,13 @@ class CategoryController extends Controller
                     }
                 }
             }
+
+            # track category update
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Category has been updated. ID: '.$category_id
+            ]);
 
             $category->save();
             DB::commit();

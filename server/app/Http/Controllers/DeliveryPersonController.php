@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PrimaryId;
+use App\Models\AuditTrail;
 use App\Models\SecondaryId;
 use App\Models\DeliveryPerson;
 use Illuminate\Validation\Rule;
@@ -86,7 +87,16 @@ class DeliveryPersonController extends Controller
     
         DB::beginTransaction();
         try {
-            DeliveryPerson::create($delivery_person_data);
+            $delivery_person = DeliveryPerson::create($delivery_person_data);
+
+            if ($delivery_person) {
+                # track delivery personnel creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Created delivery personnel. ID: ' . $delivery_person->id
+                ]);
+            }
     
             DB::commit();
             return response()->json(['message' => 'Delivery Personnel data has been saved successfully.'], 201);
@@ -97,7 +107,7 @@ class DeliveryPersonController extends Controller
     }
 
     public function get_delivery_persons_table(Request $request) {
-        // Retrieve query parameters with default values
+        # Retrieve query parameters with default values
         $page = $request->query('page', 1);
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
@@ -112,8 +122,15 @@ class DeliveryPersonController extends Controller
             });
         }
 
-        // Paginate the results
+        # Paginate the results
         $delivery_persons = $query->paginate($perPage, ['*'], 'page', $page);
+
+        # track delivery personnel view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all delivery personnels.'
+        ]);
 
         return response()->json($delivery_persons, 200);
     }
@@ -130,6 +147,13 @@ class DeliveryPersonController extends Controller
         try {
             $delivery_person_data = DeliveryPerson::findOrFail($delivery_person_id);
 
+            # track delivery personnel view
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'view',
+                'description' => 'Viewed delivery personnel ID: ' . $delivery_person_id
+            ]);
+
             return response()->json([ 'delivery_personnel_info' => $delivery_person_data ]);
         } catch (ModelNotFoundException $ex) {
             return response()->json([ 'error' => $ex->getMessage() ], 404);
@@ -142,9 +166,19 @@ class DeliveryPersonController extends Controller
             $delivery_person = DeliveryPerson::findOrFail($delivery_person_id);
             $delivery_person->delete();
 
+            # track delivery personnel removal
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed delivery personnel. ID: ' . $delivery_person->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'Delivery Personnel has been removed.' ], 200);
         } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return response()->json([ 'error' => $e->getMessage() ], 500);
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ], 500);
         }

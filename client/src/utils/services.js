@@ -100,7 +100,11 @@ const api = {
     update_Delivery_status: '/delivery/item_delivery/update_status/',
     generate_Batch_num: '/delivery/item_delivery/generate_batch_number',
     generate_Delivery_po: '/delivery/item_delivery/generate_po_number',
-    deliver_Items: '/delivery/item_delivery/deliver_items'
+    deliver_Items: '/delivery/item_delivery/deliver_items',
+
+    // audit trail
+    get_Audit_Trails: '/audit_trail/get_system_logs',
+    get_Audit_Trail: '/audit_trail/get_system_log/'
 
 };
 

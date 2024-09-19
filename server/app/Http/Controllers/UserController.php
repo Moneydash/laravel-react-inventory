@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +42,15 @@ class UserController extends Controller
             ]);
 
             $user->roles()->attach($staff_role->id);
+
+            if ($user) {
+                # track add user
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id ?? null,
+                    'action' => 'add',
+                    'description' => 'Added a new user. ID: ' . $user->id
+                ]);
+            }
 
             DB::commit();
             return response()->json([
@@ -86,6 +96,13 @@ class UserController extends Controller
                 $tokenResult->token->save();
             }
 
+            # track login user
+            AuditTrail::create([
+                'user_id' => $user->id,
+                'action' => 'login',
+                'description' => 'Logged in to the system.'
+            ]);
+
             // Return the access token as part of the response
             return response()->json([
                 'message' => 'Successfully logged in!',
@@ -110,6 +127,13 @@ class UserController extends Controller
         $user_data = User::where('username', $username)
         ->with('roles')
         ->first();
+
+        # track logout user
+        AuditTrail::create([
+            'user_id' => $user->id,
+            'action' => 'logout',
+            'description' => 'Logged out of the system.'
+        ]);
         
         $role_id = $user_data->roles[0]->pivot->role_id;
         $user_id = $user_data->roles[0]->pivot->user_id;
@@ -134,6 +158,13 @@ class UserController extends Controller
                 ->orWhere('email', 'like', "%{$search}%");
             });
         }
+
+        # track get users list
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all users.'
+        ]);
 
         $users = $query->paginate($perPage, ['*'], 'page', $page);
         return response()->json([ 'users_list' => $users ]);
@@ -191,6 +222,13 @@ class UserController extends Controller
 
             Mail::to($user->email)->send(new UserRegistrationMail($user_data_mail));
 
+            # track create user
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'create',
+                'description' => 'Created a new user. ID: ' . $user->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'User registered successfully. They can check their email for user credentials.' ]);
         } catch (\Exception $e) {
@@ -217,6 +255,13 @@ class UserController extends Controller
             'role_name' => $user->roles[0]['role_name']
         ];
 
+        # track get user
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'get',
+            'description' => 'Retrieved user details. ID: ' . $user->id
+        ]);
+
         return response()->json([ 'user_info' => $user_data ]);
     }
 
@@ -233,6 +278,13 @@ class UserController extends Controller
             }
             
             $user->roles()->attach($request->role); // attach the new assigned roles
+
+            # track update user role
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated user role. User ID: ' . $user->id
+            ]);
 
             DB::commit();
             return response()->json([ 'message' => 'User role has been updated!' ]);
@@ -251,6 +303,13 @@ class UserController extends Controller
             if (!$user) {
                 return response()->json([ 'error_message' => 'User not found.' ], 404);
             }
+
+            # track remove user
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed user. User ID: ' . $user->id
+            ]);
 
             # soft delete the user
             $user->delete();
@@ -285,11 +344,21 @@ class UserController extends Controller
                 $user->email = $request->email;
             }
 
+            # track update user account
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated user account. ID: ' . $user->id
+            ]);
+
             $user->save();
             DB::commit();
 
             return response()->json([ 'message' => 'Account has been updated successfully!' ], 200);
         } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return response()->json([ 'error' => $e->getMessage() ], 404);
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ], 400);
         }
@@ -313,12 +382,19 @@ class UserController extends Controller
                 $user->password = Hash::make($request->new_password);
                 $user->save();
 
+                # track change password
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'update',
+                    'description' => 'Changed user password. ID: ' . $user->id
+                ]);
+
                 DB::commit();
                 return response()->json([ 'message' => 'Password has successfully updated!' ]);
             } else {
                 return response()->json([ 'error' => 'Current password is incorrect!' ], 422);
             }
-        } catch (ModelNotFoundException $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\AuditTrail;
 use App\Models\SubNavigation;
 use App\Models\Navigation;
 use Illuminate\Support\Facades\Cache;
@@ -14,15 +15,22 @@ class SubNavigationController extends Controller
         $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
-        // remember the navigations using cache for fast initial retrieval
+        # remember the navigations using cache for fast initial retrieval
         $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
-            // If the data is not in the cache, retrieve it from the database
+            # If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
-                // Attempt to retrieve the data from the cache
+                # Attempt to retrieve the data from the cache
                 $profile = Navigation::where('navigation_url', 'profile')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $profile->id);
             })->get();
         });
+
+        # track view profile sub navigations
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all profile subnavigations.'
+        ]);
 
         return response()->json([ 'sub_navigations' => $sub_navigations ]);
     }
@@ -32,15 +40,22 @@ class SubNavigationController extends Controller
         $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
-        // remember the navigations using cache for fast initial retrieval
+        # remember the navigations using cache for fast initial retrieval
         $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
-            // If the data is not in the cache, retrieve it from the database
+            # If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
-                // Attempt to retrieve the data from the cache
+                # Attempt to retrieve the data from the cache
                 $product_delivery = Navigation::where('navigation_url', 'delivery')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $product_delivery->id);
             })->get();
         });
+
+        # track view product delivery sub navigations
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all product delivery subnavigations.'
+        ]);
 
         return response()->json([ 'sub_navigations' => $sub_navigations ]);
     }
@@ -50,15 +65,22 @@ class SubNavigationController extends Controller
         $cacheTags = [$role_id . '_' . $user_id];
         $minutes = 180;
 
-        // remember the navigations using cache for fast initial retrieval
+        # remember the navigations using cache for fast initial retrieval
         $sub_navigations = Cache::tags($cacheTags)->remember($cacheKey, $minutes, function () use ($role_id) {
-            // If the data is not in the cache, retrieve it from the database
+            # If the data is not in the cache, retrieve it from the database
             return SubNavigation::whereHas('roles', function ($query) use ($role_id) {
-                // Attempt to retrieve the data from the cache
+                # Attempt to retrieve the data from the cache
                 $products = Navigation::where('navigation_url', 'inventory')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $products->id);
             })->get();
         });
+
+        # track view inventory control sub navigations
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all inventory control subnavigations.'
+        ]);
 
         return response()->json([ 'sub_navigations' => $sub_navigations ]);
     }

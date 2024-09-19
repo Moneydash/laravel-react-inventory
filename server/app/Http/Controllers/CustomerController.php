@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\AuditTrail;
 use App\Models\CustomerType;
 use App\Models\IndustryType;
 use App\Models\CompanyInformation;
@@ -58,7 +59,7 @@ class CustomerController extends Controller
 
         DB::beginTransaction();
         try {
-            // insert the company information first to the company id
+            # insert the company information first to the company id
             $company = null;
             if ($request->has_company) {
                 $company_info_data = [
@@ -89,7 +90,16 @@ class CustomerController extends Controller
                 'company_info_id' => $company ? $company->id : null
             ];
             $customer = Customer::create($customer_data);
-            
+
+            if ($customer) {
+                # track customer creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Customer has been created. ID: '.$customer->id
+                ]);
+            }
+
             DB::commit();
             return response()->json([ 'message' => 'Customer Data has been saved successfully.' ], 200);
         } catch (\Exception $e) {
@@ -99,12 +109,12 @@ class CustomerController extends Controller
     }
 
     public function get_customers(Request $request) {
-        // Retrieve query parameters with default values
+        # Retrieve query parameters with default values
         $page = $request->query('page', 1);
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
 
-        // Query the customers table with optional search and eager load relationships
+        # Query the customers table with optional search and eager load relationships
         $query = Customer::with('company_info', 'customer_type');
 
         if ($search) {
@@ -116,16 +126,30 @@ class CustomerController extends Controller
             });
         }
 
-        // Paginate the results
+        # Paginate the results
         $customers = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // Return the paginated customers in JSON format
+        # track customer view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all customers.'
+        ]);
+
+        # Return the paginated customers in JSON format
         return response()->json($customers, 200);
     }
 
     public function get_customer($customer_id) {
         try {
             $customer_data = Customer::with('company_info', 'customer_type')->findOrFail($customer_id);
+
+            # track customer view
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'view',
+                'description' => 'Viewed customer ID: ' . $customer_id
+            ]);
 
             return response()->json([ 'customer_data' => $customer_data ]);
         } catch (ModelNotFoundException $e) {
@@ -223,11 +247,21 @@ class CustomerController extends Controller
                     }
                 }
 
-                $customer->save();
-                DB::commit();
+            # track customer update
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated customer ID: ' . $customer_id
+            ]);
+
+            $customer->save();
+            DB::commit();
 
             return response()->json([ 'message' => 'Customer data has been updated successfully.', 'customer' => $customer ]);
         } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return response()->json([ 'error' => $e->getMessage() ]);
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);
         }
@@ -262,6 +296,13 @@ class CustomerController extends Controller
     
         # Merge both collections
         $customers = $paidCustomers->merge($newCustomers);
+
+        # track customer view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all clear customers.'
+        ]);
     
         return response()->json(['customers' => $customers], 200);
     }
@@ -272,6 +313,13 @@ class CustomerController extends Controller
             $customer = Customer::findOrFail($customer_id);
             $customer->delete();
 
+            # track customer removal
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed customer ID: ' . $customer->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'Customer has been removed successfully.' ]);
         } catch (ModelNotFoundException $e) {
@@ -280,7 +328,4 @@ class CustomerController extends Controller
         }
     }
 
-    // public function get_invoice($customer_id) {
-    //     // $invoice 
-    // }
 }
