@@ -18,6 +18,7 @@ use App\Http\Controllers\ProductDeliveryController;
 use App\Http\Controllers\WarehouseTypeController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\AuditTrailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -154,6 +155,11 @@ Route::middleware(['auth:api'])->prefix('delivery')->group(function() {
         Route::post('deliver_items', [ProductDeliveryController::class, 'add_delivery_items'])->name('item_delivery.deliverItems');
         Route::patch('update_status/{status}/{delivery_id}', [ProductDeliveryController::class, 'update_status'])->name('item_delivery.updateStatus');
     });
+});
+
+Route::middleware(['auth:api'])->prefix('audit_trail')->group(function() {
+    Route::get('get_system_logs', [AuditTrailController::class, 'index'])->name('audit_trail.getAll');
+    Route::get('get_system_log/{id}', [AuditTrailController::class, 'view'])->name('audit_trail.getOne');
 });
 
 # Route for user navigations based on assigned role

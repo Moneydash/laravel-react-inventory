@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,15 @@ class ProductController extends Controller
                 $product->suppliers()->attach($key, ['status' => 1]);
             }
 
+            if ($product) {
+                # track product creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Created product ID: ' . $product->id
+                ]);
+            }
+
             DB::commit();
             return response()->json([ 'message' => 'New inventory item has been added successfully!' ], 200);
         } catch (\Exception $e) {
@@ -90,6 +100,13 @@ class ProductController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
+        # track product view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all products.'
+        ]);
+
         return response()->json([ 'product_supplier' => $products ]);
     }
 
@@ -98,6 +115,13 @@ class ProductController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
+        # track product view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all products.'
+        ]);
+
         return response()->json([ 'products' => $products ]);
     }
 
@@ -105,6 +129,17 @@ class ProductController extends Controller
         $product = Product::with('category', 'suppliers')
         ->where('id', $product_id)
         ->first();
+
+        if (!$product) {
+            return response()->json([ 'error' => 'Product not found.' ], 404);
+        }
+
+        # track product view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed product ID: ' . $product->id
+        ]);
 
         return response()->json([ 'product_info' => $product ]);
     }
@@ -168,10 +203,20 @@ class ProductController extends Controller
                 $product->suppliers()->attach($suppliers_to_attach);
             }
 
+            # track product update
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated product ID: ' . $product->id
+            ]);
+
             $product->save();
             DB::commit();
             return response()->json([ 'message' => 'Inventory item has been updated successfully!' ]);
         } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return response()->json([ 'error_message' => $e->getMessage() ]);
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error_message' => $e->getMessage() ]);
         }
@@ -181,6 +226,13 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             $product = Product::findOrFail($product_id);
+
+            # track product removal
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed product ID: ' . $product->id
+            ]);
 
             $product->delete();
             DB::commit();
@@ -209,6 +261,13 @@ class ProductController extends Controller
         $path = $product->image;
         $sanitized_path = trim($path);
         $ext = pathinfo($sanitized_path, PATHINFO_EXTENSION);
+
+        # track product image download
+        AuditTrail::create([
+            'user_id' => auth()->user()->id ?? null,
+            'action' => 'download',
+            'description' => 'Downloaded product image. ID: ' . $product->id
+        ]);
 
         $file_path = storage_path("app/".$sanitized_path);
         $file_name = $product_id.'_Product Image.'.$ext;
