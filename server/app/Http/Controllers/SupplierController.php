@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -36,7 +37,7 @@ class SupplierController extends Controller
 
         DB::beginTransaction();
         try {
-            Supplier::create([
+            $supplier = Supplier::create([
                 'name' => $request->name,
                 'location' => $request->location,
                 'email' => strtolower($request->email),
@@ -47,6 +48,15 @@ class SupplierController extends Controller
                 'terms_and_conditions' => $filepath_terms,
                 'agreement' => $filepath_agreement
             ]);
+
+            if ($supplier) {
+                # track add supplier
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'add',
+                    'description' => 'Added a new supplier partner.'
+                ]);
+            }
 
             DB::commit();
             return response()->json([ 'message' => 'Supplier Partner has been added successfully!' ]);
@@ -61,6 +71,14 @@ class SupplierController extends Controller
         $suppliers = Supplier::where('contract_expiry_date', '>', today())
         ->orderBy('created_at', 'desc')
         ->get();
+
+        # track view suppliers
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all supplier partners.'
+        ]);
+
         return response()->json([ 'suppliers' => $suppliers ]);
     }
 
@@ -68,6 +86,14 @@ class SupplierController extends Controller
     public function get_supplier($supplier_id) {
         try {
             $supplier = Supplier::where('id', $supplier_id)->firstOrFail();
+
+            # track view supplier
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'view',
+                'description' => 'Viewed supplier partner. ID: '.$supplier_id
+            ]);
+
             return response()->json([ 'supplier_info' => $supplier ]);
         } catch (ModelNotFoundException $exception) {
             return response()->json([ 'error' => $exception->getMessage(), 'message' => $this->_try_again ]);
@@ -108,6 +134,13 @@ class SupplierController extends Controller
                 $supplier->agreement = $filepath_agreement;
             }
 
+            # track update supplier
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated supplier partner. ID: '.$supplier->id
+            ]);
+
             $supplier->save();
             DB::commit();
             return response()->json([ 'message' => 'Supplier Information has been updated!' ]);
@@ -123,12 +156,22 @@ class SupplierController extends Controller
         try {
             $supplier = Supplier::findOrFail($supplier_id);
 
+            # track remove supplier
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed supplier partner. ID: '.$supplier->id
+            ]);
+
             $supplier->delete();
             DB::commit();
-            return response()->json([ 'message' => 'Supplier Partner has been removed.' ]);
+            return response()->json([ 'message' => 'Supplier Partner has been removed.' ], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            return response()->json([ 'message' => 'Supplier Partner removal failed, please try again later.' ]);
+            return response()->json([ 'message' => 'Supplier does not exists.' ], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([ 'message' => 'Supplier Partner removal failed, please try again later.' ], 500);
         }
     }
 
@@ -143,6 +186,13 @@ class SupplierController extends Controller
         DB::beginTransaction();
         try {
             $supplier = Supplier::withTrashed()->findOrFail($supplier_id);
+
+            # track restore supplier
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'restore',
+                'description' => 'Restored supplier partner. ID: '.$supplier->id
+            ]);
 
             $supplier->restore();
             DB::commit();
@@ -179,6 +229,13 @@ class SupplierController extends Controller
         // sanitized the file path, avoiding directory traversal attack
         $sanitized_path = trim($path);
         $ext = pathinfo($sanitized_path, PATHINFO_EXTENSION);
+
+        # track download file
+        AuditTrail::create([
+            'user_id' => auth()->user()->id ?? null,
+            'action' => 'download',
+            'description' => 'Downloaded supplier file. ID: ' . $supplier->id
+        ]);
 
         $filepath = storage_path("app/".$sanitized_path);
         $filename = $type == 'terms' ? '_Terms and Conditions.' : ($type == 'agreement' ? '_Contract Agreement.' : '');

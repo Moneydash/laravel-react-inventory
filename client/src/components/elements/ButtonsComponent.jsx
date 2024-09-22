@@ -27,17 +27,17 @@ const SuccessColorBtn = ({ displayText, endIcon, onClick }) => {
     );
 };
 
-const PrimaryColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
+const PrimaryColorLoadingBtn = ({ displayText, endIcon, onClick, loading, sx }) => {
     return (
-        <LoadingButton loading={loading} variant="contained" loadingPosition="end" color="primary" endIcon={endIcon} onClick={onClick}>
+        <LoadingButton loading={loading} variant="contained" loadingPosition="end" color="primary" endIcon={endIcon} onClick={onClick} sx={{ ...sx }}>
             { displayText }
         </LoadingButton>
     );
 };
 
-const ErrorColorLoadingBtn = ({ displayText, endIcon, onClick, loading }) => {
+const ErrorColorLoadingBtn = ({ displayText, endIcon, onClick, loading, sx }) => {
     return (
-        <LoadingButton loading={loading} variant="contained" loadingPosition="end" color="error" endIcon={endIcon} onClick={onClick}>
+        <LoadingButton loading={loading} variant="contained" loadingPosition="end" color="error" endIcon={endIcon} onClick={onClick} sx={{ ...sx }}>
             { displayText }
         </LoadingButton>
     );
@@ -63,14 +63,16 @@ PrimaryColorLoadingBtn.defaultProps = {
     displayText: '',
     endIcon: '',
     onClick: () => {},
-    loading: false
+    loading: false,
+    sx: {}
 };
 
 PrimaryColorLoadingBtn.propTypes = {
     displayText: PropTypes.string,
     endIcon: PropTypes.element,
     onClick: PropTypes.func,
-    loading: PropTypes.bool
+    loading: PropTypes.bool,
+    sx: PropTypes.object
 };
 
 ErrorColorLoadingBtn.defaultProps = {

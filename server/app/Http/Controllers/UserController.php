@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,10 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\UserRegistrationMail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Cache;
-
+use Laravel\Passport\TokenRepository;
+use Laravel\Passport\ClientRepository;
+use League\OAuth2\Server\AuthorizationServer;
+use Laravel\Passport\Passport;
 
 class UserController extends Controller
 {
@@ -39,6 +43,15 @@ class UserController extends Controller
 
             $user->roles()->attach($staff_role->id);
 
+            if ($user) {
+                # track add user
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id ?? null,
+                    'action' => 'add',
+                    'description' => 'Added a new user. ID: ' . $user->id
+                ]);
+            }
+
             DB::commit();
             return response()->json([
                 'message' => 'You are successfully registered!',
@@ -52,63 +65,75 @@ class UserController extends Controller
     }
 
     public function login(Request $request) {
-        // Validate the user's input
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        // If the validation fails, return the validation errors
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
-        // Check if the user exists and is active
-        $user = User::where('email', $request->email)->where('status', 1)->first();
-        if (!$user) {
-            // Authentication failed, return an error response
+        $user = User::where('email', $request->email)->first();
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            // Authentication passed, return a success response
             $user = Auth::user();
-            $user->load('roles'); // load the role of the user
+            $user->load('roles');
 
-            $token = $user->createToken(date('Y-m-d h:i:s').'|'.$user->id)->plainTextToken;
+            $tokenResult = $user->createToken('Personal Access Token');
 
-            // Set the token's expiration time
-            $expirationMinutes = 180; // 3hrs
-            $user->tokens->each(function ($token) use ($expirationMinutes) {
-                $token->forceFill([
-                    'expires_at' => now()->addMinutes($expirationMinutes),
-                ])->save();
-            });
-            
+            // Get the access token
+            $accessToken = $tokenResult->accessToken;
+
+            // Check if the token object exists before setting the expiration
+            if ($tokenResult->token) {
+                $tokenResult->token->expires_at = now()->addMinutes(180); // Set token expiration to 3 hours
+                $tokenResult->token->save();
+            }
+
+            # track login user
+            AuditTrail::create([
+                'user_id' => $user->id,
+                'action' => 'login',
+                'description' => 'Logged in to the system.'
+            ]);
+
+            // Return the access token as part of the response
             return response()->json([
                 'message' => 'Successfully logged in!',
-                'user' => Auth::user(), 'access_token' => $token,
-                'expire_at' => $expirationMinutes
+                'user' => $user,
+                'access_token' => $accessToken, // Passport's access token
+                'expires_at' => 180
             ]);
-            
         } else {
-            // Authentication failed, return an error response
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
     }
 
     public function logout(Request $request) {
         $user = $request->user();
-        $user->currentAccessToken()->delete(); // remove the current access token of the user\
+        
+        // Revoke the user's current access token
+        $token = $user->token();
+        $token->revoke();
         
         // get the user and role id of the user
         $username = $request->user()->username;
         $user_data = User::where('username', $username)
-        ->where('status', 1)
         ->with('roles')
         ->first();
+
+        # track logout user
+        AuditTrail::create([
+            'user_id' => $user->id,
+            'action' => 'logout',
+            'description' => 'Logged out of the system.'
+        ]);
         
         $role_id = $user_data->roles[0]->pivot->role_id;
         $user_id = $user_data->roles[0]->pivot->user_id;
@@ -119,16 +144,34 @@ class UserController extends Controller
         return response()->json([ 'message' => 'Successfully logged out.', 'role_id' => $role_id ]);
     }
 
-    public function get_users_list() {
-        $users = User::where('status', 1)
-        ->with('roles')
-        ->get();
-        
+    public function get_users_list(Request $request) {
+        # Retrieve query parameters with default values
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search', '');
+
+        $query = User::with('roles');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        # track get users list
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all users.'
+        ]);
+
+        $users = $query->paginate($perPage, ['*'], 'page', $page);
         return response()->json([ 'users_list' => $users ]);
     }
 
     public function get_roles() {
-        $roles = Role::where('role_status', 1)->get();
+        $roles = Role::get();
 
         return response()->json([ 'roles' => $roles ]);
     }
@@ -165,8 +208,7 @@ class UserController extends Controller
         $user_data = [
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($randomString),
-            'status' => 1
+            'password' => Hash::make($randomString)
         ];
 
         DB::beginTransaction();
@@ -180,6 +222,13 @@ class UserController extends Controller
 
             Mail::to($user->email)->send(new UserRegistrationMail($user_data_mail));
 
+            # track create user
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'create',
+                'description' => 'Created a new user. ID: ' . $user->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'User registered successfully. They can check their email for user credentials.' ]);
         } catch (\Exception $e) {
@@ -190,21 +239,28 @@ class UserController extends Controller
 
     public function get_user($user_id) {
         $user = User::where('id', $user_id)
-        ->where('status', 1)
-        ->with('roles')
-        ->first();
+            ->with('roles')
+            ->first();
 
         if (!$user) {
             return response()->json([ 'message' => 'User not found.' ], 404);
         }
 
-        // create a new class instance for user, excluding the password for security purposes
-        $user_data = new User();
-        $user_data->id = $user->id;
-        $user_data->username = $user->username;
-        $user_data->email = $user->email;
-        $user_data->role = $user->roles[0]['id'];
-        $user_data->role_name = $user->roles[0]['role_name'];
+        // Extract necessary user information
+        $user_data = [
+            'id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $user->roles[0]['id'],
+            'role_name' => $user->roles[0]['role_name']
+        ];
+
+        # track get user
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'get',
+            'description' => 'Retrieved user details. ID: ' . $user->id
+        ]);
 
         return response()->json([ 'user_info' => $user_data ]);
     }
@@ -223,6 +279,13 @@ class UserController extends Controller
             
             $user->roles()->attach($request->role); // attach the new assigned roles
 
+            # track update user role
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated user role. User ID: ' . $user->id
+            ]);
+
             DB::commit();
             return response()->json([ 'message' => 'User role has been updated!' ]);
         } catch (\Exception $e) {
@@ -231,18 +294,28 @@ class UserController extends Controller
         }
     }
 
-    public function disable_user($user_id) {
+    public function remove_user($user_id) {
         DB::beginTransaction();
 
         try {
-            $user = User::where('id', $user_id)
-            ->where('status', 1);
+            $user = User::where('id', $user_id)->first();
 
-            $user->status = 0;
-            $user->save();
+            if (!$user) {
+                return response()->json([ 'error_message' => 'User not found.' ], 404);
+            }
 
+            # track remove user
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'remove',
+                'description' => 'Removed user. User ID: ' . $user->id
+            ]);
+
+            # soft delete the user
+            $user->delete();
             DB::commit();
-            return response()->json([ 'message' => 'User account has been disabled' ]);
+
+            return response()->json([ 'message' => 'User account has been removed.' ]);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error_message' => $e->getMessage() ]);
@@ -257,9 +330,11 @@ class UserController extends Controller
 
         DB::beginTransaction();
         try {
-            $user = User::findOrFail($user_id)
-            ->where('status', 1)
-            ->first();
+            $user = User::findOrFail($user_id)->first();
+
+            if (!$user) {
+                return response()->json([ 'error' => 'User not found.' ], 404);
+            }
 
             if ($request->username != $user->username) {
                 $user->username = $request->username;
@@ -269,13 +344,23 @@ class UserController extends Controller
                 $user->email = $request->email;
             }
 
-            $user->save();
+            # track update user account
+            AuditTrail::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'description' => 'Updated user account. ID: ' . $user->id
+            ]);
 
+            $user->save();
             DB::commit();
-            return response()->json([ 'message' => 'Account has been updated successfully!' ]);
+
+            return response()->json([ 'message' => 'Account has been updated successfully!' ], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            return response()->json([ 'error' => $e->getMessage() ]);
+            return response()->json([ 'error' => $e->getMessage() ], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([ 'error' => $e->getMessage() ], 400);
         }
     }
 
@@ -285,9 +370,11 @@ class UserController extends Controller
             'new_password' => 'required'
         ]);
 
-        $user = User::findOrFail($user_id)
-        ->where('status', 1)
-        ->first();
+        $user = User::findOrFail($user_id)->first();
+
+        if (!$user) {
+            return response()->json([ 'error' => 'User not found.' ], 404);
+        }
 
         DB::beginTransaction();
         try {
@@ -295,12 +382,19 @@ class UserController extends Controller
                 $user->password = Hash::make($request->new_password);
                 $user->save();
 
+                # track change password
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'update',
+                    'description' => 'Changed user password. ID: ' . $user->id
+                ]);
+
                 DB::commit();
                 return response()->json([ 'message' => 'Password has successfully updated!' ]);
             } else {
                 return response()->json([ 'error' => 'Current password is incorrect!' ], 422);
             }
-        } catch (ModelNotFoundException $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ]);
         }

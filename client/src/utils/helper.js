@@ -52,13 +52,15 @@ export const isoDateToCommonDateTime = (dateTimeData) => {
     const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, so add 1
     const day = date.getDate().toString().padStart(2, '0');
 
-    // Extract the time components
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
+    // Extract and format the time components in AM/PM format (hours and minutes only)
+    const formattedTime = date.toLocaleTimeString('en-US', { 
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
 
-    // Create the formatted date string in "yyyy-mm-dd HH:mm:ss" format
-    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    // Create the formatted date string in "mm/dd/yyyy hh:mm AM/PM" format
+    const formattedDate = `${month}/${day}/${year} ${formattedTime}`;
     return formattedDate;
 };
 
@@ -159,11 +161,18 @@ export const createFormData = (data) => {
 }
 
 export const crumbsHelper = ( submodule, module, module_link ) => {
-    return [
-        { text: 'Dashboard', link: '../dashboard' },
-        { text: module, link: module_link },
-        { text: submodule }
-    ];
+    if (nullCheck(submodule)) {
+        return [
+            { text: 'Dashboard', link: '../dashboard' },
+            { text: module }
+        ];
+    } else {
+        return [
+            { text: 'Dashboard', link: '../dashboard' },
+            { text: module, link: module_link },
+            { text: submodule }
+        ];
+    }
 };
 
 export const validateTin = (tin) => {

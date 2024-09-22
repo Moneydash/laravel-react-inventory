@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Navigation;
+use App\Models\AuditTrail;
 use Illuminate\Support\Facades\Cache;
 
 class NavigationController extends Controller
@@ -22,7 +23,14 @@ class NavigationController extends Controller
             ->orderBy('order')
             ->get();
         });
-    
+
+        # track navigation view
+        AuditTrail::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'view',
+            'description' => 'Viewed all navigation.'
+        ]);
+
         return response()->json(['navigations' => $navigations]);
     }
 }

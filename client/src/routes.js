@@ -16,6 +16,7 @@ import ItemDelivery from "./pages/Delivery/ItemDelivery";
 import Customers from "./pages/Delivery/Customers";
 import DeliveryPersons from "./pages/Delivery/DeliveryPersons";
 import Notfound from "./pages/Notfound";
+import AuditTrail from "./pages/AuditTrail";
 import { redirect } from "react-router-dom";
 
 const childRoutes = [
@@ -78,6 +79,10 @@ const childRoutes = [
     {
         path: 'delivery/delivery-persons',
         element: <DeliveryPersons />
+    },
+    {
+        path: 'audit-trails',
+        element: <AuditTrail />
     }
 ];
 

@@ -19,8 +19,7 @@ const AddUpdateContent = ({
     warehouses,
     suppliers,
     parentProducts,
-    imgSrc,
-    editIndex
+    imgSrc
 }) => {
     const boolChoices = [
         { id: 0, name: 'No' },
@@ -159,7 +158,7 @@ const AddUpdateContent = ({
                         size="small"
                         value={formData.warehouse_id}
                         onChange={handleChange}
-                        noItemsText="Select Categories first ..."
+                        noItemsText={warehouses?.length > 0 || nullCheck(formData?.category_id) ? 'Select Categories first ...' : 'No Available Warehouse ...'}
                     />
                 </Grid>
                 <Grid
@@ -295,6 +294,7 @@ const AddUpdateContent = ({
                         value={formData.suppliers}
                         error={formDataError.suppliers}
                         onChange={handleChange}
+                        noItemsText={suppliers?.length > 0 ? 'Loading Suppliers...' : 'No Suppliers yet...'}
                     />
                 </Grid>
             </Grid>

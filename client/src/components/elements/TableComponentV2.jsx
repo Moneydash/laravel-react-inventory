@@ -18,11 +18,11 @@ const TableComponentV2 = ({
     rows,
     loadingTable,
     size,
-    handleSizeChange,
+    setSize,
     page,
-    handlePageChange,
+    setPage,
     search,
-    handleSearch,
+    setSearch,
     total,
     sx
 }) => {
@@ -32,6 +32,24 @@ const TableComponentV2 = ({
         { id: 50, name: '50' },
         { id: 100, name: '100' }
     ];
+
+    /* table actions --- start */
+    const handleSearch = (e) => {
+        const { value } = e.target;
+        setSearch(value);
+        setPage(1);
+    }
+
+    const handlePageChange = (e, newPage) => {
+        setPage(Number(newPage));
+    };
+
+    const handleSizeChange = (e) => {
+        const { value } = e.target;
+        setSize(value);
+        setPage(1);
+    }
+    /* table actions --- end */
 
     return (
         <Grid container justifyContent="flex-start" alignItems="center" sx={{ mt: .2, ...sx }} rowSpacing={2}>
@@ -108,11 +126,11 @@ TableComponentV2.defaultProps = {
     rows: [],
     loadingTable: false,
     size: 10,
-    handleSizeChange: () => {},
+    setSize: () => {},
     page: 1,
-    handlePageChange: () => {},
+    setPage: () => {},
     search: '',
-    handleSearch: () => {},
+    setSearch: () => {},
     total: 1,
     sx: {}
 };
@@ -122,11 +140,11 @@ TableComponentV2.propTypes = {
     rows: PropTypes.array,
     loadingTable: PropTypes.bool,
     size: PropTypes.number,
-    handleSizeChange: PropTypes.func,
+    setSize: PropTypes.func,
     page: PropTypes.number,
-    handlePageChange: PropTypes.func,
+    setPage: PropTypes.func,
     search: PropTypes.string,
-    handleSearch: PropTypes.func,
+    setSearch: PropTypes.func,
     total: PropTypes.number,
     sx: PropTypes.object
 }

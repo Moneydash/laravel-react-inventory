@@ -1,9 +1,28 @@
-import { Button, Card, CardActions, CardContent, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, FormGroup, Grid, IconButton, Snackbar, TextField, Typography } from "@mui/material";
-import React, { Fragment, useState } from "react";
-import { LoadingButton } from "@mui/lab";
-import { CancelOutlined, CloseRounded, LockResetOutlined, RefreshOutlined, SendRounded } from "@mui/icons-material";
+import {
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    Checkbox,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    FormControlLabel,
+    FormGroup,
+    Grid,
+    TextField,
+    Typography
+} from "@mui/material";
+import React, { useState } from "react";
+import { CancelOutlined, LockResetOutlined, SendRounded } from "@mui/icons-material";
 import { axios_patch_header } from 'utils/requests';
 import { decryptAccessToken, decryptAuthId } from "utils/auth";
+import { toast } from "react-toastify";
+import { nullCheck, setData, setErrorHelper } from "utils/helper";
+import { change_Password } from "utils/services";
+import { PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 
 function ChangePassword() {
     document.title = 'InventoryIQ: User Preferences - Change Password';
@@ -13,10 +32,7 @@ function ChangePassword() {
     const [loading, setLoading] = useState(false);
     const [dialog, setDialog] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: ''
-    });
+
     const [formData, setFormData] = useState({
         old_password: '',
         new_password: '',
@@ -33,20 +49,6 @@ function ChangePassword() {
         conf_password: ''
     });
 
-    const handleSnackbar = (open, message) => { setSnackbar((prevSnack) => ({ ...prevSnack, open: open, message: message })); };
-    const action = (
-        <Fragment>
-          <IconButton
-            size="small"
-            aria-label="close"
-            color="inherit"
-            onClick={() => handleSnackbar(false, '')}
-          >
-            <CloseRounded fontSize="small" />
-          </IconButton>
-        </Fragment>
-    );
-
     const formDataReset = () => {
         setFormData((prevState) => ({
             ...prevState,
@@ -58,57 +60,46 @@ function ChangePassword() {
     const handleChange = (e) => {
         const { name, value, checked } = e.target;
         const strong_regex_pass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{15,}$/;
+        setData(setFormData, name, value);
 
-        setFormData((prevState) => ({
-            ...prevState,
-            [name]: value
-        }));
-
-        if (name === 'old_password') {
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'new_password') {
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (value < 15 || !strong_regex_pass.test(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: "Password is too weak!" }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'conf_password') {
-            if (value === '') {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else if (value !== formData.new_password) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'Password do not match!' }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === 'show_password') {
-            setShowPassword(checked);
+        switch (name) {
+            case 'old_password':
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'new_password':
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (value < 15 || !strong_regex_pass.test(value)) {
+                    setErrorHelper(name, true, "Password is too weak!", setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'conf_password':
+                if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else if (value !== formData.new_password) {
+                    setErrorHelper(name, true, 'Password do not match!', setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'show_password':
+                setShowPassword(checked);
+                break;
+            default:
+                break;
         }
     };
 
     const handleDialog = (open) => {
         if (open === false) {
             setDialog(open);
-            setFormData((prevState) => ({ ...prevState, old_password: '' }));
+            setData(setFormData, 'old_password', '');
         } else {
             setDialog(open);
         }
@@ -125,13 +116,13 @@ function ChangePassword() {
         }
 
         if (hasError) {
-            handleSnackbar(true, 'Oops! Something went wrong. Please check for errors.');
-        } else if (formData.new_password === '') {
-            handleSnackbar(true, 'Please enter a new password.');
-            setFormDataError((prevError) => ({ ...prevError, new_password: empty_field_warning }));
-        } else if (formData.conf_password === '') {
-            handleSnackbar(true, 'Please confirm your new password.');
-            setFormDataError((prevError) => ({ ...prevError, conf_password: empty_field_warning }));
+            toast.error('Oops! Something went wrong. Please check for field errors.');
+        } else if (nullCheck(formData.new_password)) {
+            toast.error('Please enter a new password.');
+            setErrorHelper('new_password', true, empty_field_warning, setFormDataError, setFormDataHelperText);
+        } else if (nullCheck(formData.conf_password)) {
+            toast.error('Please confirm your new password.');
+            setErrorHelper('conf_password', true, empty_field_warning, setFormDataError, setFormDataHelperText);
         } else {
             handleDialog(true);
         }
@@ -144,28 +135,29 @@ function ChangePassword() {
             new_password: formData.new_password
         };
 
-        if (formData.old_password !== '') {
+        if (!nullCheck(formData.old_password)) {
             setLoading(true);
-            axios_patch_header('/user/change_password/' + decrypted_auth_id, payload, decrypted_access_token)
+            axios_patch_header(`${change_Password}${decrypted_auth_id}`, payload, decrypted_access_token)
             .then(response => {
                 setLoading(false);
                 handleDialog(false);
                 formDataReset();
-                handleSnackbar(true, response.data.message);
+                toast.success(response.data.message);
             })
             .catch(error => {
                 setLoading(false);
-                handleSnackbar(true, error.response.data.error);
+                toast.error(error.response.data.error);
             })
+        } else {
+            toast.error('Please enter your current password.');
         }
     };
 
     return (
         <Grid container direction="row" justifyContent="center" alignItems="center">
-            <Snackbar open={snackbar.open} onClose={() => handleSnackbar(false, '')} message={snackbar.message} action={action} autoHideDuration={3000} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
-            
+
             {/* dialog for password confirmation */}
-            <Dialog open={dialog} fullWidth maxWidth="sm">
+            <Dialog open={dialog} fullWidth maxWidth="sm"> 
                 <DialogTitle>Please enter current password</DialogTitle>
                 <Divider />
                 <DialogContent>
@@ -187,9 +179,13 @@ function ChangePassword() {
                             <Button variant="contained" color="error" endIcon={<CancelOutlined />} onClick={() => handleDialog(false)}>Cancel</Button>
                         </Grid>
                         <Grid item>
-                            {loading ? 
-                            <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Updating Account Information...</LoadingButton>
-                            : <Button variant="contained" color="primary" endIcon={<SendRounded />} onClick={handleSubmit}>Submit</Button>}
+                            <PrimaryColorLoadingBtn
+                                loading={loading}
+                                loadingPosition="end"
+                                endIcon={<SendRounded fontSize="small" />}
+                                onClick={handleSubmit}
+                                displayText={loading ? 'Updating Password...' : 'Submit'}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
@@ -234,7 +230,11 @@ function ChangePassword() {
                     <CardActions>
                         <Grid container direction="column" rowSpacing={2} sx={{ ml: 1, mb: 2 }}>
                             <Grid item>
-                                <Button variant="contained" color="primary" endIcon={<LockResetOutlined />} onClick={PreSubmit}>Change Password</Button>
+                                <PrimaryColorBtn
+                                    displayText="Change Password"
+                                    endIcon={<LockResetOutlined />}
+                                    onClick={PreSubmit}
+                                />
                             </Grid>
                         </Grid>
                     </CardActions>

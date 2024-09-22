@@ -9,6 +9,9 @@
 # migrate all the tables
 php artisan migrate
 
+# install passport
+php artisan passport:install
+
 # migrate the seeder in order
 php artisan db:seed
 

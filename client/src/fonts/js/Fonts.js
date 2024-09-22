@@ -20,4 +20,7 @@ import './ubuntu.js';
 
 // source sans pro
 import './source_sans_pro.js';
+
+// gt walsheim
+import './gt_walsheim.js';
 // add more font below

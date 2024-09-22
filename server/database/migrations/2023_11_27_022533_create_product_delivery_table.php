@@ -28,6 +28,11 @@ return new class extends Migration
             $table->foreign('batch_id')->references('id')->on('batches');
             $table->foreign('delivery_person_id')->references('id')->on('delivery_persons');
             $table->foreign('customer_id')->references('id')->on('customers');
+
+            # add table indexing for faster data retrieval
+            $table->index('po_number');
+            $table->index('batch_id');
+            $table->index('customer_id');
         });
     }
 

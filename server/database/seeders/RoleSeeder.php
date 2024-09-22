@@ -19,28 +19,24 @@ class RoleSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'role_name' => 'Administrator',
-                'role_status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
                 'role_name' => 'Staff Manager',
-                'role_status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
                 'role_name' => 'Staff',
-                'role_status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
                 'role_name' => 'Developer',
-                'role_status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]

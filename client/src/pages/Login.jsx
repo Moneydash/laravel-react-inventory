@@ -10,6 +10,7 @@ import ToastCmp from "../components/elements/ToastComponent";
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import { login, checkAuth } from 'utils/services';
+import { nullCheck } from "utils/helper";
 
 function Login() {
     document.title = 'InventoryIQ: Log In';
@@ -64,7 +65,8 @@ function Login() {
 
         axios_post(login, formData)
         .then(response => {
-            toast.success(response.data.message);
+            const data = response.data;
+            toast.success(data.message);
 
             /* for localStorage */
             const expirationMinutes = response.data.expire_at;
@@ -82,11 +84,11 @@ function Login() {
 
             /* for cookie */
             Cookies.set('isLoggedIn', 1, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('access_token', AES.encrypt(response.data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
-            Cookies.set('email_token', AES.encrypt(response.data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('auth_id', AES.encrypt(response.data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_id', AES.encrypt(response.data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_name', AES.encrypt(response.data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('access_token', AES.encrypt(data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
+            Cookies.set('email_token', AES.encrypt(data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('auth_id', AES.encrypt(data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_id', AES.encrypt(data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_name', AES.encrypt(data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
             
             setTimeout(() => {
                 setLoading(false);
@@ -95,13 +97,14 @@ function Login() {
         })
         .catch(error => {
             setLoading(false);
-            console.log(error);
-            if (error.response.data.email !== undefined) {
-                toast.error(error.response.data.email);
-            } else if (error.response.data.password !== undefined) {
-                toast.error(error.response.data.password);
+            if (!nullCheck(error?.response?.data?.email)) {
+                toast.error(error?.response?.data?.email[0]);
+            } else if (!nullCheck(error?.response?.data?.password)) {
+                toast.error(error?.response?.data?.password[0]);
             } else {
-                toast.info(error.response.data.message);
+                if (!nullCheck(error?.response?.data?.message)) {
+                    toast.info(error.response.data.message);
+                }
             }
         });
     }
@@ -123,7 +126,7 @@ function Login() {
                     alignItems="center"
                 >
                     <Grid item lg={12} xs={12} sm={8} xl={12}>
-                        <img src={process.env.REACT_APP_URL + '/logo/logo-transparent-new.png'} style={{ height: '200px' }} alt="Logo" />
+                        <img src={process.env.REACT_APP_URL + '/logoV2/logo-transparent.png'} style={{ height: '200px' }} alt="Logo" />
                         <Typography variant="h5" justifyContent="center" alignItems="center" sx={{ fontWeight: 'bold' }}>Web-Based Inventory Management App</Typography>
                     </Grid>
                 </Grid>
@@ -149,6 +152,7 @@ function Login() {
                                         <Grid item>
                                             <TextField
                                                 autoFocus
+                                                required
                                                 name="email"
                                                 label="E-mail"
                                                 placeholder="E-mail (Required)"
@@ -166,6 +170,7 @@ function Login() {
                                             <TextField
                                                 name="password"
                                                 label="Password"
+                                                required
                                                 placeholder="Password (Required)"
                                                 variant="outlined"
                                                 type="password"
@@ -179,9 +184,19 @@ function Login() {
                                     </Grid>
                                 </CardContent>
                                 <CardActions>
-                                    <Grid container justifyContent="flex-end" sx={{ mr: 1, mb: 1 }}>
-                                        <Grid item>
-                                            { loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />} variant="outlined">Logging In</LoadingButton> :  <Button variant="contained" color="success" endIcon={<VpnKeyRounded />} type="submit">Log In</Button>}
+                                    <Grid container justifyContent="flex-end" sx={{ mx: 1, mb: 1 }}>
+                                        <Grid item lg={12} xl={12} sm={12} xs={12}>
+                                            <LoadingButton
+                                                loading={loading}
+                                                color="success"
+                                                loadingPosition="end"
+                                                endIcon={<VpnKeyRounded />}
+                                                variant="contained"
+                                                type="submit"
+                                                fullWidth
+                                            >
+                                                {loading ? 'Logging In' : 'Login'}
+                                            </LoadingButton>
                                         </Grid>
                                     </Grid>
                                 </CardActions>

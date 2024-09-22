@@ -1,9 +1,9 @@
-import { CancelOutlined, CancelRounded, CloseRounded, EditRounded, GroupAddOutlined, PersonAddAlt1Outlined, PersonOffRounded, RefreshOutlined } from "@mui/icons-material";
+import { CancelOutlined, CancelRounded, CloseRounded, Delete, DeleteRounded, EditRounded, GroupAddOutlined, PersonAddAlt1Outlined, PersonOffRounded, RefreshOutlined } from "@mui/icons-material";
 import { Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { DataGrid } from "@mui/x-data-grid";
 import React, { Fragment, useEffect, useState } from "react";
-import { axios_get_header, axios_patch_header, axios_post_header, axios_put_header } from '../utils/requests';
+import { axios_delete_header, axios_get_header, axios_patch_header, axios_post_header, axios_put_header } from '../utils/requests';
 import * as EmailValidator from 'email-validator';
 import { decryptAccessToken, decryptAuthId } from 'utils/auth';
 import {
@@ -14,6 +14,12 @@ import {
     disable_User,
     get_Account_info
 } from 'utils/services';
+import { crumbsHelper, isoDateToCommonDateTime, nullCheck, setData, setErrorHelper } from "utils/helper";
+import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
+import { toast } from "react-toastify";
+import { ErrorColorBtn, ErrorColorLoadingBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
+import TableComponentV2 from "components/elements/TableComponentV2";
+import useDebounce from "hooks/useDebounce";
 
 function UserAccounts() {
     document.title = 'InventoryIQ: User Accounts';
@@ -24,11 +30,11 @@ function UserAccounts() {
     const renderActionButtons = (params) => {
         return(
             <div>
-                <IconButton onClick={() => get_user(1, params.value)} color="primary" sx={{ ml: 1 }}>
+                <IconButton onClick={() => get_user(1, params.value)} color="primary" sx={{ ml: 1 }} disabled={params.value === decrypted_auth_id}>
                     <Tooltip title="Update User Role" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
                 </IconButton>
                 <IconButton onClick={() => get_user(2, params.value)} color="error" sx={{ ml: 1 }} disabled={params.value === decrypted_auth_id}>
-                    <Tooltip title="Disable User Account" placement="bottom" arrow><PersonOffRounded fontSize="small"/></Tooltip>
+                    <Tooltip title="Disable User Account" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
                 </IconButton>
             </div>
         );
@@ -37,10 +43,30 @@ function UserAccounts() {
     const columns = [
         { field: 'email', headerName: 'Email Address', flex: 1 },
         { field: 'username', headerName: 'Username', flex: 1 },
-        { field: 'role', headerName: 'Role', flex: 1 },
-        { field: 'status', headerName: 'User Status', flex: 1 },
-        { field: 'created_at', headerName: 'Created At', flex: 1 },
-        { field: 'updated_at', headerName: 'Updated At', flex: 1 },
+        {
+            field: 'role',
+            headerName: 'Role',
+            flex: 1,
+            valueGetter: (params) => params.row?.roles[0]?.role_name
+        },
+        {
+            field: 'status',
+            headerName: 'User Status',
+            flex: 1,
+            valueGetter: (params) => nullCheck(params.row?.deleted_at) ? 'Active' : 'Inactive'
+        },
+        {
+            field: 'created_at',
+            headerName: 'Created At',
+            flex: 1,
+            valueGetter: (params) => params.row?.created_at ? isoDateToCommonDateTime(params.row.created_at) : ''
+        },
+        {
+            field: 'updated_at',
+            headerName: 'Updated At',
+            flex: 1,
+            valueGetter: (params) => params.row?.updated_at ? isoDateToCommonDateTime(params.row.updated_at) : ''
+        },
         { field: 'id', headerName: 'Actions', flex: 1, renderCell: renderActionButtons }
     ];
 
@@ -51,11 +77,6 @@ function UserAccounts() {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [tableLoading, setTableLoading] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: ''
-    });
-
     const [formData, setFormData] = useState({
         id: '',
         email: '',
@@ -72,63 +93,50 @@ function UserAccounts() {
         username: ''
     });
 
+    // pagination
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [maxPage, setMaxPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const debounceSearch = useDebounce(search, 300);
+
     const get_users = () => {
         setTableLoading(true);
-        axios_get_header(get_Users, decrypted_access_token)
+        axios_get_header(
+            `${get_Users}?page=1&per_page=10&search=`,
+            decrypted_access_token
+        )
         .then(response => {
             const data = response.data.users_list;
-            const transformedData = data.map(user => {
-                const created_date = new Date(user["created_at"]);
-                const updated_date = new Date(user["updated_at"]);
-
-                // Extract the date and time components for created_at
-                const created_year = created_date.getFullYear();
-                const created_month = (created_date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, so add 1
-                const created_day = created_date.getDate().toString().padStart(2, '0');
-                const created_hours = created_date.getHours().toString().padStart(2, '0');
-                const created_minutes = created_date.getMinutes().toString().padStart(2, '0');
-                const created_seconds = created_date.getSeconds().toString().padStart(2, '0');
-
-                // Extract the date and time components for updated_at
-                const updated_year = updated_date.getFullYear();
-                const updated_month = (updated_date.getMonth() + 1).toString().padStart(2, '0');
-                const updated_day = updated_date.getDate().toString().padStart(2, '0');
-                const updated_hours = updated_date.getHours().toString().padStart(2, '0');
-                const updated_minutes = updated_date.getMinutes().toString().padStart(2, '0');
-                const updated_seconds = updated_date.getSeconds().toString().padStart(2, '0');
-
-                // Create the formatted date string in "yyyy-mm-dd HH:mm:ss" format
-                const formattedDate_created = `${created_year}-${created_month}-${created_day} ${created_hours}:${created_minutes}:${created_seconds}`;
-                const formattedDate_updated = `${updated_year}-${updated_month}-${updated_day} ${updated_hours}:${updated_minutes}:${updated_seconds}`;
-                const string_status = user['status'] === 1 ? 'Active' : 'Deleted';
-
-                return {
-                    id: user['id'],
-                    email: user['email'],
-                    username: user['username'],
-                    role: user.roles[0]['role_name'],
-                    created_at: formattedDate_created,
-                    updated_at: formattedDate_updated,
-                    status: string_status
-                }
-            });
-
             setTableLoading(false);
-            setRows(transformedData);
+            setRows(data.data);
+            setMaxPage(data.last_page);
         })
-        .catch(error => { console.error('Error: ' + error); });
+        .catch(error => {
+            setTableLoading(false);
+            console.error('Error: ', error);
+        });
     }
     
     /* eslint-disable */
     useEffect(() => {
-        get_users();
-    }, []);
+        setTableLoading(true);
+        axios_get_header(
+            `${get_Users}?page=${currentPage}&per_page=${rowsPerPage}&search=${debounceSearch}`,
+            decrypted_access_token
+        )
+        .then(response => {
+            const data = response.data.users_list;
+            setTableLoading(false);
+            setRows(data.data);
+            setMaxPage(data.last_page);
+        })
+        .catch(error => {
+            setTableLoading(false);
+            console.error('Error: ', error);
+        });
+    }, [currentPage, rowsPerPage, debounceSearch, decrypted_access_token]);
     /* eslint-disable */
-
-    const refreshTable = () => {
-        setRows([]);
-        get_users();
-    }
 
     const get_roles = () => {
         axios_get_header(get_Roles, decrypted_access_token)
@@ -161,6 +169,7 @@ function UserAccounts() {
     const handleDisableDialog = (status) => { setDisableDialog(status); }
 
     const get_user = (editIndexValue, user_id) => {
+        setEditIndex(editIndexValue);
         axios_get_header(get_Account_info + user_id, decrypted_access_token)
         .then(response => {
             const user = response.data.user_info;
@@ -185,45 +194,31 @@ function UserAccounts() {
         .catch(error => { console.log(error); });
     }
 
-    const handleSnackbar = (status, message) => { setSnackbar((prevSnack) => ({ ...prevSnack, open: status, message: message })); }
-    const action = (
-        <Fragment>
-            <IconButton
-                size="small"
-                aria-label="cancel"
-                color="inherit"
-                onClick={() => handleSnackbar(false, '')}
-            >
-                <CloseRounded fontSize="small" />
-            </IconButton>
-        </Fragment>
-    );
-
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevState) => ({ ...prevState, [name]: value }));
+        setData(setFormData, name, value);
 
-        if (name === "email") {
-            if (!EmailValidator.validate(value)) {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: 'E-mail address is invalid' }));
-            } else if (value === "") {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
-        }
-
-        if (name === "username") {
-            if (value === "") {
-                setFormDataError((prevError) => ({ ...prevError, [name]: true }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
-            } else {
-                setFormDataError((prevError) => ({ ...prevError, [name]: false }));
-                setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
-            }
+        switch(name) {
+            case 'email':
+                if (!EmailValidator.validate(value)) {
+                    setErrorHelper(name, true, 'E-mail address is invalid', setFormDataError, setFormDataHelperText);
+                } else if (nullCheck(value)) {
+                    setErrorHelper(name, true, empty_field_warning, setFormDataError, setFormDataHelperText);
+                } else {
+                    setErrorHelper(name, false, '', setFormDataError, setFormDataHelperText);
+                }
+                break;
+            case 'username':
+                if (nullCheck(value)) {
+                    setFormDataError((prevError) => ({ ...prevError, [name]: true }));
+                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: empty_field_warning }));
+                } else {
+                    setFormDataError((prevError) => ({ ...prevError, [name]: false }));
+                    setFormDataHelperText((prevText) => ({ ...prevText, [name]: '' }));
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -243,7 +238,6 @@ function UserAccounts() {
                 role: formData.role
             };
         }
-        
 
         let hasError = false
         for (const field in formData) {
@@ -255,29 +249,37 @@ function UserAccounts() {
         }
 
         if (formData.role === "") {
-            handleSnackbar(true, empty_field_warning);
+            toast.error(empty_field_warning);
             setFormDataError((prevError) => ({ ...prevError, role: true }));
         } else if (hasError) {
-            handleSnackbar(true, "Check for empty or error fields!");
+            toast.error("Check for empty or error fields.");
         } else {
             setLoading(true);
             if (editIndex === 1) {
-                axios_put_header(update_User + formData.id, payload, decrypted_access_token)
+                axios_put_header(`${update_User}${formData.id}`, payload, decrypted_access_token)
                 .then(response => {
                     handleDialog(false);
                     setLoading(false);
                     get_users();
-                    handleSnackbar(true, response.data.message);
+                    toast.success(response?.data?.message);
                 })
-                .catch(error => { console.log(error); });
+                .catch(error => {
+                    setLoading(false);
+                    console.error('Update Error: ', error);
+                });
             } else {
                 axios_post_header(create_User, payload, decrypted_access_token)
                 .then(response => {
                     handleDialog(false);
                     setLoading(false);
                     get_users();
-                    handleSnackbar(true, response.data.message); })
-                .catch(error => { handleSnackbar(true, error.response.data.message); });
+                    toast.success(response?.data?.message);
+                })
+                .catch(error => {
+                    setLoading(false);
+                    toast.error(error.response.data.message);
+                    console.error('Create Error: ', error);
+                });
             }
         }
     }
@@ -286,15 +288,18 @@ function UserAccounts() {
         e.preventDefault();
 
         setLoading(true);
-        axios_patch_header(disable_User + formData.id, {}, decrypted_access_token)
+        axios_delete_header(disable_User + formData.id, {}, decrypted_access_token)
         .then(response => {
-            handleSnackbar(true, response.data.message);
+            toast.success(response.data.message);
             handleDisableDialog(false);
             formDataReset();
             setLoading(false);
             get_users();
         })
-        .catch(error => { console.log(error); });
+        .catch(error => {
+            setLoading(false);
+            console.log(error);
+        });
     }
 
     const role_select = (disabled_select) => (
@@ -318,9 +323,8 @@ function UserAccounts() {
     )
 
     return(
-        <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 5 }}>
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => handleSnackbar(false, '')} message={snackbar.message} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} action={action} />
-            
+        <Grid container justifyContent="flex-start" alignItems="center" sx={{ px: 2, mt: 3 }} display="flex">
+
             {/* dialog for creating user or updating user permissions */}
             <Dialog open={dialog} onClose={() => handleDialog(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Create New User</DialogTitle>
@@ -383,11 +387,16 @@ function UserAccounts() {
                 </DialogContent>
                 <DialogActions>
                     <Grid container direction="row" display="flex" justifyContent="flex-end" alignItems="center" sx={{ mr: 2, mb: 1 }} columnSpacing={{ lg: 1, xl: 1 }}>
-                    <Grid item>
-                            <Button variant="contained" color="error" endIcon={<CancelRounded />} onClick={() => handleDialog(false)}>Cancel</Button>
+                        <Grid item>
+                            <ErrorColorBtn displayText="Cancel" endIcon={<CancelRounded />} onClick={() => handleDialog(false)} />
                         </Grid>
                         <Grid item>
-                            { loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>{ editIndex === 1 ? 'Updating User' : 'Creating Supplier' }</LoadingButton> : <Button variant="contained" color="primary" endIcon={<GroupAddOutlined />} onClick={handleSubmit}>{ editIndex === 1 ? 'Update' : 'Create' } User</Button> }
+                            <PrimaryColorLoadingBtn
+                                loading={loading}
+                                endIcon={<GroupAddOutlined />}
+                                onClick={handleSubmit}
+                                displayText={editIndex === 1 ? 'Update User' : 'Create User'}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
@@ -397,35 +406,55 @@ function UserAccounts() {
                 <DialogTitle>Disable User Access?</DialogTitle>
                 <Divider />
                 <DialogContent>
-                    <Typography variant="body1">Are you sure you want to disable this user account?</Typography>
+                    <Typography variant="body1">Are you sure you want to remove this user account? This action cannot be undone.</Typography>
                 </DialogContent>
                 <DialogActions>
                     <Grid container justifyContent="flex-end" direction="row" columnSpacing={1} sx={{ mr: 1, mb: 1 }}>
                         <Grid item>
-                            <Button variant="contained" endIcon={<CancelOutlined />} onClick={() => handleDisableDialog(false)}>Cancel</Button>
+                            <PrimaryColorBtn displayText="Cancel" endIcon={<CancelOutlined />} onClick={() => handleDisableDialog(false)}/>
                         </Grid>
                         <Grid item>
-                            {loading ? <LoadingButton loading loadingPosition="end" endIcon={<RefreshOutlined />}>Disabling Account...</LoadingButton> : <Button variant="contained" endIcon={<PersonOffRounded />} color="error" onClick={disable_user}>Disable Account</Button>}
+                            <ErrorColorLoadingBtn
+                                loading={loading}
+                                loadingPosition="end"
+                                endIcon={<PersonOffRounded />}
+                                onClick={disable_user}
+                                displayText={loading ? 'Removing Account...' : 'Remove Account'}
+                            />
                         </Grid>
                     </Grid>
                 </DialogActions>
             </Dialog>
             
-            <Grid container justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }}>
-                <Grid item>
-                    <Button variant="contained" endIcon={<RefreshOutlined />} onClick={refreshTable}>Refresh Table</Button>
+            <Grid container direction="row" justifyContent="flex-start" alignItems="center" columnSpacing={{ lg: 1, xl: 1 }} rowSpacing={2} sx={{ mr: .3, ml: 1 }}>
+                <Grid item lg={3} xl={3} sm={3} xs={12}>
+                    <BreadCrumbsCmp data={crumbsHelper('', 'Members', '')} />
                 </Grid>
-                <Grid item>
-                    <Button variant="contained" endIcon={<PersonAddAlt1Outlined />} onClick={() => handleDialog(true)}>Create New User</Button>
+                <Grid item lg={9} xl={9} sm={9} xs={12}>
+                    <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
+                        <Grid item justifyContent="end" display="flex">
+                            <PrimaryColorBtn displayText="Refresh Table" endIcon={<RefreshOutlined />} onClick={get_users} />
+                        </Grid>
+                        <Grid item justifyContent="end" display="flex">
+                            <PrimaryColorBtn displayText="Create New User" endIcon={<PersonAddAlt1Outlined />} onClick={() => handleDialog(true)} />
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
-            <Grid container justifyContent="flex-start" alignItems="center" sx={{ mt: 2 }}>
-                <Card raised sx={{ width: '100%' }}>
-                    <CardContent>
-                        <DataGrid rows={rows} columns={columns} loading={tableLoading} autoHeight/>
-                    </CardContent>
-                </Card>
-            </Grid>
+
+            <TableComponentV2
+                columns={columns}
+                rows={rows}
+                loadingTable={tableLoading}
+                size={rowsPerPage}
+                setSize={setRowsPerPage}
+                page={currentPage}
+                setPage={setCurrentPage}
+                total={maxPage}
+                search={search}
+                setSearch={setSearch}
+                sx={{ mb: 5 }}
+            />
         </Grid>
     );
 }
