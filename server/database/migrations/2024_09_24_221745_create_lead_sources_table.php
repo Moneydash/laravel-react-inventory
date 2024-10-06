@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('company_informations', function (Blueprint $table) {
+        Schema::create('lead_sources', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('company_name')->nullable(false);
-            $table->uuid('industry_type_id')->nullable(false);
-            $table->string('company_size')->nullable(false);
-            $table->string('years_of_operation')->nullable(false);
+            $table->string('name')->unique()->nullable(false);
             $table->softDeletes($column = 'deleted_at');
             $table->timestamps();
-
-            $table->foreign('industry_type_id')->references('id')->on('industry_types');
         });
     }
 
@@ -29,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('company_informations');
+        Schema::dropIfExists('lead_sources');
     }
 };

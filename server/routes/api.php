@@ -19,6 +19,7 @@ use App\Http\Controllers\WarehouseTypeController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\LeadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -155,6 +156,15 @@ Route::middleware(['auth:api'])->prefix('delivery')->group(function() {
         Route::post('deliver_items', [ProductDeliveryController::class, 'add_delivery_items'])->name('item_delivery.deliverItems');
         Route::patch('update_status/{status}/{delivery_id}', [ProductDeliveryController::class, 'update_status'])->name('item_delivery.updateStatus');
     });
+});
+
+Route::middleware(['auth:api'])->prefix('leads')->group(function() {
+    Route::get('get-sources', [LeadController::class, 'get_lead_sources'])->name('leads.getSources');
+    Route::get('get-job-roles', [LeadController::class, 'get_lead_job_roles'])->name('leads.getJobRoles');
+    Route::get('get-leads', [LeadController::class, 'index'])->name('leads.getAll');
+    Route::get('get-lead/{lead_id}', [LeadController::class, 'get'])->name('leads.getOne');
+    Route::post('add-lead', [LeadController::class, 'store'])->name('leads.addLead');
+    Route::put('update-lead/{lead_id}', [LeadController::class, 'update'])->name('leads.updateLead');
 });
 
 Route::middleware(['auth:api'])->prefix('audit_trail')->group(function() {

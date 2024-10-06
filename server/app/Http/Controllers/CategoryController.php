@@ -71,7 +71,7 @@ class CategoryController extends Controller
 
             return response()->json([ 'category' => $category ], 200);
         } catch (ModelNotFoundException $ex) {
-            return response()->json([ 'error' => $ex->getMessage, 'message' => $this->_try_again ], 500);
+            return response()->json([ 'error' => $ex->getMessage(), 'message' => $this->_try_again ], 500);
         }
     }
 

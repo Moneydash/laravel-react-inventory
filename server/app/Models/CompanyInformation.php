@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CompanyInformation extends Model
 {
@@ -14,6 +15,7 @@ class CompanyInformation extends Model
     protected $table = 'company_informations';
 
     protected $fillable = [
+        'company_name',
         'industry_type_id',
         'company_size',
         'years_of_operation'
@@ -23,5 +25,9 @@ class CompanyInformation extends Model
 
     public function customer(): HasOne {
         return $this->hasOne(Customer::class, 'company_info_id', 'id');
+    }
+
+    public function industry(): BelongsTo {
+        return $this->belongsTo(IndustryType::class, 'industry_type_id', 'id');
     }
 }

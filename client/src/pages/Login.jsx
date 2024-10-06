@@ -32,7 +32,7 @@ function Login() {
     useEffect(() => {
         const access_token = Cookies.get('access_token');
         // check if access token is not empty and a valid one.
-        if (access_token !== null && access_token !== undefined) {
+        if (!nullCheck(access_token)) {
             axios_get_header(checkAuth, AES.decrypt(access_token, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8))
             .then(() => {
                 navigate("/main/page/inventory");
@@ -127,7 +127,7 @@ function Login() {
                 >
                     <Grid item lg={12} xs={12} sm={8} xl={12}>
                         <img src={process.env.REACT_APP_URL + '/logoV2/logo-transparent.png'} style={{ height: '200px' }} alt="Logo" />
-                        <Typography variant="h5" justifyContent="center" alignItems="center" sx={{ fontWeight: 'bold' }}>Web-Based Inventory Management App</Typography>
+                        <Typography variant="h5" justifyContent="center" alignItems="center" sx={{ fontWeight: 'bold' }}>Web Inventory Management App</Typography>
                     </Grid>
                 </Grid>
             </Grid>

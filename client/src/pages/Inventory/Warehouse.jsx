@@ -10,7 +10,7 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid } from
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { ErrorColorBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
-import TableComponent from "components/elements/TableComponent";
+import TableComponent from "components/elements/Tables/TableComponent";
 import dayjs from "dayjs";
 import { validate } from "email-validator";
 import React, { useEffect, useState } from "react";
