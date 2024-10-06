@@ -23,7 +23,9 @@ class DatabaseSeeder extends Seeder
             EquipmentSeeder::class,
             WarehouseTypeSeeder::class,
             CustomerTypeSeeder::class,
-            IndustryTypeSeeder::class
+            IndustryTypeSeeder::class,
+            LeadSourceSeeder::class,
+            LeadTitleSeeder::class
         ]);
     }
 }

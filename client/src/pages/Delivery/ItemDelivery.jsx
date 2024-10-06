@@ -37,7 +37,7 @@ import { PrimaryColorBtn, PrimaryColorIconBtn } from "components/elements/Button
 import { crumbsHelper } from "utils/helper";
 import { toast } from "react-toastify";
 import useDebounce from "hooks/useDebounce";
-import TableComponentV2 from "components/elements/TableComponentV2";
+import TableComponentV2 from "components/elements/Tables/TableComponentV2";
 
 function ItemDelivery() {
     document.title = 'InventoryIQ: Delivery Hub - Product Delivery';

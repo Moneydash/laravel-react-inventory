@@ -209,6 +209,18 @@ const AddUpdateContent = ({
                     </Divider>
                     <Grid container direction="row" columnSpacing={{ lg: 2, xl: 2, sm: 2 }} rowSpacing={2} sx={{ mt: .5 }}>
                         <Grid item xl={12} lg={12} sm={12} xs={12}>
+                            <TextField
+                                label="Company Name"
+                                name="company_name"
+                                placeholder="Company Name (Required)"
+                                value={formData.company_name}
+                                error={formDataError.company_name}
+                                helperText={formDataHelperText.company}
+                                fullWidth
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xl={12} lg={12} sm={12} xs={12}>
                             <SelectCmp
                                 id="industry-type"
                                 value={formData.industry_type_id}

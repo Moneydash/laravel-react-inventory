@@ -27,7 +27,7 @@ import {
 import { ErrorColorBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import { crumbsHelper, nullCheck, setErrorHelper } from "utils/helper";
 import AddUpdateContent from "components/pages/Inventory/Category/Add_Update";
-import TableComponent from "components/elements/TableComponent";
+import TableComponent from "components/elements/Tables/TableComponent";
 
 function Category() {
     document.title = 'Inventory IQ: Categories';

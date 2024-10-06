@@ -52,7 +52,7 @@ class NavigationSeeder extends Seeder
                 'id' => Str::uuid(),
                 'navigation_name' => 'Sales Leads',
                 'navigation_url' => 'leads',
-                'navigation_icon' => 'Groups2Outlined',
+                'navigation_icon' => 'Diversity3Outlined',
                 'order' => 4,
                 'status' => 1,
                 'created_at' => now(),

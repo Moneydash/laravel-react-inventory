@@ -104,8 +104,15 @@ const api = {
 
     // audit trail
     get_Audit_Trails: '/audit_trail/get_system_logs',
-    get_Audit_Trail: '/audit_trail/get_system_log/'
+    get_Audit_Trail: '/audit_trail/get_system_log/',
 
+    // leads
+    get_Lead_sources: '/leads/get-sources',
+    get_Lead_job_roles: '/leads/get-job-roles',
+    get_Leads: '/leads/get-leads',
+    get_Lead: '/leads/get-lead/',
+    add_Lead: '/leads/add-lead',
+    update_Lead: '/leads/update-lead/'
 };
 
 // Prepend base_api to each endpoint

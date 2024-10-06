@@ -1,12 +1,20 @@
+import { isEqual } from 'lodash';
 import * as actionTypes from './actionTypes';
 
 const initialState = {
-  items: [],
+  items: {
+    leads: [],
+    users: []
+  },
   loading: false,
   error: null,
+  currentPage: 1,
+  perPage: 10,
+  search: '',
+  totalPages: 1
 };
 
-const itemReducer = (state = initialState, action) => {
+const crudReducer = (state = initialState, action) => {
   switch (action.type) {
     case actionTypes.CREATE_ITEM_REQUEST:
     case actionTypes.FETCH_ITEMS_REQUEST:
@@ -17,33 +25,31 @@ const itemReducer = (state = initialState, action) => {
         loading: true,
         error: null,
       };
-
+      
     case actionTypes.CREATE_ITEM_SUCCESS:
       return {
         ...state,
         loading: false,
-        items: [...state.items, action.payload],
       };
 
     case actionTypes.FETCH_ITEMS_SUCCESS:
-      console.log('actions', action);
-      console.log('payload item reducer', action.payload);
       return {
-        ...state,
-        loading: false,
-        items: {
-          ...state.items,
-          [action.entity]: action.payload
-        },
+          ...state,
+          loading: false,
+          items: {
+            ...state.items,
+            [action.entity]: 
+              !isEqual(state.items[action.entity], action.payload.data) ? action.payload.data : state.items[action.entity] // Only update if data has changed
+          },
+          totalPages: action.payload.last_page,
+          currentPage: action.payload.current_page,
+          perPage: action.payload.per_page,
+          search: action.payload.search
       };
-
     case actionTypes.UPDATE_ITEM_SUCCESS:
       return {
         ...state,
-        loading: false,
-        items: state.items.map(item =>
-          item.id === action.payload.id ? action.payload : item
-        ),
+        loading: false
       };
 
     case actionTypes.DELETE_ITEM_SUCCESS:
@@ -74,4 +80,4 @@ const itemReducer = (state = initialState, action) => {
   }
 };
 
-export default itemReducer;
+export default crudReducer;

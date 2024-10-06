@@ -3,7 +3,7 @@ import useDebounce from 'hooks/useDebounce';
 import { axios_get_header } from 'utils/requests';
 import { get_Audit_Trails, get_Audit_Trail } from 'utils/services';
 import { decryptAccessToken } from 'utils/auth';
-import TableComponentV2 from 'components/elements/TableComponentV2';
+import TableComponentV2 from 'components/elements/Tables/TableComponentV2';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, Typography } from '@mui/material';
 import BreadCrumbsCmp from 'components/elements/BreadcrumbsComponent';
 import { crumbsHelper, isoDateToCommonDateTime } from 'utils/helper';

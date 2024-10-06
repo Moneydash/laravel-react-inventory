@@ -30,7 +30,7 @@ import {
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
-import TableComponent from "components/elements/TableComponent";
+import TableComponent from "components/elements/Tables/TableComponent";
 import { decryptAccessToken } from "utils/auth";
 import {
     get_Suppliers,

@@ -120,6 +120,20 @@ class IndustryTypeSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now()
             ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Non-Profit',
+                'description' => 'The non-profit industry consists of organizations that operate to serve a social, educational, charitable, or public purpose, rather than to generate profit. Unlike traditional companies, their revenue is reinvested into their mission, and they rely on donations, grants, and fundraising rather than selling goods or services for profit.',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Government',
+                'description' => 'The government industry refers to public sector organizations that manage and deliver services, enforce laws, and regulate societal functions for the public good. Unlike companies focused on profit, government agencies are funded by taxes and focus on public service, including healthcare, education, defense, and infrastructure.',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
         ];
 
         IndustryType::insert($industry_data);

@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import { decryptAccessToken } from "./auth";
 import { axios_get_header } from "./requests";
+import { createSelector } from "reselect";
 
 export const fetcher = async (url) => {
     const decrypt_access_token = decryptAccessToken();
@@ -79,7 +80,10 @@ export const pathCleaner = (string) => {
 };
 
 export const setData = (setter, fieldName, value) => {
-    setter((prevState) => ({ ...prevState, [fieldName]: value }));
+    setter((prevState) => ({
+        ...prevState,
+        [fieldName]: value === null ? '' : value // Replace null with empty string
+    }));
 };
 
 export const setErrorHelper = (fieldName, error, text, setError, setHelper) => {
@@ -102,10 +106,25 @@ export const apiGetHelper = async (url, setter, arrayField) => {
         const response = await axios_get_header(url, decrypt_access_token);
         const data = response.data;
 
-        setter(data[arrayField]);
+        // Check if the specified field is an array
+        if (Array.isArray(data[arrayField])) {
+            setter(data[arrayField]); // Set the array directly
+        } else if (typeof data[arrayField] === 'object' && data[arrayField] !== null) {
+            // Ensure data[arrayField] is an object and not null
+            const newState = {}; // Create a new state object
+            for (const field in data[arrayField]) {
+                if (data[arrayField].hasOwnProperty(field)) { // Check if the property belongs to the object
+                    newState[field] = nullCheck(data[arrayField][field]) ? '' : data[arrayField][field];
+                }
+            }
+            setter((prevState) => ({ ...prevState, ...newState })); // Update state with new values
+        } else {
+            console.error(`Unexpected data format for ${arrayField}:`, data[arrayField]);
+            setter([]); // Handle unexpected format
+        }
     } catch (error) {
         console.error(error);
-        throw error;
+        throw error; // Rethrow the error for further handling
     }
 };
 
@@ -268,3 +287,12 @@ export const downloadWithType = async (url, id, type) => {
         toast.error('Oops, something went wrong. Please try again later.');
     }   
 };
+
+const selectItemsEntity = (state, entity) => { return state.itemReducer.items[entity] || [] }
+export const makeSelectRowsEntity = () => createSelector(
+    [selectItemsEntity],
+    (items) => {
+        // Memoize the filtering to avoid new references
+        return items.filter(item => nullCheck(item.deleted_at));  // Example: Filter only active items
+    }
+);

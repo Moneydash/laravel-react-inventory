@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 
 export default function Notfound() {
     document.title = 'Page Not Found';
-    const color = '#787878';
+    const color = 'inherit';
     const navigate = useNavigate();
     const { previousIndex } = localStorage;
     const access_token = Cookies.get('access_token');
