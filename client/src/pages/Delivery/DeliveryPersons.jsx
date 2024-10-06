@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { ErrorColorBtn, ErrorColorIconBtn, PrimaryColorIconBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import useDebounce from "hooks/useDebounce";
-import TableComponentV2 from "components/elements/TableComponentV2";
+import TableComponentV2 from "components/elements/Tables/TableComponentV2";
 import Remove from "components/pages/Delivery/DeliveryPersons/Remove";
 
 function DeliveryPersons() {

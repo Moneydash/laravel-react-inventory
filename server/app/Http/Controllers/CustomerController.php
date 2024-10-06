@@ -52,6 +52,7 @@ class CustomerController extends Controller
             'tin' => 'required',
             'customer_type_id' => 'required',
             'has_company' => 'required|boolean',
+            'company_name' => 'required_if:has_company,1',
             'industry_type_id' => 'required_if:has_company,1',
             'company_size' => 'required_if:has_company,1',
             'years' => 'required_if:has_company,1'
@@ -63,12 +64,22 @@ class CustomerController extends Controller
             $company = null;
             if ($request->has_company) {
                 $company_info_data = [
+                    'company_name' => $request->company_name,
                     'industry_type_id' => $request->industry_type_id,
                     'company_size' => $request->company_size,
                     'years_of_operation' => $request->years
                 ];
 
                 $company = CompanyInformation::create($company_info_data);
+
+                if ($company) {
+                    # track customer company info creation
+                    AuditTrail::create([
+                        'user_id' => auth()->user()->id,
+                        'action' => 'create',
+                        'description' => 'Customer Company has been created. ID: '.$company->id
+                    ]);
+                }
             }
 
             $customer_data = [
@@ -101,7 +112,7 @@ class CustomerController extends Controller
             }
 
             DB::commit();
-            return response()->json([ 'message' => 'Customer Data has been saved successfully.' ], 200);
+            return response()->json([ 'message' => 'Customer Data has been saved successfully.', 'requests' => $request->all() ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([ 'error' => $e->getMessage() ], 500);
@@ -169,6 +180,7 @@ class CustomerController extends Controller
             'tin' => 'required',
             'customer_type_id' => 'required',
             'has_company' => 'required|boolean',
+            'company_name' => 'required_if:has_company,1',
             'industry_type_id' => 'required_if:has_company,1',
             'company_size' => 'required_if:has_company,1',
             'years' => 'required_if:has_company,1'
@@ -194,6 +206,7 @@ class CustomerController extends Controller
 
                 if ($request->has_company) {
                     foreach ($request->only([
+                        'company_name',
                         'industry_type_id',
                         'company_size',
                         'years',
@@ -211,6 +224,13 @@ class CustomerController extends Controller
                         }
                     }
                     $company->save();
+
+                    # track customer company info update
+                    AuditTrail::create([
+                        'user_id' => auth()->user()->id,
+                        'action' => 'update',
+                        'description' => 'Updated customer company info. ID: ' . $customer_id
+                    ]);
                 } else {
                     # remove the company information and remove the company information
                     $customer->company_info_id = null;
@@ -220,17 +240,27 @@ class CustomerController extends Controller
                 # else create a new company if the customer has a new company
                 if ($request->has_company) {
                     $company = [
+                        'company_name' => $request->company_name,
                         'industry_type_id' => $request->industry_type_id,
                         'company_size' => $request->company_size,
                         'years_of_operation' => $request->years
                     ];
                     $company = CompanyInformation::create($company);
                 }
+
+                # track customer company info creation
+                AuditTrail::create([
+                    'user_id' => auth()->user()->id,
+                    'action' => 'create',
+                    'description' => 'Customer Company has been created. ID: ' . $customer_id
+                ]);
+                
                 $customer->company_info_id = $company ? $company->id : null;
             }
 
                 # customer
                 foreach($request->except([
+                    'company_name',
                     'industry_type_id',
                     'company_size',
                     'years',

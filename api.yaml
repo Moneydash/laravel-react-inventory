@@ -1,0 +1,1007 @@
+openapi: 3.0.0
+info:
+  title: Your API
+  version: 1.0.0
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      tags:
+        - User
+      operationId: userRegister
+
+  /login:
+    post:
+      summary: User login
+      tags:
+        - User
+      operationId: userLogin
+
+  /warehouse-file/download/{type}/{warehouse_id}:
+    get:
+      summary: Download warehouse file
+      tags:
+        - Warehouse
+      operationId: warehouseDownloadFile
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: warehouse_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /product-image/download/{product_id}:
+    get:
+      summary: Download product image
+      tags:
+        - Product
+      operationId: productDownloadImage
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /supplier-file/download/{type}/{supplier_id}:
+    get:
+      summary: Download supplier file
+      tags:
+        - Supplier
+      operationId: supplierDownloadFile
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user/logout:
+    post:
+      summary: User logout
+      tags:
+        - User
+      operationId: userLogout
+      security:
+        - BearerAuth: []
+
+  /user/get_users:
+    get:
+      summary: Get all users
+      tags:
+        - User
+      operationId: getUsersList
+      security:
+        - BearerAuth: []
+
+  /user/get_roles:
+    get:
+      summary: Get all roles
+      tags:
+        - User
+      operationId: getRoles
+      security:
+        - BearerAuth: []
+
+  /user/create_user:
+    post:
+      summary: Create a new user
+      tags:
+        - User
+      operationId: createUser
+      security:
+        - BearerAuth: []
+
+  /user/get_user/{user_id}:
+    get:
+      summary: Get user information
+      tags:
+        - User
+      operationId: getUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user/update_user/{user_id}:
+    put:
+      summary: Update user role
+      tags:
+        - User
+      operationId: updateUserRole
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user/remove_user/{user_id}:
+    delete:
+      summary: Disable user
+      tags:
+        - User
+      operationId: disableUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user/update_account/{user_id}:
+    put:
+      summary: Update user account
+      tags:
+        - User
+      operationId: updateAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user/change_password/{user_id}:
+    patch:
+      summary: Change user password
+      tags:
+        - User
+      operationId: changePassword
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /checkAuth:
+    get:
+      summary: Check authentication
+      tags:
+        - Auth
+      operationId: checkAuth
+      security:
+        - BearerAuth: []
+
+  /inventory/product/add_product:
+    post:
+      summary: Add a new product
+      tags:
+        - Product
+      operationId: addProduct
+      security:
+        - BearerAuth: []
+
+  /inventory/product/get_products_infos:
+    get:
+      summary: Get all products info
+      tags:
+        - Product
+      operationId: getProductsInfos
+      security:
+        - BearerAuth: []
+
+  /inventory/product/get_products:
+    get:
+      summary: Get all products
+      tags:
+        - Product
+      operationId: getProducts
+      security:
+        - BearerAuth: []
+
+  /inventory/product/get_product/{product_id}:
+    get:
+      summary: Get product info
+      tags:
+        - Product
+      operationId: getProduct
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/product/update_product/{product_id}:
+    post:
+      summary: Update product
+      tags:
+        - Product
+      operationId: updateProduct
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/product/remove_product/{product_id}:
+    delete:
+      summary: Remove product
+      tags:
+        - Product
+      operationId: removeProduct
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/product/get_parent_products:
+    get:
+      summary: Get parent products
+      tags:
+        - Product
+      operationId: getParentProducts
+      security:
+        - BearerAuth: []
+
+  /inventory/product/get_price/{product_id}:
+    get:
+      summary: Get product price
+      tags:
+        - Product
+      operationId: getProductPrice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/product/get_parent_products_exclude_self/{product_id}:
+    get:
+      summary: Get parent products excluding self
+      tags:
+        - Product
+      operationId: getParentProductsExcludeSelf
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/category/get_categories:
+    get:
+      summary: Get all categories
+      tags:
+        - Category
+      operationId: getCategories
+      security:
+        - BearerAuth: []
+
+  /inventory/category/get_category/{category_id}:
+    get:
+      summary: Get category info
+      tags:
+        - Category
+      operationId: getCategory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/category/create:
+    post:
+      summary: Create a new category
+      tags:
+        - Category
+      operationId: createCategory
+      security:
+        - BearerAuth: []
+
+  /inventory/category/update/{category_id}:
+    put:
+      summary: Update category
+      tags:
+        - Category
+      operationId: updateCategory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/supplier/add_supplier:
+    post:
+      summary: Add a new supplier
+      tags:
+        - Supplier
+      operationId: addSupplier
+      security:
+        - BearerAuth: []
+
+  /inventory/supplier/get_suppliers:
+    get:
+      summary: Get all suppliers
+      tags:
+        - Supplier
+      operationId: getSuppliers
+      security:
+        - BearerAuth: []
+
+  /inventory/supplier/get_supplier/{supplier_id}:
+    get:
+      summary: Get supplier info
+      tags:
+        - Supplier
+      operationId: getSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/supplier/update_supplier/{supplier_id}:
+    post:
+      summary: Update supplier
+      tags:
+        - Supplier
+      operationId: updateSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/supplier/remove_supplier/{supplier_id}:
+    delete:
+      summary: Remove supplier
+      tags:
+        - Supplier
+      operationId: removeSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/supplier/get_removed_suppliers:
+    get:
+      summary: Get removed suppliers
+      tags:
+        - Supplier
+      operationId: getRemovedSuppliers
+      security:
+        - BearerAuth: []
+
+  /inventory/supplier/get_supplier_products/{supplier_id}:
+    get:
+      summary: Get supplier products
+      tags:
+        - Supplier
+      operationId: getSupplierProducts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/supplier/restore/{supplier_id}:
+    put:
+      summary: Restore supplier
+      tags:
+        - Supplier
+      operationId: restoreSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: supplier_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/purchase_order/generate_po_number:
+    get:
+      summary: Generate PO number
+      tags:
+        - PurchaseOrder
+      operationId: generatePoNumber
+      security:
+        - BearerAuth: []
+
+  /inventory/purchase_order/generate_track_number:
+    get:
+      summary: Generate tracking number
+      tags:
+        - PurchaseOrder
+      operationId: generateTrackingNumber
+      security:
+        - BearerAuth: []
+
+  /inventory/purchase_order/add_purchase_order:
+    post:
+      summary: Add purchase order
+      tags:
+        - PurchaseOrder
+      operationId: addPurchaseOrder
+      security:
+        - BearerAuth: []
+
+  /inventory/purchase_order/get_purchase_orders/{approval_status}:
+    get:
+      summary: Get purchase orders
+      tags:
+        - PurchaseOrder
+      operationId: getPurchaseOrders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: approval_status
+          in: path
+          required: true
+          schema:
+            type: string
+
+  /inventory/purchase_order/get_purchase_order/{purchase_order_number}:
+    get:
+      summary: Get purchase order info
+      tags:
+        - PurchaseOrder
+      operationId: getPurchaseOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: purchase_order_number
+          in: path
+          required: true
+          schema:
+            type: string
+
+  /inventory/purchase_order/update_purchase_order/{purchase_order_number}:
+    post:
+      summary: Update purchase order
+      tags:
+        - PurchaseOrder
+      operationId: updatePurchaseOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: purchase_order_number
+          in: path
+          required: true
+          schema:
+            type: string
+
+  /inventory/purchase_order/purchase_approval/{po_number}/{status}:
+    patch:
+      summary: Update purchase order approval
+      tags:
+        - PurchaseOrder
+      operationId: purchaseApproval
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: po_number
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+
+  /inventory/purchase_order/close_order/{po_number}:
+    patch:
+      summary: Close purchase order
+      tags:
+        - PurchaseOrder
+      operationId: closeOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: po_number
+          in: path
+          required: true
+          schema:
+            type: string
+
+  /inventory/warehouse/get_types:
+    get:
+      summary: Get warehouse types
+      tags:
+        - Warehouse
+      operationId: getWarehouseTypes
+      security:
+        - BearerAuth: []
+
+  /inventory/warehouse/get_warehouses:
+    get:
+      summary: Get all warehouses
+      tags:
+        - Warehouse
+      operationId: getWarehouses
+      security:
+        - BearerAuth: []
+
+  /inventory/warehouse/get_warehouse/{warehouse_id}:
+    get:
+      summary: Get warehouse info
+      tags:
+        - Warehouse
+      operationId: getWarehouse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: warehouse_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/warehouse/get_category_warehouse/{category_id}:
+    get:
+      summary: Get category-based warehouse
+      tags:
+        - Warehouse
+      operationId: getCategoryWarehouse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/warehouse/create:
+    post:
+      summary: Create warehouse
+      tags:
+        - Warehouse
+      operationId: createWarehouse
+      security:
+        - BearerAuth: []
+
+  /inventory/warehouse/update_warehouse/{warehouse_id}:
+    post:
+      summary: Update warehouse
+      tags:
+        - Warehouse
+      operationId: updateWarehouse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: warehouse_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/warehouse/remove/{warehouse_id}:
+    delete:
+      summary: Remove warehouse
+      tags:
+        - Warehouse
+      operationId: removeWarehouse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: warehouse_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /inventory/equipment/get_equipments:
+    get:
+      summary: Get all equipments
+      tags:
+        - Equipment
+      operationId: getEquipments
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/get_types:
+    get:
+      summary: Get customer types
+      tags:
+        - Customer
+      operationId: getCustomerTypes
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/get_industries:
+    get:
+      summary: Get industries
+      tags:
+        - Customer
+      operationId: getIndustries
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/get_customers:
+    get:
+      summary: Get all customers
+      tags:
+        - Customer
+      operationId: getCustomers
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/get_customer/{customer_id}:
+    get:
+      summary: Get customer info
+      tags:
+        - Customer
+      operationId: getCustomer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/customer/get_customer_payment/{customer_id}:
+    get:
+      summary: Get customer payment
+      tags:
+        - Customer
+      operationId: getCustomerPayment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/customer/get_paid_customers:
+    get:
+      summary: Get paid customers
+      tags:
+        - Customer
+      operationId: getPaidCustomers
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/update_customer/{customer_id}:
+    post:
+      summary: Update customer
+      tags:
+        - Customer
+      operationId: updateCustomer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/customer/create_customer:
+    post:
+      summary: Create customer
+      tags:
+        - Customer
+      operationId: createCustomer
+      security:
+        - BearerAuth: []
+
+  /delivery/customer/remove_customer/{customer_id}:
+    delete:
+      summary: Remove customer
+      tags:
+        - Customer
+      operationId: removeCustomer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/delivery_person/get_primary:
+    get:
+      summary: Get primary delivery person IDs
+      tags:
+        - DeliveryPerson
+      operationId: getPrimaryDeliveryPersonIds
+      security:
+        - BearerAuth: []
+
+  /delivery/delivery_person/get_secondary:
+    get:
+      summary: Get secondary delivery person IDs
+      tags:
+        - DeliveryPerson
+      operationId: getSecondaryDeliveryPersonIds
+      security:
+        - BearerAuth: []
+
+  /delivery/delivery_person/add_delivery_person:
+    post:
+      summary: Add delivery person
+      tags:
+        - DeliveryPerson
+      operationId: addDeliveryPerson
+      security:
+        - BearerAuth: []
+
+  /delivery/delivery_person/get_delivery_persons_table:
+    get:
+      summary: Get delivery persons table
+      tags:
+        - DeliveryPerson
+      operationId: getDeliveryPersonsTable
+      security:
+        - BearerAuth: []
+
+  /delivery/delivery_person/get_delivery_persons:
+    get:
+      summary: Get delivery persons list
+      tags:
+        - DeliveryPerson
+      operationId: getDeliveryPersonsList
+      security:
+        - BearerAuth: []
+
+  /delivery/delivery_person/get_info/{delivery_person_id}:
+    get:
+      summary: Get delivery person info
+      tags:
+        - DeliveryPerson
+      operationId: getDeliveryPerson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: delivery_person_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/delivery_person/remove_delivery_person/{delivery_person_id}:
+    patch:
+      summary: Remove delivery person
+      tags:
+        - DeliveryPerson
+      operationId: removeDeliveryPerson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: delivery_person_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /delivery/item_delivery/generate_batch_number:
+    get:
+      summary: Generate batch number
+      tags:
+        - ItemDelivery
+      operationId: generateBatchNumber
+      security:
+        - BearerAuth: []
+
+  /delivery/item_delivery/generate_po_number:
+    get:
+      summary: Generate delivery PO number
+      tags:
+        - ItemDelivery
+      operationId: generateDeliveryPoNumber
+      security:
+        - BearerAuth: []
+
+  /delivery/item_delivery/get_items:
+    get:
+      summary: Get delivery items
+      tags:
+        - ItemDelivery
+      operationId: getDeliveryItems
+      security:
+        - BearerAuth: []
+
+  /delivery/item_delivery/deliver_items:
+    post:
+      summary: Deliver items
+      tags:
+        - ItemDelivery
+      operationId: deliverItems
+      security:
+        - BearerAuth: []
+
+  /delivery/item_delivery/update_status/{status}/{delivery_id}:
+    patch:
+      summary: Update delivery status
+      tags:
+        - ItemDelivery
+      operationId: updateDeliveryStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: delivery_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /leads/get_sources:
+    get:
+      summary: Get lead sources
+      tags:
+        - Leads
+      operationId: getLeadSources
+      security:
+        - BearerAuth: []
+
+  /audit_trail/get_system_logs:
+    get:
+      summary: Get system logs
+      tags:
+        - AuditTrail
+      operationId: getSystemLogs
+      security:
+        - BearerAuth: []
+
+  /audit_trail/get_system_log/{id}:
+    get:
+      summary: Get specific system log
+      tags:
+        - AuditTrail
+      operationId: getSystemLog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user_nav/get_navigations/{role_id}/{user_id}:
+    get:
+      summary: Get user navigations
+      tags:
+        - UserNavigation
+      operationId: getUserNavigations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user_sub_nav/get_profile_sub_navigations/{role_id}/{user_id}:
+    get:
+      summary: Get profile sub-navigations
+      tags:
+        - UserSubNavigation
+      operationId: getProfileSubNavigations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user_sub_nav/get_prodDelivery_sub_navigations/{role_id}/{user_id}:
+    get:
+      summary: Get product delivery sub-navigations
+      tags:
+        - UserSubNavigation
+      operationId: getProductDeliverySubNavigations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+  /user_sub_nav/get_inventoryControl_sub_navigations/{role_id}/{user_id}:
+    get:
+      summary: Get inventory control sub-navigations
+      tags:
+        - UserSubNavigation
+      operationId: getInventoryControlSubNavigations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

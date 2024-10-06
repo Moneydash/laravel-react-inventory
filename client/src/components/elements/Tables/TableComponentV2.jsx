@@ -2,7 +2,7 @@ import { Card, CardContent, Grid, Pagination, TextField, Typography } from "@mui
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector } from "@mui/x-data-grid";
 import React from "react";
 import PropTypes from "prop-types";
-import { SelectCmp } from "./FieldComponents";
+import { SelectCmp } from "../FieldComponents";
 
 const CustomToolbar = () => {
     return (

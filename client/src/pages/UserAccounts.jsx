@@ -18,7 +18,7 @@ import { crumbsHelper, isoDateToCommonDateTime, nullCheck, setData, setErrorHelp
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { toast } from "react-toastify";
 import { ErrorColorBtn, ErrorColorLoadingBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
-import TableComponentV2 from "components/elements/TableComponentV2";
+import TableComponentV2 from "components/elements/Tables/TableComponentV2";
 import useDebounce from "hooks/useDebounce";
 
 function UserAccounts() {

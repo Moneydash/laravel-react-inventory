@@ -50,7 +50,7 @@ import {
     PrimaryColorIconBtn,
     PrimaryColorLoadingBtn
 } from "components/elements/ButtonsComponent";
-import TableComponentV2 from "components/elements/TableComponentV2";
+import TableComponentV2 from "components/elements/Tables/TableComponentV2";
 import useDebounce from "hooks/useDebounce";
 
 function Customers() {
@@ -115,6 +115,7 @@ function Customers() {
         website: '',
         social_link: '',
         has_company: 0,
+        company_name: '',
         industry_type_id: '',
         company_size: '',
         years: '',
@@ -131,6 +132,7 @@ function Customers() {
         shipping_address: false,
         tin: false,
         years: false,
+        company_name: false,
         industry_type_id: false,
         company_size: false
     };
@@ -143,6 +145,7 @@ function Customers() {
         billing_address: '',
         shipping_address: '',
         tin: '',
+        company_name: '',
         years: ''
     };
     const [formData, setFormData] = useState(initialFormData);
@@ -249,6 +252,7 @@ function Customers() {
                 website: customer?.website ?? '',
                 social_link: customer?.social_link ?? '',
                 has_company: customer?.has_company === true ? 1 : 0,
+                company_name: nullCheck(customer?.company_info) ? '' : customer?.company_info?.company_name,
                 industry_type_id: nullCheck(customer?.company_info) ? '' : customer?.company_info?.industry_type_id,
                 company_size: nullCheck(customer?.company_info) ? '' : customer?.company_info?.company_size,
                 years: nullCheck(customer?.company_info) ? '' : customer?.company_info?.years_of_operation,
@@ -303,6 +307,7 @@ function Customers() {
             case 'industry_type_id':
             case 'company_size':
             case 'years':
+            case 'company_name':
             case 'customer_type_id':
                 setData(setFormData, name, value);
                 if (nullCheck(value)) {
@@ -355,7 +360,7 @@ function Customers() {
             || nullCheck(formData?.years)
         );
         const optional = ["middlename", "customer_notes", "website", "social_link", "id"];
-        const companyFields = ["industry_type_id", "company_size", "years"];
+        const companyFields = ["company_name", "industry_type_id", "company_size", "years"];
         const isCompany = formData?.has_company === 1;
 
         for (const field in formDataError) {
@@ -434,7 +439,7 @@ function Customers() {
             setLoading(false);
             console.error('Remove error: ', error);
             toast.error("Oops, something went wrong. Please try again later.");
-        })
+        });
     };
 
     return (

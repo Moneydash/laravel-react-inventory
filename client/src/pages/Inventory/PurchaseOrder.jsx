@@ -49,7 +49,7 @@ import {
     validate_file,
     wholeNumRegex
 } from "utils/helper";
-import TableComponent from "components/elements/TableComponent";
+import TableComponent from "components/elements/Tables/TableComponent";
 import { toast } from "react-toastify";
 import { SelectCmp } from "components/elements/FieldComponents";
 import AddUpdateContent from "components/pages/Inventory/PurchaseOrder/Add_Update";
