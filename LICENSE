@@ -2,11 +2,60 @@ Open "Fair-Code" Source License
 
 Copyright (c) 2024 Christian Raquid
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, and distribute the Software for non-commercial purposes, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, and sublicense the Software for non-commercial purposes, subject to the following conditions:
 
-Commercial Use: For any commercial use of the Software, a separate commercial license must be obtained from the copyright holder.
-Attribution: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-Contribution: Any modifications or enhancements to the Software must be contributed back to the community by making the modified source code publicly available under the same license.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+1. Commercial Use: For any commercial use, adaptation, or distribution of the Software, including but not limited to selling, licensing, or using the Software as part of a commercial product or service, a separate commercial license must be obtained from the copyright holder. This includes indirect commercial use, such as using the Software to provide commercial services or as part of a commercial product.
 
-This version maintains the openness and collaborative spirit of the original MIT License while introducing restrictions on commercial use to ensure that the software's creator is compensated for profit-generating activities.
+2. Attribution: The above copyright notice, this permission notice, and a prominent notice stating the modifications made to the original Software shall be included in all copies or substantial portions of the Software, its documentation, and any derivative works.
+
+3. Contribution: Any modifications, enhancements, or derivative works of the Software must be contributed back to the community by making the modified source code publicly available under the same license. This includes bug fixes, feature additions, and any other alterations to the original codebase.
+
+4. Non-Endorsement: Neither the names of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this Software without specific prior written permission.
+
+5. Trademark: This license does not grant permission to use the trade names, trademarks, service marks, or product names of the copyright holder, except as required for reasonable and customary use in describing the origin of the Software.
+
+6. Sublicensing: The rights granted under this license may be sublicensed to third parties, provided that all conditions of this license are met by the sublicensee.
+
+7. Patent Use: This license provides an express grant of patent rights from contributors for the use, modification, and distribution of the Software under the terms of this license.
+
+8. Termination: This license and the rights granted hereunder will terminate automatically upon any breach by you of the terms of this license.
+
+Terms and Conditions:
+
+1. Scope of Use:
+   a. Non-commercial Use: You may use, modify, and distribute the Software for non-commercial purposes without restriction, subject to the conditions outlined in this license.
+   b. Commercial Use: Any commercial use requires a separate license agreement with the copyright holder.
+   c. Educational Use: Use in educational institutions is permitted, provided it is not part of a commercial offering.
+
+2. Modifications and Contributions:
+   a. All modifications must be clearly documented and attributed.
+   b. Contributions to the project must be made available under the same license terms.
+   c. The copyright holder reserves the right to incorporate or reject any contributions.
+
+3. Distribution:
+   a. Distribution of the original or modified Software must include this license and all accompanying documentation.
+   b. You may not impose any further restrictions on the recipients' exercise of the rights granted herein.
+
+4. Liability and Warranty:
+   a. The Software is provided "as is" without any warranty or guarantee of fitness for any particular purpose.
+   b. The copyright holder and contributors are not liable for any damages or losses resulting from the use of the Software.
+
+5. Compliance:
+   a. Users are responsible for ensuring their use of the Software complies with all applicable laws and regulations.
+   b. Failure to comply with the terms of this license may result in immediate termination of your rights to use the Software.
+
+6. Updates and Modifications to License:
+   a. The copyright holder reserves the right to update or modify this license at any time.
+   b. Users will be bound by the version of the license under which they initially received the Software, unless they explicitly agree to a newer version.
+
+7. Dispute Resolution:
+   a. Any disputes arising from the use or distribution of the Software shall be resolved through arbitration in the jurisdiction of the copyright holder.
+
+8. Severability:
+   If any provision of this license is held to be unenforceable or invalid, that provision will be enforced to the maximum extent possible, and the other provisions will remain in full force and effect.
+
+By using, modifying, or distributing the Software, you acknowledge that you have read, understood, and agree to be bound by the terms and conditions of this license.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT, AND COMPATIBILITY WITH OTHER SOFTWARE. IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This license maintains the openness and collaborative spirit of open-source software while introducing restrictions on commercial use to ensure fair compensation for the software's creators and contributors.
