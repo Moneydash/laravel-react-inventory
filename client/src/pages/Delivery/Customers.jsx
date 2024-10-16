@@ -21,7 +21,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { validate } from "email-validator";
 import { axios_delete_header, axios_get_header, axios_post_header_file } from "utils/requests";
-import { decryptAccessToken } from 'utils/auth';
+import { decryptAccessToken, decryptedRoleName } from 'utils/auth';
 import {
     get_Customers,
     get_Customer,
@@ -56,6 +56,7 @@ import useDebounce from "hooks/useDebounce";
 function Customers() {
     document.title = 'InventoryIQ: Delivery Hub - Customers';
     const decrypted_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const empty_field_warning = 'Please fill up required field!';
 
     const renderActionButtons = (params) => {
@@ -65,12 +66,14 @@ function Customers() {
                 title="Update Customer Information"
                 icon={<EditRounded fontSize="small"/> }
             />
-            <ErrorColorIconBtn
-                fn={() => get_customer(2, params.value)}
-                title="Remove Customer"
-                icon={<DeleteRounded fontSize="small"/>}
-                sx={{ ml: 1 }}
-            />
+            { roleName === "Super Admin" && (
+                <ErrorColorIconBtn
+                    fn={() => get_customer(2, params.value)}
+                    title="Remove Customer"
+                    icon={<DeleteRounded fontSize="small"/>}
+                    sx={{ ml: 1 }}
+                />
+            )}
         </>
     };
 

@@ -22,7 +22,9 @@ class SubNavigationController extends Controller
                 # Attempt to retrieve the data from the cache
                 $profile = Navigation::where('navigation_url', 'profile')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $profile->id);
-            })->get();
+            })
+            ->orderBy('order')
+            ->get();
         });
 
         # track view profile sub navigations
@@ -47,7 +49,9 @@ class SubNavigationController extends Controller
                 # Attempt to retrieve the data from the cache
                 $product_delivery = Navigation::where('navigation_url', 'delivery')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $product_delivery->id);
-            })->get();
+            })
+            ->orderBy('order')
+            ->get();
         });
 
         # track view product delivery sub navigations
@@ -72,7 +76,9 @@ class SubNavigationController extends Controller
                 # Attempt to retrieve the data from the cache
                 $products = Navigation::where('navigation_url', 'inventory')->first();
                 $query->where('role_id', $role_id)->where('parent_navigation_id', $products->id);
-            })->get();
+            })
+            ->orderBy('order')
+            ->get();
         });
 
         # track view inventory control sub navigations

@@ -15,7 +15,7 @@ import dayjs from "dayjs";
 import { validate } from "email-validator";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { decryptAccessToken } from "utils/auth";
+import { decryptAccessToken, decryptedRoleName } from "utils/auth";
 import {
     axios_delete_header,
     axios_get_header,
@@ -45,6 +45,7 @@ import Remove from "components/pages/Inventory/Warehouse/Remove";
 function Warehouse() {
     document.title = 'Inventory IQ: Warehouse Management';
     const decrypt_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const try_again = 'Oops, something went wrong. Please try again later.';
 
     const renderActionButtons = (params) => {
@@ -55,12 +56,14 @@ function Warehouse() {
                 onClick={() => get_warehouse(params.id, 1)}
                 showInMenu
             />,
-            <GridActionsCellItem
-                icon={<DeleteRounded fontSize="small" color="error" />}
-                label="Remove Warehouse"
-                onClick={() => get_warehouse(params.id, 0)}
-                showInMenu
-            />,
+            ...(roleName === "Super Admin" ? [
+                <GridActionsCellItem
+                    icon={<DeleteRounded fontSize="small" color="error" />}
+                    label="Remove Warehouse"
+                    onClick={() => get_warehouse(params.id, 0)}
+                    showInMenu
+                />
+            ] : []),
             <GridActionsCellItem
                 icon={<DownloadRounded fontSize="small" color="info" />}
                 label="Download Insurance Info"

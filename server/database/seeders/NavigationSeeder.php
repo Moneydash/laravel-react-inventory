@@ -113,10 +113,10 @@ class NavigationSeeder extends Seeder
         Navigation::insert($nav_data);
 
         // roles
-        $admin = Role::where('role_name', 'Administrator')->first();
-        $staff_manager = Role::where('role_name', 'Staff Manager')->first();
-        $staff = Role::where('role_name', 'Staff')->first();
-        $developer = Role::where('role_name', 'Developer')->first();
+        $superadmin = Role::where('name', 'Super Admin')->first();
+        $staff_manager = Role::where('name', 'Staff Manager')->first();
+        $staff = Role::where('name', 'Staff')->first();
+        $admin = Role::where('name', 'Administrator')->first();
 
         // navigations
         $dashboard_nav = Navigation::where('navigation_url', 'dashboard')->first();
@@ -126,19 +126,20 @@ class NavigationSeeder extends Seeder
         $profile_nav = Navigation::where('navigation_url', 'profile')->first();
         $reports_nav = Navigation::where('navigation_url', 'reports')->first();
         $audit_trail_nav = Navigation::where('navigation_url', 'audit-trails')->first();
+        $leads_nav = Navigation::where('navigation_url', 'leads')->first();
         $settings_nav = Navigation::where('navigation_url', 'configurations')->first();
 
         DB::beginTransaction();
         try {
-            if ($admin && $staff_manager && $staff && $developer) {
+            if ($superadmin && $staff_manager && $staff && $admin) {
                 // for admin access and permissions
                 foreach($nav_data as $navigation) {
                     // grant access to all navigations and permissions
                     $navigation_model = Navigation::where('id', $navigation['id'])->first();
                     if ($navigation_model) {
                         $navigation_model->roles()->attach([
-                            $admin->id => ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 1, 'download' => 1, 'upload' => 1, 'created_at' => now(), 'updated_at' => now()],
-                            $developer->id => ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 1, 'upload' => 1, 'created_at' => now(), 'updated_at' => now()]
+                            $superadmin->id => ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 1, 'download' => 1, 'upload' => 1, 'created_at' => now(), 'updated_at' => now()],
+                            $admin->id => ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 1, 'upload' => 1, 'created_at' => now(), 'updated_at' => now()]
                         ]);
                     }
                 }
@@ -149,12 +150,12 @@ class NavigationSeeder extends Seeder
                 $prod_delivery_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $profile_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $reports_nav->roles()->attach($staff_manager->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
+                $leads_nav->roles()->attach($staff_manager->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
 
                 // for staff access and permissions
                 $dashboard_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $products_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $profile_nav->roles()->attach($staff->id, ['create' => 1, 'read' => 1, 'update' => 1, 'delete' => 0, 'download' => 0, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
-                $reports_nav->roles()->attach($staff->id, ['create' => 0, 'read' => 1, 'update' => 0, 'delete' => 0, 'download' => 1, 'upload' => 0, 'created_at' => now(), 'updated_at' => now()]);
 
                 DB::commit();
             } else {

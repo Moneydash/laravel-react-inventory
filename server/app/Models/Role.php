@@ -3,28 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory;
 
-    protected $table = 'roles';
-    protected $casts = [
-        'role_status' => 'boolean'
-    ];
+    protected $fillable = ['name', 'guard_name'];
 
-    public function users() {
-        return $this->belongsToMany(User::class);
-    }
-
-    public function navigations() {
+    public function navigations()
+    {
         return $this->belongsToMany(Navigation::class);
     }
 
-    public function sub_navigations() {
+    public function sub_navigations()
+    {
         return $this->belongsToMany(SubNavigation::class);
     }
 }

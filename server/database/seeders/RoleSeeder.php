@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use App\Models\Role;
 
 class RoleSeeder extends Seeder
@@ -14,34 +12,35 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // insert initial and default roles
         $role_data = [
             [
-                'id' => Str::uuid(),
-                'role_name' => 'Administrator',
+                'name' => 'Super Admin',
+                'guard_name' => 'api', // or 'api' if you're using API authentication
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => Str::uuid(),
-                'role_name' => 'Staff Manager',
+                'name' => 'Staff Manager',
+                'guard_name' => 'api',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => Str::uuid(),
-                'role_name' => 'Staff',
+                'name' => 'Staff',
+                'guard_name' => 'api',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => Str::uuid(),
-                'role_name' => 'Developer',
+                'name' => 'Administrator',
+                'guard_name' => 'api',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
         ];
 
-        Role::insert($role_data);
+        foreach ($role_data as $role) {
+            Role::create($role);
+        }
     }
 }

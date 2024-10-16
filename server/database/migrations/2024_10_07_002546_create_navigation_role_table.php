@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('navigation_role', function (Blueprint $table) {
             $table->id();
-            $table->uuid('role_id');
+            $table->unsignedBigInteger('role_id');
             $table->uuid('navigation_id');
             $table->boolean('create');
             $table->boolean('read');
@@ -22,6 +22,9 @@ return new class extends Migration
             $table->boolean('download');
             $table->boolean('upload');
             $table->timestamps();
+
+            $table->foreign('role_id')->references('id')->on('roles');
+            $table->foreign('navigation_id')->references('id')->on('navigations');
         });
     }
 

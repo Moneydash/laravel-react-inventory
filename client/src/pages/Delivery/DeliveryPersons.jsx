@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid } from '@mui/material';
 import { CancelOutlined, DeleteRounded, GroupAddOutlined, InfoOutlined, RefreshOutlined } from '@mui/icons-material';
-import { axios_get_header, axios_patch_header, axios_post_header_file } from "utils/requests";
-import { decryptAccessToken } from "utils/auth";
+import { axios_delete_header, axios_get_header, axios_post_header_file } from "utils/requests";
+import { decryptAccessToken, decryptedRoleName } from "utils/auth";
 import { validate } from "email-validator";
 import {
     get_Delivery_persons,
@@ -24,6 +24,7 @@ import Remove from "components/pages/Delivery/DeliveryPersons/Remove";
 function DeliveryPersons() {
     document.title = 'InventoryIQ: Delivery Hub - Delivery Personnel';
     const decrypted_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const empty_field_warning = 'Please fill up required field!';
 
     const renderActionButtons = (params) => {
@@ -33,12 +34,14 @@ function DeliveryPersons() {
                 title="View Personnel Information"
                 icon={<InfoOutlined fontSize="small" />}
             />
-            <ErrorColorIconBtn
-                fn={() => get_delivery_person(3, params.value)}
-                title="Remove Personnel Information"
-                icon={<DeleteRounded fontSize="small" />}
-                sx={{ ml: 1 }}
-            />
+            { roleName === "Super Admin" && (
+                <ErrorColorIconBtn
+                    fn={() => get_delivery_person(3, params.value)}
+                    title="Remove Personnel Information"
+                    icon={<DeleteRounded fontSize="small" />}
+                    sx={{ ml: 1 }}
+                />
+            )}
         </>
     };
     
@@ -171,24 +174,6 @@ function DeliveryPersons() {
         });
     }, [currentPage, rowsPerPage, debounceSearch, decrypted_access_token]);
     /* eslint-disable */
-
-    /* table actions --- start */
-    const handleSearch = (e) => {
-        const { value } = e.target;
-        setSearch(value);
-        setCurrentPage(1);
-    }
-
-    const handlePageChange = (e, newPage) => {
-        setCurrentPage(Number(newPage));
-    };
-
-    const handleSizeChange = (e) => {
-        const { value } = e.target;
-        setRowsPerPage(value);
-        setCurrentPage(1);
-    }
-    /* table actions --- end */
 
     const refresh_table = () => {
         get_delivery_persons();
@@ -426,7 +411,7 @@ function DeliveryPersons() {
 
     const handleRemoveSubmit = () => {
         setLoading(true);
-        axios_patch_header(remove_Delivery_person + formData.id, {}, decrypted_access_token)
+        axios_delete_header(remove_Delivery_person + formData.id, {}, decrypted_access_token)
         .then(response => {
             handleRemoveDialog(false);
             setLoading(false);

@@ -30,7 +30,7 @@ const api = {
     update_Supplier: '/inventory/supplier/update_supplier/',
     add_Supplier: '/inventory/supplier/add_supplier',
     get_Supplier_products: '/inventory/supplier/get_supplier_products/',
-    remove_Supplier: '/inventory/supplier/remove_supplier/',
+    remove_Supplier: '/inventory/supplier/remove/',
     download_Supplier_file: '/supplier-file/download/',
 
     // inventory - categories submodules
@@ -103,8 +103,8 @@ const api = {
     deliver_Items: '/delivery/item_delivery/deliver_items',
 
     // audit trail
-    get_Audit_Trails: '/audit_trail/get_system_logs',
-    get_Audit_Trail: '/audit_trail/get_system_log/',
+    get_Audit_Trails: '/trail/get_system_logs',
+    get_Audit_Trail: '/trail/get_system_log/',
 
     // leads
     get_Lead_sources: '/leads/get-sources',

@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -32,7 +33,7 @@ class UserController extends Controller
 
         DB::beginTransaction();
 
-        $staff_role = Role::where('role_name', 'Staff')->first();
+        $staff_role = Role::where('name', 'Staff')->first();
 
         try {
             $user = User::create([
@@ -149,29 +150,44 @@ class UserController extends Controller
         $page = $request->query('page', 1);
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
-
+    
         $query = User::with('roles');
-
+    
+        // Check if the authenticated user has the Administrator role
+        if (auth()->user()->hasRole('Administrator')) {
+            // Exclude users with Super Admin role
+            $superAdminRole = Role::where('name', 'Super Admin')->first();
+            if ($superAdminRole) {
+                $query->whereDoesntHave('roles', function ($q) use ($superAdminRole) {
+                    $q->where('roles.id', $superAdminRole->id);
+                });
+            }
+        }
+    
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
-
+    
         # track get users list
         AuditTrail::create([
             'user_id' => auth()->user()->id,
             'action' => 'view',
             'description' => 'Viewed all users.'
         ]);
-
+    
         $users = $query->paginate($perPage, ['*'], 'page', $page);
         return response()->json([ 'users_list' => $users ]);
     }
 
     public function get_roles() {
-        $roles = Role::get();
+        if (auth()->user()->hasRole('Super Admin')) {
+            $roles = Role::get();
+        } else {
+            $roles = Role::where('name', '!=', 'Super Admin')->get();
+        }
 
         return response()->json([ 'roles' => $roles ]);
     }
@@ -197,12 +213,16 @@ class UserController extends Controller
         $randomString = substr($shuffledChars, 0, $password_length);
         $role = Role::where('id', $request->role)->first();
 
+        if (!$role) {
+            return response()->json(['error' => 'Role not found.'], 404);
+        }
+
         // for mailing and sending the unhash password on the email
         $user_data_mail = [
             'username' => $request->username,
             'email' => $request->email,
             'password' => $randomString,
-            'role' => $role->role_name
+            'role' => $role->name
         ];
 
         $user_data = [
@@ -233,7 +253,11 @@ class UserController extends Controller
             return response()->json([ 'message' => 'User registered successfully. They can check their email for user credentials.' ]);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([ 'error_message' => $e->getMessage() ]);
+            Log::error('User Creation failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([ 'error' => $e->getMessage() ]);
         }
     }
 
@@ -252,7 +276,7 @@ class UserController extends Controller
             'username' => $user->username,
             'email' => $user->email,
             'role' => $user->roles[0]['id'],
-            'role_name' => $user->roles[0]['role_name']
+            'role_name' => $user->roles[0]['name']
         ];
 
         # track get user

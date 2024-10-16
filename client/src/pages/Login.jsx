@@ -66,11 +66,18 @@ function Login() {
         axios_post(login, formData)
         .then(response => {
             const data = response.data;
+            console.log(data.user.email);
             toast.success(data.message);
 
             /* for localStorage */
             const expirationMinutes = response.data.expire_at;
             const expirationTime = expirationMinutes * 60000;
+
+            const role_id = data.user.roles[0]['id'];
+            const role_name = data.user.roles[0]['name'];
+
+            const encryptedRoleId = AES.encrypt(role_id.toString(), process.env.REACT_APP_SECRET_KEY).toString();
+            const encryptedRoleName = AES.encrypt(role_name, process.env.REACT_APP_SECRET_KEY).toString();
 
             // Calculate the future timestamp by adding expirationTime to the current time
             const now = new Date().getTime();
@@ -87,8 +94,8 @@ function Login() {
             Cookies.set('access_token', AES.encrypt(data.access_token, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true }); // encrypt tokens for user security purposes...
             Cookies.set('email_token', AES.encrypt(data.user.email, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
             Cookies.set('auth_id', AES.encrypt(data.user.id, process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_id', AES.encrypt(data.user.roles[0]['id'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
-            Cookies.set('role_name', AES.encrypt(data.user.roles[0]['role_name'], process.env.REACT_APP_SECRET_KEY).toString(), { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_id', encryptedRoleId, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
+            Cookies.set('role_name', encryptedRoleName, { expires: threeHrsFraction, sameSite: 'strict', secure: true });
             
             setTimeout(() => {
                 setLoading(false);
