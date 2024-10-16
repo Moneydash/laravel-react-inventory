@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('role_sub_navigation', function (Blueprint $table) {
             $table->id();
             $table->uuid('sub_navigation_id');
-            $table->uuid('role_id');
+            $table->unsignedBigInteger('role_id');
             $table->boolean('create');
             $table->boolean('read');
             $table->boolean('update');
@@ -22,6 +22,9 @@ return new class extends Migration
             $table->boolean('download');
             $table->boolean('upload');
             $table->timestamps();
+
+            $table->foreign('role_id')->references('id')->on('roles');
+            $table->foreign('sub_navigation_id')->references('id')->on('sub_navigations');
         });
     }
 

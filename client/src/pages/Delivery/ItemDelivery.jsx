@@ -646,7 +646,7 @@ function ItemDelivery() {
                                 </Grid>
                             </Grid>
                             <Grid container item direction="row" columnSpacing={{ lg: 2, xl: 2, sm: 2, xs: 2 }}>
-                                <Grid iteBreadCrumbsCmpm lg={3} xl={3} sm={3} xs={12}>
+                                <Grid item lg={3} xl={3} sm={3} xs={12}>
                                     <TextField
                                         label="SubTotal"
                                         name="subtotal"

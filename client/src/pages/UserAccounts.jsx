@@ -5,7 +5,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import React, { Fragment, useEffect, useState } from "react";
 import { axios_delete_header, axios_get_header, axios_patch_header, axios_post_header, axios_put_header } from '../utils/requests';
 import * as EmailValidator from 'email-validator';
-import { decryptAccessToken, decryptAuthId } from 'utils/auth';
+import { decryptAccessToken, decryptAuthId, decryptedRoleName } from 'utils/auth';
 import {
     get_Users,
     get_Roles,
@@ -20,11 +20,13 @@ import { toast } from "react-toastify";
 import { ErrorColorBtn, ErrorColorLoadingBtn, PrimaryColorBtn, PrimaryColorLoadingBtn } from "components/elements/ButtonsComponent";
 import TableComponentV2 from "components/elements/Tables/TableComponentV2";
 import useDebounce from "hooks/useDebounce";
+import { SelectCmp } from "components/elements/FieldComponents";
 
 function UserAccounts() {
     document.title = 'InventoryIQ: User Accounts';
     const decrypted_access_token = decryptAccessToken();
     const decrypted_auth_id = decryptAuthId();
+    const roleName = decryptedRoleName();
     const empty_field_warning = "Please fill up required field!";
 
     const renderActionButtons = (params) => {
@@ -33,9 +35,11 @@ function UserAccounts() {
                 <IconButton onClick={() => get_user(1, params.value)} color="primary" sx={{ ml: 1 }} disabled={params.value === decrypted_auth_id}>
                     <Tooltip title="Update User Role" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
                 </IconButton>
-                <IconButton onClick={() => get_user(2, params.value)} color="error" sx={{ ml: 1 }} disabled={params.value === decrypted_auth_id}>
-                    <Tooltip title="Disable User Account" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
-                </IconButton>
+                { roleName === "Super Admin" && (
+                    <IconButton onClick={() => get_user(2, params.value)} color="error" sx={{ ml: 1 }} disabled={params.value === decrypted_auth_id}>
+                        <Tooltip title="Disable User Account" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
+                    </IconButton>
+                )}
             </div>
         );
     }
@@ -47,7 +51,7 @@ function UserAccounts() {
             field: 'role',
             headerName: 'Role',
             flex: 1,
-            valueGetter: (params) => params.row?.roles[0]?.role_name
+            valueGetter: (params) => params.row?.roles[0]?.name
         },
         {
             field: 'status',
@@ -316,7 +320,7 @@ function UserAccounts() {
         >
             { roles.map(role => (
                 <MenuItem key={role.id} value={role.id}>
-                    { role.role_name }
+                    { role.name }
                 </MenuItem>
             )) }
         </Select>
@@ -357,31 +361,16 @@ function UserAccounts() {
                             />
                         </Grid>
                         <Grid item>
-                            <FormControl fullWidth>
-                                {roles.length > 0 ? (<InputLabel id="role">Role</InputLabel>) : ''}
-                                {editIndex === 0 ? (
-                                    role_select(false)
-                                ) : (
-                                    roles.length > 0 ? (
-                                        <Select
-                                            labelId="role"
-                                            id="role"
-                                            label="Role"
-                                            name="role"
-                                            fullWidth
-                                            value={formData.role}
-                                            error={formDataError.role}
-                                            onChange={handleChange}
-                                        >
-                                            { roles.length > 0 ? (roles.map(role => (
-                                                <MenuItem key={role.id} value={role.id}>
-                                                    { role.role_name }
-                                                </MenuItem>
-                                            ))) : (<MenuItem value="">&nbsp;</MenuItem>) }
-                                        </Select>
-                                    ) : <p>Loading Roles...</p>
-                                )}
-                            </FormControl>
+                            <SelectCmp
+                                id="role"
+                                label="Role"
+                                name="role"
+                                value={formData.role}
+                                error={formDataError.role}
+                                onChange={handleChange}
+                                items={roles}
+                                noItemsText="Loading Roles..."
+                            />
                         </Grid>
                     </Grid>
                 </DialogContent>
@@ -395,7 +384,11 @@ function UserAccounts() {
                                 loading={loading}
                                 endIcon={<GroupAddOutlined />}
                                 onClick={handleSubmit}
-                                displayText={editIndex === 1 ? 'Update User' : 'Create User'}
+                                displayText={editIndex === 1 && loading
+                                    ? 'Updating User'
+                                    : (editIndex === 1 && !loading
+                                        ? 'Update User'
+                                        : (editIndex === 0 && loading ? 'Creating User' : 'Create User'))}
                             />
                         </Grid>
                     </Grid>

@@ -28,7 +28,7 @@ import {
     axios_get_header,
     axios_post_header_file
 } from 'utils/requests';
-import { decryptAccessToken } from "utils/auth";
+import { decryptAccessToken, decryptedRoleName } from "utils/auth";
 import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { inventoryCrumbs } from "utils/breadCrumbs";
@@ -53,17 +53,24 @@ import Remove from "components/pages/Inventory/Products/Remove";
 function Products() {
     document.title = "InventoryIQ: Inventory Control - Inventory Items";
     const decrypted_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const try_again = 'Oops, something went wrong. Please try again later.';
 
     const renderActionButtons = (params) => {
         return (
             <div>
-                <IconButton onClick={() => get_product(params.value, 1)} color="primary" sx={{ ml: 1 }}>
-                    <Tooltip title="Update Product Information" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
-                </IconButton>
-                <IconButton onClick={() => get_product(params.value, 0)} color="error" sx={{ ml: 1 }}>
-                    <Tooltip title="Remove Product" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
-                </IconButton>
+                { roleName !== "Staff" && (
+                    <IconButton onClick={() => get_product(params.value, 1)} color="primary" sx={{ ml: 1 }}>
+                        <Tooltip title="Update Product Information" placement="bottom" arrow><EditRounded fontSize="small"/></Tooltip>
+                    </IconButton>
+                )}
+                { roleName === "Super Admin" && (
+                    <>
+                        <IconButton onClick={() => get_product(params.value, 0)} color="error" sx={{ ml: 1 }}>
+                            <Tooltip title="Remove Product" placement="bottom" arrow><DeleteRounded fontSize="small"/></Tooltip>
+                        </IconButton>
+                    </>
+                )}
                 <IconButton onClick={() => download(params.value)} color="primary" sx={{ ml: 1 }}>
                     <Tooltip title="Download Product Image" placement="bottom" arrow><DownloadRounded fontSize="small"/></Tooltip>
                 </IconButton>
@@ -565,9 +572,11 @@ function Products() {
                         <Grid item justifyContent="end" display="flex">
                             <Button variant="contained" color="primary" endIcon={<RefreshOutlined fontSize="small" />} onClick={get_products}>Refresh Table</Button>
                         </Grid>
-                        <Grid item justifyContent="end" display="flex">
-                            <Button variant="contained" color="primary" endIcon={<LibraryAddOutlined fontSize="small" />} onClick={() => handleDialog(true)}>Add Inventory Items</Button>
-                        </Grid>
+                        { roleName !== "Staff" && (
+                            <Grid item justifyContent="end" display="flex">
+                                <Button variant="contained" color="primary" endIcon={<LibraryAddOutlined fontSize="small" />} onClick={() => handleDialog(true)}>Add Inventory Items</Button>
+                            </Grid>
+                        )}
                     </Grid>
                 </Grid>
             </Grid>

@@ -15,8 +15,12 @@ class AuditTrailController extends Controller
         $query = AuditTrail::with('user')->orderBy('created_at', 'desc');
 
         if ($search) {
-            $query->where('action', 'like', "%{$search}%")
-            ->orWhere('user_id', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('email', 'like', "%{$search}%");
+                  });
+            });
         }
 
         $auditTrail = $query->paginate($perPage, ['*'], 'page', $page);

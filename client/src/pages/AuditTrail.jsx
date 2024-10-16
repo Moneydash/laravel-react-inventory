@@ -24,10 +24,10 @@ function AuditTrail() {
     }
     const [rows, setRows] = useState([]);
     const columns = [
-        { field: 'user_id', headerName: 'User ID', flex: 1, valueGetter: (params) => params.row.user.email },
-        { field: 'action', headerName: 'Action', flex: 1 },
-        { field: 'description', headerName: 'Description', flex: 1 },
-        { field: 'created_at', headerName: 'Created At', flex: 1, valueGetter: (params) => isoDateToCommonDateTime(params.row.created_at) },
+        { field: 'user_id', headerName: 'User Email', flex: 1, valueGetter: (params) => params.row.user.email },
+        { field: 'action', headerName: 'Action Type', flex: 1 },
+        { field: 'description', headerName: 'Action Description', flex: 1 },
+        { field: 'created_at', headerName: 'Recorded Timestamp', flex: 1, valueGetter: (params) => isoDateToCommonDateTime(params.row.created_at) },
         { field: 'id', headerName: 'View', flex: 1, renderCell: renderActionButtons }
     ];
     const [loading, setLoading] = useState(false);

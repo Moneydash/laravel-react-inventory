@@ -31,7 +31,7 @@ import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import TableComponent from "components/elements/Tables/TableComponent";
-import { decryptAccessToken } from "utils/auth";
+import { decryptAccessToken, decryptedRoleName } from "utils/auth";
 import {
     get_Suppliers,
     get_Removed_suppliers,
@@ -61,6 +61,7 @@ import DeletedContent from "components/pages/Inventory/Supplier/Deleted";
 function Supplier() {
     document.title = "InventoryIQ: Supplier Partners";
     const decrypted_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const empty_field_warning = 'Please fill up required field!';
 
     const renderActionButtons = (params) => {
@@ -71,11 +72,15 @@ function Supplier() {
                     icon={<EditRounded fontSize="small"/>}
                     fn={() => get_supplier(params.value)}
                 />
-                <ErrorColorIconBtn
-                    title="Remove Supplier Partner"
-                    icon={<DeleteRounded fontSize="small"/>}
-                    fn={() => remove_supplier(params.value)}
-                />
+                { roleName === "Super Admin" && (
+                    <>
+                        <ErrorColorIconBtn
+                            title="Remove Supplier Partner"
+                            icon={<DeleteRounded fontSize="small"/>}
+                            fn={() => remove_supplier(params.value)}
+                        />
+                    </>
+                )}
                 <PrimaryColorIconBtn
                     title="Download Terms and Conditions"
                     icon={<DownloadRounded fontSize="small"/>}
@@ -213,7 +218,11 @@ function Supplier() {
             setRemoveSupplierDialog(true);
             setRemoveRows(transformedData);
         })
-        .catch(error => { console.log(error); });
+        .catch(error => {
+            console.log(error);
+            const message = error?.response?.data?.error;
+            toast.error(message);
+        });
     }
 
     // get specific supplier for updates
@@ -414,6 +423,9 @@ function Supplier() {
         })
         .catch(error => {
             setLoading(false);
+            const message = error?.response?.data?.error;
+            toast.error(message);
+            setRemoveDialog(false);
             console.log(error);
         });
     }
@@ -488,9 +500,11 @@ function Supplier() {
                 </Grid>
                 <Grid item lg={9} xl={9} sm={9} xs={12}>
                     <Grid container direction="row" justifyContent="flex-end" alignItems="center" columnSpacing={{ lg: 1, xl: 1, sm: 1, xs: 1 }} rowSpacing={1.5}>
-                        <Grid item justifyContent="end" display="flex">
-                            <Button variant="contained" endIcon={<GroupRemoveOutlined fontSize="small" />} onClick={get_removed_suppliers}>Deleted Suppliers</Button>
-                        </Grid>
+                        { roleName === "Super Admin" && (
+                            <Grid item justifyContent="end" display="flex">
+                                <Button variant="contained" endIcon={<GroupRemoveOutlined fontSize="small" />} onClick={get_removed_suppliers}>Deleted Suppliers</Button>
+                            </Grid>
+                        )}
                         <Grid item justifyContent="end" display="flex">
                             <Button variant="contained" onClick={get_suppliers} endIcon={<RefreshOutlined fontSize="small" />}>Refresh Table</Button>
                         </Grid>

@@ -18,17 +18,56 @@ class UserSeeder extends Seeder
     {
         // Insert initial user
         $initial_user = [
-            'username' => 'admin', // Change this to the desired username
-            'email' => 'test@test.com', // Change this to the desired email
-            'password' => Hash::make('Test1234!'), // Change this to the desired password
-            'created_at' => now(),
-            'updated_at' => now(),
+            [
+                'id' => Str::uuid(),
+                'username' => 'superadmin', // Change this to the desired username
+                'email' => 'superadmin@test.com', // Change this to the desired email
+                'password' => Hash::make('Test1234!'), // Change this to the desired password
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'username' => 'admin', // Change this to the desired username
+                'email' => 'admin@test.com', // Change this to the desired email
+                'password' => Hash::make('Test1234!'), // Change this to the desired password
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'username' => 'manager', // Change this to the desired username
+                'email' => 'manager@test.com', // Change this to the desired email
+                'password' => Hash::make('Test1234!'), // Change this to the desired password
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'username' => 'staff', // Change this to the desired username
+                'email' => 'staff@test.com', // Change this to the desired email
+                'password' => Hash::make('Test1234!'), // Change this to the desired password
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
         ];
 
-        $user = User::create($initial_user);
-        $role_admin = Role::where('role_name', 'Administrator')->first();
+        User::insert($initial_user);
+
+        $superadmin = Role::where('name', 'Super Admin')->first();
+        $admin = Role::where('name', 'Administrator')->first();
+        $manager = Role::where('name', 'Staff Manager')->first();
+        $staff = Role::where('name', 'Staff')->first();
+
+        $super_user = User::where('username', 'superadmin')->first();
+        $admin_user = User::where('username', 'admin')->first();
+        $manager_user = User::where('username', 'manager')->first();
+        $staff_user = User::where('username', 'staff')->first();
 
         // insert the admin user on the table.
-        $user->roles()->attach($role_admin->id);
+        $super_user->roles()->attach($superadmin->id);
+        $admin_user->roles()->attach($admin->id);
+        $manager_user->roles()->attach($manager->id);
+        $staff_user->roles()->attach($staff->id);
     }
 }

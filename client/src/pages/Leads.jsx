@@ -267,13 +267,13 @@ function Leads() {
                             <PrimaryColorLoadingBtn
                                 displayText={
                                     loading && editIndex ? "Updating Lead"
-                                    : (!loading && editIndex ? "Update Lead"
-                                        : (!loading && !editIndex ? "Add Lead"
-                                            : (loading && !editIndex ? "Adding Lead"
-                                                : ""
-                                            )
-                                        )
-                                    )
+                                    : (!loading && editIndex
+                                    ? "Update Lead"
+                                    : (!loading && !editIndex
+                                    ? "Add Lead"
+                                    : (loading && !editIndex
+                                    ? "Adding Lead"
+                                    : "" )))
                                 }
                                 endIcon={<PersonAddAlt1Outlined fontSize="small"/>}
                                 loading={loading}

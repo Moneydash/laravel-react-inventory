@@ -16,7 +16,7 @@ import {
 import React, { useEffect, useState } from "react";
 import BreadCrumbsCmp from "components/elements/BreadcrumbsComponent";
 import { axios_get_header, axios_post_header, axios_put_header } from "utils/requests";
-import { decryptAccessToken } from "utils/auth";
+import { decryptAccessToken, decryptedRoleName } from "utils/auth";
 import { toast } from "react-toastify";
 import {
     get_Categories,
@@ -32,21 +32,27 @@ import TableComponent from "components/elements/Tables/TableComponent";
 function Category() {
     document.title = 'Inventory IQ: Categories';
     const decrypt_access_token = decryptAccessToken();
+    const roleName = decryptedRoleName();
     const try_again = 'Oops, something went wrong. Please try again later.';
 
     const columns = [
         { field: 'name', headerName: 'Category Name', flex: 1 },
         { field: 'slug', headerName: 'Slug', flex: 1 },
         { field: 'description', headerName: 'Description', flex: 1 },
-        { field: 'id', headerName: 'Action', width: 100, renderCell: (params) => (
-            <>
-                <PrimaryColorIconBtn
-                    fn={() => get_category(params.value)}
-                    title="Update Category"
-                    icon={<EditRounded fontSize="small"/>}
-                />
-            </>
-        )}
+        ...(roleName !== "Staff" ? [
+            { 
+                field: 'id', 
+                headerName: 'Action', 
+                width: 100, 
+                renderCell: (params) => (
+                    <PrimaryColorIconBtn
+                        fn={() => get_category(params.value)}
+                        title="Update Category"
+                        icon={<EditRounded fontSize="small"/>}
+                    />
+                )
+            }
+        ] : [])
     ];
 
     const initialForm = {
@@ -240,9 +246,11 @@ function Category() {
                     <Grid item justifyContent="end" display="flex">
                             <Button variant="contained" onClick={get_categories} endIcon={<RefreshOutlined fontSize="small" />}>Refresh Table</Button>
                         </Grid>
-                        <Grid item justifyContent="end" display="flex">
-                            <Button variant="contained" onClick={() => toggleDialog(true)} endIcon={<LayersTwoTone fontSize="small" />}>Add New Category</Button>
-                        </Grid>
+                        { roleName !== "Staff" && (
+                            <Grid item justifyContent="end" display="flex">
+                                <Button variant="contained" onClick={() => toggleDialog(true)} endIcon={<LayersTwoTone fontSize="small" />}>Add New Category</Button>
+                            </Grid>
+                        )}
                     </Grid>
                 </Grid>
             </Grid>

@@ -18,7 +18,21 @@ import DeliveryPersons from "./pages/Delivery/DeliveryPersons";
 import Notfound from "./pages/Notfound";
 import AuditTrail from "./pages/AuditTrail";
 import Leads from "./pages/Leads";
-import { redirect } from "react-router-dom";
+import { Navigate, redirect } from "react-router-dom";
+import { AES, enc } from "crypto-js";
+import Cookies from "js-cookie";
+
+const getUserRole = () => {
+    const role = Cookies.get('role_name') ?? 'user'; // default role user if cookie not found
+    const decryptedRole = role === 'user' ? 'user' : AES.decrypt(role, process.env.REACT_APP_SECRET_KEY).toString(enc.Utf8);
+    return decryptedRole;
+};
+
+const RoleBasedRoute = ({ element, allowedRoles }) => {
+    const userRole = getUserRole();
+    const isAllowed = allowedRoles.includes('*') || allowedRoles.includes(userRole); // Check if allowedRoles includes '*' or the user's role
+    return isAllowed ? element : <Navigate to="/not-found" replace />;
+};
 
 const childRoutes = [
     {
@@ -27,67 +41,67 @@ const childRoutes = [
     },
     {
         path: 'inventory',
-        element: <InventoryControl />
+        element: <RoleBasedRoute element={<InventoryControl />} allowedRoles={['*']} />
     },
     {
         path: 'inventory/products-list',
-        element: <Products />
+        element: <RoleBasedRoute element={<Products />} allowedRoles={['*']} />
     },
     {
         path: 'inventory/suppliers',
-        element: <Supplier />
+        element: <RoleBasedRoute element={<Supplier />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'inventory/purchase-orders',
-        element: <PurchaseOrder />
+        element: <RoleBasedRoute element={<PurchaseOrder />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'inventory/categories',
-        element: <Category />
+        element: <RoleBasedRoute element={<Category />} allowedRoles={['*']} />
     },
     {
         path: 'inventory/warehouse-management',
-        element: <Warehouse />
+        element: <RoleBasedRoute element={<Warehouse />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'users',
-        element: <UserAccounts />
+        element: <RoleBasedRoute element={<UserAccounts />} allowedRoles={['Super Admin', 'Administrator']} />
     },
     {
         path: 'profile',
-        element: <Profile />
+        element: <RoleBasedRoute element={<Profile />} allowedRoles={['*']} />
     },
     {
         path: 'profile/update-profile',
-        element: <UpdateProfile />
+        element: <RoleBasedRoute element={<UpdateProfile />} allowedRoles={['*']} />
     },
     {
         path: 'profile/change-password',
-        element: <ChangePassword />
+        element: <RoleBasedRoute element={<ChangePassword />} allowedRoles={['*']} />
     },
     {
         path: 'delivery',
-        element: <ProductDelivery />
+        element: <RoleBasedRoute element={<ProductDelivery />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'delivery/delivery-items',
-        element: <ItemDelivery />
+        element: <RoleBasedRoute element={<ItemDelivery />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'delivery/customers',
-        element: <Customers />
+        element: <RoleBasedRoute element={<Customers />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'delivery/delivery-persons',
-        element: <DeliveryPersons />
+        element: <RoleBasedRoute element={<DeliveryPersons />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     },
     {
         path: 'audit-trails',
-        element: <AuditTrail />
+        element: <RoleBasedRoute element={<AuditTrail />} allowedRoles={['Super Admin', 'Administrator']} />
     },
     {
         path: 'leads',
-        element: <Leads />
+        element: <RoleBasedRoute element={<Leads />} allowedRoles={['Super Admin', 'Administrator', 'Staff Manager']} />
     }
 ];
 
@@ -101,8 +115,12 @@ const appRoutes = [
         element: <Register />
     },
     {
-        path: '*',
+        path: '/not-found',
         element: <Notfound />
+    },
+    {
+        path: '*',
+        element: <Navigate to="/not-found" replace />
     },
     {
         path: '/main/page',
